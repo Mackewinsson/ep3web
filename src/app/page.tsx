@@ -113,13 +113,17 @@ export default function Home() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <a
-                  href="#contacto"
+                  href="https://wa.link/9rr0si"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
                 >
                   Cotizar ahora
                 </a>
                 <a
-                  href="tel:+56900000000"
+                  href="https://wa.link/9rr0si"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="rounded-full border border-white/50 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
                 >
                   Llamar asesor
@@ -243,13 +247,17 @@ export default function Home() {
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <a
-                href="https://wa.me/56900000000"
+                href="https://wa.link/9rr0si"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
               >
                 Hablar por WhatsApp
               </a>
               <a
-                href="mailto:contacto@transportesep3.cl"
+                href="https://wa.link/9rr0si"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="rounded-full border border-white/50 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
               >
                 Enviar correo
