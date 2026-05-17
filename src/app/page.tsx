@@ -14,9 +14,9 @@ const BOXES: {
   tied?: boolean;
   tape?: boolean;
 }[] = [
-  { top: "2%",   left: "8%",  rotate: "-10deg", w: "115px", h: "105px", tied: true             },
-  { top: "5%",   left: "48%", rotate:   "8deg", w:  "95px", h:  "88px",             tape: true },
-  { top: "18%",  left: "28%", rotate:  "-5deg", w: "105px", h:  "97px",             tape: true },
+  { top: "2%",  left: "8%",  rotate: "-10deg", w: "115px", h: "105px", tied: true             },
+  { top: "2%",  left: "48%", rotate:   "8deg", w:  "95px", h:  "88px",             tape: true },
+  { top: "14%", left: "28%", rotate:  "-5deg", w: "105px", h:  "97px",             tape: true },
 ];
 
 function MovingTruck() {
@@ -341,7 +341,7 @@ export default function Home() {
             </div>
 
             {/* Left: truck + floating boxes — second on mobile */}
-            <div className="order-last relative h-56 sm:h-72 md:order-first md:h-[480px]">
+            <div className="order-last relative h-80 sm:h-80 md:order-first md:h-[480px]">
               {BOXES.map((box, i) => (
                 <PackageBox key={i} {...box} />
               ))}
