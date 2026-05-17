@@ -14,12 +14,95 @@ const BOXES: {
   tied?: boolean;
   tape?: boolean;
 }[] = [
-  { top: "2%",    left: "4%",  rotate: "-11deg", w: "195px", h: "175px", tied: true             },
-  { top: "12%",   left: "44%", rotate:   "7deg", w: "155px", h: "140px",             tape: true },
-  { top: "48%",   left: "-1%", rotate:  "-4deg", w: "175px", h: "160px",             tape: true },
-  { bottom: "8%", left: "30%", rotate:   "9deg", w: "130px", h: "120px", tied: true             },
-  { bottom: "1%", left: "5%",  rotate:  "-7deg", w: "155px", h: "140px",             tape: true },
+  { top: "2%",   left: "8%",  rotate: "-10deg", w: "115px", h: "105px", tied: true             },
+  { top: "5%",   left: "48%", rotate:   "8deg", w:  "95px", h:  "88px",             tape: true },
+  { top: "18%",  left: "28%", rotate:  "-5deg", w: "105px", h:  "97px",             tape: true },
 ];
+
+function MovingTruck() {
+  const wheelColor = "#1a1a2e";
+  const rimColor   = "#2d2d45";
+  const hubColor   = "#3d3d58";
+
+  const bolts = (cx: number, cy: number, r: number, n: number, br: number) =>
+    Array.from({ length: n }, (_, i) => {
+      const a = (i * (360 / n) * Math.PI) / 180;
+      return (
+        <circle key={i} cx={cx + r * Math.cos(a)} cy={cy + r * Math.sin(a)} r={br} fill={wheelColor} />
+      );
+    });
+
+  return (
+    <svg viewBox="0 0 480 215" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+      {/* ── ground shadow ── */}
+      <ellipse cx="250" cy="210" rx="210" ry="7" fill="rgba(0,0,0,0.22)" />
+
+      {/* ── cargo body ── */}
+      <rect x="98" y="12" width="368" height="158" rx="5" fill={kraft} />
+      {/* corrugation */}
+      {[0,1,2,3,4,5,6,7,8].map((i) => (
+        <line key={i} x1={98 + i * 44} y1="12" x2={98 + i * 44} y2="170"
+          stroke="rgba(0,0,0,0.07)" strokeWidth="1.5" />
+      ))}
+      {/* top lid darker zone */}
+      <rect x="98" y="12" width="368" height="26" rx="5" fill="rgba(0,0,0,0.22)" />
+      {/* lid center crease */}
+      <line x1="282" y1="12" x2="282" y2="38" stroke="rgba(0,0,0,0.25)" strokeWidth="1.5" />
+      {/* packing tape */}
+      <rect x="98" y="34" width="368" height="10" fill="rgba(215,195,120,0.45)"
+        style={{ borderTop: "1px solid rgba(255,255,255,0.2)" }} />
+      {/* outline */}
+      <rect x="98" y="12" width="368" height="158" rx="5" stroke="rgba(0,0,0,0.18)" strokeWidth="2" fill="none" />
+      {/* right-edge shading */}
+      <rect x="448" y="12" width="18" height="158" rx="5" fill="rgba(0,0,0,0.12)" />
+      {/* bottom shading */}
+      <rect x="98" y="148" width="368" height="22" rx="3" fill="rgba(0,0,0,0.12)" />
+      {/* logo on truck side */}
+      <image href="/logo.png" x="178" y="52" width="220" height="86"
+        preserveAspectRatio="xMidYMid meet" />
+
+      {/* ── cab ── */}
+      {/* cab body */}
+      <path d="M16 170 L16 65 Q16 38 44 38 L98 38 L98 170 Z" fill={navy} />
+      {/* windshield */}
+      <path d="M23 74 Q23 48 46 48 L91 48 L91 128 L23 128 Z"
+        fill="#5a9fd4" fillOpacity="0.55" />
+      {/* windshield glare */}
+      <path d="M27 54 L44 54 L29 82 Z" fill="white" fillOpacity="0.18" />
+      {/* cab/windshield divider */}
+      <line x1="23" y1="128" x2="91" y2="128" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
+      {/* door outline */}
+      <rect x="23" y="130" width="67" height="36" rx="2"
+        stroke="rgba(255,255,255,0.10)" strokeWidth="1" fill="none" />
+      {/* door handle */}
+      <rect x="78" y="145" width="10" height="4" rx="2" fill={yellow} />
+      {/* headlight */}
+      <rect x="14" y="90" width="9" height="22" rx="3" fill={yellow} fillOpacity="0.95" />
+      {/* front bumper accent */}
+      <rect x="11" y="150" width="12" height="18" rx="2" fill={yellow} />
+      {/* exhaust pipe */}
+      <rect x="88" y="10" width="6" height="30" rx="3" fill="#333" />
+      <ellipse cx="91" cy="10" rx="3" ry="2" fill="#555" />
+
+      {/* ── chassis ── */}
+      <rect x="16" y="168" width="450" height="13" rx="3" fill="rgba(0,0,0,0.35)" />
+
+      {/* ── rear wheel ── */}
+      <circle cx="396" cy="183" r="30" fill={wheelColor} />
+      <circle cx="396" cy="183" r="21" fill={rimColor} />
+      <circle cx="396" cy="183" r="13" fill={hubColor} />
+      <circle cx="396" cy="183" r="5"  fill={yellow} />
+      {bolts(396, 183, 17, 6, 2.5)}
+
+      {/* ── front wheel ── */}
+      <circle cx="82" cy="183" r="26" fill={wheelColor} />
+      <circle cx="82" cy="183" r="18" fill={rimColor} />
+      <circle cx="82" cy="183" r="11" fill={hubColor} />
+      <circle cx="82" cy="183" r="4.5" fill={yellow} />
+      {bolts(82, 183, 14, 5, 2)}
+    </svg>
+  );
+}
 
 function PackageBox({
   top, bottom, left, right, rotate, w, h, tied, tape,
@@ -161,13 +244,11 @@ export default function Home() {
             </a>
           </nav>
           <a
-            href="https://wa.link/9rr0si"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="tel:+56997406693"
             className="hidden items-center gap-2 rounded-full px-5 py-2 text-sm font-bold transition hover:brightness-110 md:inline-flex"
             style={{ background: yellow, color: navy }}
           >
-            Escribir a WhatsApp
+            Llamar
           </a>
         </div>
       </header>
@@ -230,11 +311,16 @@ export default function Home() {
           ))}
 
           <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-6 px-6 py-16 md:grid-cols-2 md:py-24">
-            {/* Left: package scene */}
+            {/* Left: truck + floating boxes */}
             <div className="relative h-80 md:h-[480px]">
+              {/* floating boxes above the truck */}
               {BOXES.map((box, i) => (
                 <PackageBox key={i} {...box} />
               ))}
+              {/* truck sits at the bottom of the column */}
+              <div className="absolute bottom-0 left-0 right-0">
+                <MovingTruck />
+              </div>
             </div>
 
             {/* Right: headline + logo + CTA */}
