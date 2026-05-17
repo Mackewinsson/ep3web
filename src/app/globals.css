@@ -10,6 +10,11 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* EP3 brand tokens — sourced from src/theme.json */
+  --color-ep3-navy:   #001F54;
+  --color-ep3-yellow: #FFCC00;
+  --color-ep3-kraft:  #c4863a;
 }
 
 @media (prefers-color-scheme: dark) {
