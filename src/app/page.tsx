@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ReviewsSection } from "@/components/ReviewsSection";
 import theme from "@/theme.json";
 
 const { navy, yellow, kraft } = theme.colors;
@@ -242,6 +243,9 @@ export default function Home() {
             <a href="#servicios" className="transition hover:text-ep3-yellow">
               Servicios
             </a>
+            <a href="#resenas" className="transition hover:text-ep3-yellow">
+              Reseñas
+            </a>
           </nav>
           <a
             href="tel:+56997406693"
@@ -379,6 +383,7 @@ export default function Home() {
             ))}
           </div>
         </section>
+        <ReviewsSection />
       </main>
 
       <footer className="border-t border-slate-200 bg-white">
