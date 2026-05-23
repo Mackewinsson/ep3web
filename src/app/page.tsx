@@ -219,6 +219,11 @@ export default function Home() {
       description:
         "Coordinamos rutas interurbanas para mercaderia, pallets y carga consolidada con tiempos de entrega claros desde el inicio.",
     },
+    {
+      title: "Entregas de paquetes ecommerce - Flex - Ventas web",
+      description:
+        "Retiramos tus paquetes y los entregamos en tiempo record, con seguimiento y atencion personalizada para que tus clientes reciban sus compras de forma eficiente y confiable.",
+    },
   ];
 
   return (
@@ -367,7 +372,7 @@ export default function Home() {
               protocolos de seguridad y coordinacion en tiempo real.
             </p>
           </div>
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-2">
             {features.map((feature) => (
               <article
                 key={feature.title}
