@@ -49,9 +49,15 @@ function AuthorAvatar({ name }: { name: string }) {
   );
 }
 
-function ReviewCard({ review }: { review: Review }) {
+function ReviewCard({ review, mapsUrl }: { review: Review; mapsUrl: string }) {
   return (
-    <article className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
+    <a
+      href={mapsUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Ver reseña de ${review.author} en Google Maps`}
+      className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition hover:border-slate-200 hover:shadow-md sm:p-5"
+    >
       <div className="flex items-start gap-3">
         <AuthorAvatar name={review.author} />
         <div className="min-w-0 flex-1">
@@ -83,7 +89,7 @@ function ReviewCard({ review }: { review: Review }) {
       {review.text && (
         <p className="text-sm leading-relaxed text-slate-600 lg:line-clamp-4">{review.text}</p>
       )}
-    </article>
+    </a>
   );
 }
 
@@ -151,7 +157,7 @@ export function ReviewsSection() {
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {place.reviews.map((review, i) => (
-            <ReviewCard key={i} review={review} />
+            <ReviewCard key={i} review={review} mapsUrl={place.mapsUrl} />
           ))}
         </div>
       </div>
