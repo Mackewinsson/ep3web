@@ -51,18 +51,17 @@ function AuthorAvatar({ name }: { name: string }) {
 
 function ReviewCard({ review }: { review: Review }) {
   return (
-    <article className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+    <article className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex items-start gap-3">
         <AuthorAvatar name={review.author} />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-slate-900">{review.author}</p>
-          <div className="mt-0.5 flex items-center gap-2">
+          <p className="text-sm font-semibold leading-snug text-slate-900">{review.author}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <StarRating rating={review.rating} size={14} />
             <span className="text-xs text-slate-400">{review.relativeTime}</span>
           </div>
         </div>
-        {/* Google G icon */}
-        <svg viewBox="0 0 24 24" className="h-5 w-5 flex-shrink-0 opacity-40" aria-hidden>
+        <svg viewBox="0 0 24 24" className="hidden h-5 w-5 flex-shrink-0 opacity-40 sm:block" aria-hidden>
           <path
             fill="#4285F4"
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -82,7 +81,7 @@ function ReviewCard({ review }: { review: Review }) {
         </svg>
       </div>
       {review.text && (
-        <p className="line-clamp-4 text-sm leading-relaxed text-slate-600">{review.text}</p>
+        <p className="text-sm leading-relaxed text-slate-600 lg:line-clamp-4">{review.text}</p>
       )}
     </article>
   );
@@ -99,12 +98,12 @@ function RatingSummary({
 }) {
   return (
     <div
-      className="flex flex-col items-center gap-3 rounded-2xl p-6 text-center text-white sm:flex-row sm:justify-between sm:text-left"
+      className="flex flex-col items-center gap-4 rounded-2xl p-5 text-center text-white sm:flex-row sm:justify-between sm:gap-3 sm:p-6 sm:text-left"
       style={{ background: navy }}
     >
-      <div>
-        <p className="text-4xl font-extrabold">{rating.toFixed(1)}</p>
-        <div className="mt-1">
+      <div className="w-full sm:w-auto">
+        <p className="text-3xl font-extrabold sm:text-4xl">{rating.toFixed(1)}</p>
+        <div className="mt-1 flex justify-center sm:justify-start">
           <StarRating rating={Math.round(rating)} size={20} />
         </div>
         <p className="mt-1 text-sm text-white/70">{totalReviews} reseñas en Google</p>
@@ -113,7 +112,7 @@ function RatingSummary({
         href={mapsUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition hover:brightness-110"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-bold transition hover:brightness-110 sm:w-auto sm:py-2.5"
         style={{ background: yellow, color: navy }}
       >
         Ver todas las reseñas
@@ -131,18 +130,18 @@ export function ReviewsSection() {
   if (!place) return null;
 
   return (
-    <section id="resenas" className="bg-slate-50 px-4 py-12 md:px-6 md:py-20">
+    <section id="resenas" className="scroll-mt-20 bg-slate-50 px-4 py-10 sm:py-12 md:px-6 md:py-20">
       <div className="mx-auto max-w-6xl">
-        {/* heading */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl md:text-3xl">
             Lo que dicen nuestros clientes
           </h2>
-          <p className="mt-2 text-slate-500">Opiniones reales de Google Maps</p>
+          <p className="mt-1.5 text-sm text-slate-500 sm:mt-2 sm:text-base">
+            Opiniones reales de Google Maps
+          </p>
         </div>
 
-        {/* summary */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <RatingSummary
             rating={place.rating}
             totalReviews={place.totalReviews}
@@ -150,8 +149,7 @@ export function ReviewsSection() {
           />
         </div>
 
-        {/* review cards */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {place.reviews.map((review, i) => (
             <ReviewCard key={i} review={review} />
           ))}
