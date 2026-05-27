@@ -1,4 +1,4 @@
-import { fetchPlaceData, type Review } from "@/lib/google-places";
+import { getReviewsData, type Review } from "@/lib/reviews";
 import theme from "@/theme.json";
 
 const { navy, yellow } = theme.colors;
@@ -24,7 +24,7 @@ function StarRating({ rating, size = 16 }: { rating: number; size?: number }) {
   );
 }
 
-function AuthorAvatar({ name, photoUrl }: { name: string; photoUrl: string }) {
+function AuthorAvatar({ name }: { name: string }) {
   const initials = name
     .split(" ")
     .slice(0, 2)
@@ -37,20 +37,6 @@ function AuthorAvatar({ name, photoUrl }: { name: string; photoUrl: string }) {
     "#457b9d", "#a8dadc", "#6d6875", "#b5838d", "#0077b6",
   ];
   const bg = colors[name.charCodeAt(0) % colors.length];
-
-  if (photoUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={photoUrl}
-        alt={name}
-        width={44}
-        height={44}
-        className="h-11 w-11 flex-shrink-0 rounded-full object-cover"
-        referrerPolicy="no-referrer"
-      />
-    );
-  }
 
   return (
     <div
@@ -67,7 +53,7 @@ function ReviewCard({ review }: { review: Review }) {
   return (
     <article className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
       <div className="flex items-start gap-3">
-        <AuthorAvatar name={review.author} photoUrl={review.authorPhotoUrl} />
+        <AuthorAvatar name={review.author} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-slate-900">{review.author}</p>
           <div className="mt-0.5 flex items-center gap-2">
@@ -140,10 +126,9 @@ function RatingSummary({
   );
 }
 
-export async function ReviewsSection() {
-  const place = await fetchPlaceData();
-
-  if (!place || place.reviews.length === 0) return null;
+export function ReviewsSection() {
+  const place = getReviewsData();
+  if (!place) return null;
 
   return (
     <section id="resenas" className="bg-slate-50 px-4 py-12 md:px-6 md:py-20">

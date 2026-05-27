@@ -1,0 +1,44 @@
+{
+  "name": "Transportes EP3",
+  "rating": 5,
+  "totalReviews": 34,
+  "mapsUrl": "https://www.google.com/maps/place/Transportes+Ep3/@-33.4377177,-70.6494866,17z",
+  "reviews": [
+    {
+      "author": "Francisca Sepulveda",
+      "rating": 5,
+      "text": "Hace 4 años aproximadamente los contacté para que hicieran mi primer flete a mi hogar y hasta el día de hoy me han acompañado en distintas mudanzas. La verdad, no los cambio por nada. Son 100% recomendables, puntuales, responsables y siempre entregan un excelente servicio. Se agradece la confianza y dedicación en cada trabajo.",
+      "relativeTime": "hace 2 días"
+    },
+    {
+      "author": "Graxiel Morillo",
+      "rating": 5,
+      "text": "Excelente servicio, confiable y puntual. Muy colaborador y solidario. Prestan servicios con fines de lucro pero también apoyan a ONG que ayudan a los más necesitados. En una de las tantas mudanzas donde los he contratado, me quedé muy conforme. Los recomiendo al 100% por la responsabilidad y compromiso con que trabajan.",
+      "relativeTime": "hace 13 horas"
+    },
+    {
+      "author": "Karina Mármol",
+      "rating": 5,
+      "text": "Excelente servicio, responsable y seguros. Recomendado 100%. Si necesitas un transporte con confianza, seguro y que no te quedará mal, ya tienes el mejor dato.",
+      "relativeTime": "hace 1 semana"
+    },
+    {
+      "author": "Arivic Gutierrez",
+      "rating": 5,
+      "text": "Muy buen servicio, responsable y muy puntual, además de súper cuidadoso en la mudanza. Las cosas llegan perfectas; ya hemos hecho mudanzas completas y pequeñas con ellos y son muy buenos.",
+      "relativeTime": "hace 1 semana"
+    },
+    {
+      "author": "Guillermo Flores",
+      "rating": 5,
+      "text": "Excelente servicio, muy recomendado. Rápido, responsable y resolutivos.",
+      "relativeTime": "hace 1 semana"
+    },
+    {
+      "author": "Geremy",
+      "rating": 5,
+      "text": "Recomendado 100%, siempre me hacen todas mis mudanzas.",
+      "relativeTime": "hace 1 semana"
+    }
+  ]
+}
