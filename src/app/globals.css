@@ -29,3 +29,28 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes partner-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.partner-marquee-track {
+  animation: partner-marquee-scroll 38s linear infinite;
+}
+
+@media (max-width: 640px) {
+  .partner-marquee-track {
+    animation-duration: 28s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partner-marquee-track {
+    animation: none;
+  }
+}

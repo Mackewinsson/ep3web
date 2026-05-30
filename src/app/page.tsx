@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { PartnerBrandsSection } from "@/components/PartnerBrandsSection";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import theme from "@/theme.json";
 
@@ -360,6 +361,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <PartnerBrandsSection />
 
         {/* ── Services ───────────────────────────────────────────── */}
         <section id="servicios" className="mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-20">

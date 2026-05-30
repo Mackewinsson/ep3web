@@ -1,0 +1,14 @@
+{
+  "headline": "Empresas que confían en nosotros",
+  "subheadline": "Colaboramos con marcas de ecommerce, retail y logística.",
+  "partners": [
+    { "name": "VENECHi Ascensores", "logoUrl": "/partners/venechi.png" },
+    { "name": "Todo Fiestas", "logoUrl": "/partners/todo-fiestas.png" },
+    { "name": "GlowDeco", "logoUrl": "/partners/glowdeco.png" },
+    { "name": "Flex Delivery", "logoUrl": "" },
+    { "name": "Cargo Chile", "logoUrl": "" },
+    { "name": "Urban Store", "logoUrl": "" },
+    { "name": "Pack & Go", "logoUrl": "" },
+    { "name": "Distribuidora Sur", "logoUrl": "" }
+  ]
+}
