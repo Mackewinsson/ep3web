@@ -3,7 +3,7 @@ import theme from "@/theme.json";
 
 const { navy, yellow } = theme.colors;
 
-function PartnerTile({ partner }: { partner: Partner }) {
+function PartnerTileContent({ partner }: { partner: Partner }) {
   const initials = partner.name
     .split(" ")
     .slice(0, 2)
@@ -12,10 +12,7 @@ function PartnerTile({ partner }: { partner: Partner }) {
     .toUpperCase();
 
   return (
-    <div
-      className="group relative flex h-20 w-44 flex-shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md sm:h-24 sm:w-48 sm:px-4 md:h-28 md:w-52"
-      aria-label={partner.name}
-    >
+    <>
       {partner.logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -42,6 +39,31 @@ function PartnerTile({ partner }: { partner: Partner }) {
         style={{ background: yellow }}
         aria-hidden
       />
+    </>
+  );
+}
+
+function PartnerTile({ partner }: { partner: Partner }) {
+  const className =
+    "group relative flex h-20 w-44 flex-shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md sm:h-24 sm:w-48 sm:px-4 md:h-28 md:w-52";
+
+  if (partner.href) {
+    return (
+      <a
+        href={partner.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        aria-label={`Visitar ${partner.name}`}
+      >
+        <PartnerTileContent partner={partner} />
+      </a>
+    );
+  }
+
+  return (
+    <div className={className} aria-label={partner.name}>
+      <PartnerTileContent partner={partner} />
     </div>
   );
 }

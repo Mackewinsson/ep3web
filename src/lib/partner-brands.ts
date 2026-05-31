@@ -3,6 +3,7 @@ import partnerBrandsData from "@/data/partner-brands.json";
 export interface Partner {
   name: string;
   logoUrl: string;
+  href?: string;
 }
 
 export interface PartnerBrandsData {
