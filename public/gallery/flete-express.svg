@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a3a6e"/>
+      <stop offset="100%" stop-color="#001F54"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#sky)"/>
+  <rect x="0" y="460" width="800" height="140" fill="#0f2847"/>
+  <line x1="0" y1="500" x2="800" y2="500" stroke="#FFCC00" stroke-width="6" stroke-dasharray="40 30"/>
+  <rect x="180" y="260" width="380" height="180" rx="6" fill="#c4863a"/>
+  <rect x="180" y="260" width="380" height="30" fill="rgba(0,0,0,0.22)"/>
+  <rect x="60" y="320" width="130" height="120" rx="4" fill="#001F54"/>
+  <rect x="72" y="340" width="70" height="55" fill="#5a9fd4" opacity="0.55"/>
+  <rect x="52" y="390" width="16" height="30" rx="3" fill="#FFCC00"/>
+  <circle cx="150" cy="448" r="34" fill="#1a1a2e"/><circle cx="150" cy="448" r="20" fill="#FFCC00"/>
+  <circle cx="500" cy="448" r="38" fill="#1a1a2e"/><circle cx="500" cy="448" r="22" fill="#FFCC00"/>
+  <polygon points="620,200 680,240 620,280" fill="#FFCC00" opacity="0.8"/>
+  <polygon points="650,180 710,220 650,260" fill="#FFCC00" opacity="0.5"/>
+  <text x="40" y="560" fill="#FFCC00" font-family="Arial,sans-serif" font-size="22" font-weight="bold">Flete express</text>
+</svg>

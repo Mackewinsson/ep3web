@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#001F54"/>
+  <rect x="0" y="420" width="800" height="180" fill="#0a2d6e"/>
+  <ellipse cx="400" cy="500" rx="320" ry="24" fill="rgba(0,0,0,0.25)"/>
+  <rect x="120" y="180" width="420" height="220" rx="8" fill="#c4863a"/>
+  <rect x="120" y="180" width="420" height="36" rx="8" fill="rgba(0,0,0,0.2)"/>
+  <rect x="120" y="210" width="420" height="12" fill="rgba(215,195,120,0.5)"/>
+  <rect x="60" y="280" width="90" height="140" rx="6" fill="#001F54" stroke="#FFCC00" stroke-width="3"/>
+  <rect x="68" y="300" width="50" height="40" rx="2" fill="#5a9fd4" opacity="0.6"/>
+  <circle cx="130" cy="430" r="36" fill="#1a1a2e"/><circle cx="130" cy="430" r="22" fill="#2d2d45"/><circle cx="130" cy="430" r="8" fill="#FFCC00"/>
+  <circle cx="480" cy="430" r="40" fill="#1a1a2e"/><circle cx="480" cy="430" r="26" fill="#2d2d45"/><circle cx="480" cy="430" r="10" fill="#FFCC00"/>
+  <rect x="280" y="120" width="90" height="70" rx="4" fill="#dba85e" transform="rotate(-8 325 155)"/>
+  <rect x="420" y="100" width="70" height="60" rx="4" fill="#a86a20" transform="rotate(12 455 130)"/>
+  <rect x="350" y="90" width="60" height="50" rx="3" fill="#c4863a" transform="rotate(-5 380 115)"/>
+  <path d="M200 160 L240 120 L280 160" stroke="#FFCC00" stroke-width="4" fill="none"/>
+  <text x="40" y="560" fill="#FFCC00" font-family="Arial,sans-serif" font-size="22" font-weight="bold">Mudanza hogar</text>
+</svg>

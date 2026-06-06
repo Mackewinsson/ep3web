@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#0f172a"/>
+  <rect x="0" y="0" width="800" height="120" fill="#001F54"/>
+  <rect x="40" y="160" width="720" height="340" rx="4" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <rect x="80" y="220" width="140" height="120" fill="#c4863a"/>
+  <rect x="240" y="220" width="140" height="120" fill="#a86a20"/>
+  <rect x="400" y="220" width="140" height="120" fill="#c4863a"/>
+  <rect x="560" y="220" width="140" height="120" fill="#dba85e"/>
+  <rect x="80" y="360" width="140" height="100" fill="#dba85e"/>
+  <rect x="240" y="360" width="140" height="100" fill="#c4863a"/>
+  <rect x="400" y="360" width="140" height="100" fill="#a86a20"/>
+  <rect x="560" y="360" width="140" height="100" fill="#c4863a"/>
+  <line x1="80" y1="280" x2="700" y2="280" stroke="#FFCC00" stroke-width="2" opacity="0.4"/>
+  <rect x="300" y="80" width="200" height="24" rx="12" fill="#FFCC00"/>
+  <text x="330" y="97" fill="#001F54" font-family="Arial,sans-serif" font-size="14" font-weight="bold">CARGA REGIONAL</text>
+  <text x="40" y="560" fill="#FFCC00" font-family="Arial,sans-serif" font-size="22" font-weight="bold">Carga interregional</text>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#1a1a2e"/>
+  <rect x="0" y="480" width="800" height="120" fill="#0f0f1a"/>
+  <rect x="120" y="280" width="200" height="24" fill="#8B6914"/>
+  <rect x="120" y="304" width="200" height="16" fill="#6B4F10"/>
+  <rect x="120" y="200" width="200" height="80" fill="#c4863a"/>
+  <rect x="120" y="200" width="200" height="20" fill="rgba(0,0,0,0.2)"/>
+  <rect x="340" y="240" width="200" height="24" fill="#8B6914"/>
+  <rect x="340" y="264" width="200" height="16" fill="#6B4F10"/>
+  <rect x="340" y="160" width="200" height="80" fill="#dba85e"/>
+  <rect x="560" y="300" width="200" height="24" fill="#8B6914"/>
+  <rect x="560" y="324" width="200" height="16" fill="#6B4F10"/>
+  <rect x="560" y="220" width="200" height="80" fill="#a86a20"/>
+  <line x1="100" y1="160" x2="700" y2="160" stroke="#FFCC00" stroke-width="2" opacity="0.3"/>
+  <text x="40" y="560" fill="#FFCC00" font-family="Arial,sans-serif" font-size="22" font-weight="bold">Pallets industriales</text>
+</svg>

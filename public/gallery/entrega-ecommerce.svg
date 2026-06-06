@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#f1f5f9"/>
+  <rect x="80" y="80" width="280" height="440" rx="8" fill="#e2e8f0"/>
+  <rect x="110" y="120" width="220" height="160" rx="4" fill="#cbd5e1"/>
+  <rect x="420" y="200" width="300" height="320" rx="12" fill="#001F54"/>
+  <rect x="450" y="240" width="120" height="90" rx="6" fill="#c4863a"/>
+  <rect x="590" y="260" width="90" height="70" rx="6" fill="#dba85e"/>
+  <rect x="450" y="360" width="230" height="12" fill="rgba(255,204,0,0.4)"/>
+  <circle cx="560" cy="180" r="50" fill="#FFCC00"/>
+  <path d="M535 180 L555 200 L590 160" stroke="#001F54" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <rect x="140" y="400" width="80" height="100" rx="4" fill="#c4863a"/>
+  <rect x="240" y="420" width="70" height="80" rx="4" fill="#a86a20"/>
+  <text x="40" y="560" fill="#001F54" font-family="Arial,sans-serif" font-size="22" font-weight="bold">Entrega ecommerce</text>
+</svg>

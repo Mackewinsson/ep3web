@@ -1,0 +1,70 @@
+{
+  "headline": "Nuestro trabajo en acción",
+  "subheadline": "Mudanzas, fletes y entregas coordinadas con el mismo cuidado que prometemos en cada servicio.",
+  "items": [
+    {
+      "id": "mudanza-hogar",
+      "src": "/gallery/mudanza-hogar.svg",
+      "alt": "Equipo cargando muebles durante una mudanza residencial",
+      "caption": "Mudanza residencial completa — embalaje, carga y traslado seguro de muebles y electrodomésticos.",
+      "category": "Mudanzas",
+      "size": "large"
+    },
+    {
+      "id": "flete-express",
+      "src": "/gallery/flete-express.svg",
+      "alt": "Camión de flete express en ruta urbana",
+      "caption": "Flete express el mismo día dentro de la Región Metropolitana.",
+      "category": "Fletes",
+      "size": "medium"
+    },
+    {
+      "id": "entrega-ecommerce",
+      "src": "/gallery/entrega-ecommerce.svg",
+      "alt": "Entrega de paquetes de ecommerce en puerta",
+      "caption": "Entregas Flex y ventas web con seguimiento por WhatsApp.",
+      "category": "Ecommerce",
+      "size": "medium"
+    },
+    {
+      "id": "carga-regional",
+      "src": "/gallery/carga-regional.svg",
+      "alt": "Carga consolidada lista para despacho interregional",
+      "caption": "Transporte de carga y pallets hacia regiones con tiempos claros.",
+      "category": "Carga",
+      "size": "large"
+    },
+    {
+      "id": "embalaje",
+      "src": "/gallery/embalaje.svg",
+      "alt": "Cajas embaladas con cinta y protección",
+      "caption": "Embalaje profesional para objetos frágiles y mercadería sensible.",
+      "category": "Embalaje",
+      "size": "small"
+    },
+    {
+      "id": "mudanza-oficina",
+      "src": "/gallery/mudanza-oficina.svg",
+      "alt": "Traslado de mobiliario de oficina",
+      "caption": "Mudanzas corporativas con mínima interrupción operativa.",
+      "category": "Oficinas",
+      "size": "small"
+    },
+    {
+      "id": "pallets",
+      "src": "/gallery/pallets.svg",
+      "alt": "Pallets industriales en bodega",
+      "caption": "Logística de pallets y carga consolidada para empresas.",
+      "category": "Industrial",
+      "size": "small"
+    },
+    {
+      "id": "entrega-urbano",
+      "src": "/gallery/entrega-urbano.svg",
+      "alt": "Repartidor entregando paquete en zona urbana",
+      "caption": "Última milla puerta a puerta en Santiago y alrededores.",
+      "category": "Entregas",
+      "size": "medium"
+    }
+  ]
+}

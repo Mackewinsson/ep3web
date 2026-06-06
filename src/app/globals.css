@@ -54,3 +54,40 @@ body {
     animation: none;
   }
 }
+
+@keyframes gallery-tile-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gallery-lightbox-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.gallery-tile {
+  animation: gallery-tile-enter 0.55s ease-out both;
+}
+
+.gallery-lightbox-enter {
+  animation: gallery-lightbox-enter 0.25s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-tile,
+  .gallery-lightbox-enter {
+    animation: none;
+  }
+}

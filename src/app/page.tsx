@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { GallerySection } from "@/components/GallerySection";
 import { PartnerBrandsSection } from "@/components/PartnerBrandsSection";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import theme from "@/theme.json";
@@ -249,6 +250,9 @@ export default function Home() {
             <a href="#servicios" className="transition hover:text-ep3-yellow">
               Servicios
             </a>
+            <a href="#galeria" className="transition hover:text-ep3-yellow">
+              Galería
+            </a>
             <a href="#resenas" className="transition hover:text-ep3-yellow">
               Reseñas
             </a>
@@ -391,6 +395,9 @@ export default function Home() {
             ))}
           </div>
         </section>
+
+        <GallerySection />
+
         <ReviewsSection />
       </main>
 

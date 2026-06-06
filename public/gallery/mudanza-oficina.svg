@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#e8edf5"/>
+  <rect x="60" y="80" width="680" height="400" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <line x1="60" y1="200" x2="740" y2="200" stroke="#e2e8f0" stroke-width="2"/>
+  <rect x="120" y="240" width="180" height="24" rx="2" fill="#001F54" opacity="0.15"/>
+  <rect x="120" y="280" width="140" height="24" rx="2" fill="#001F54" opacity="0.1"/>
+  <rect x="400" y="260" width="200" height="100" rx="4" fill="#c4863a"/>
+  <rect x="400" y="260" width="200" height="24" fill="rgba(0,0,0,0.15)"/>
+  <rect x="620" y="300" width="80" height="120" rx="3" fill="#001F54"/>
+  <rect x="630" y="320" width="40" height="50" fill="#5a9fd4" opacity="0.5"/>
+  <rect x="300" y="340" width="60" height="80" rx="2" fill="#94a3b8"/>
+  <rect x="200" y="360" width="50" height="60" rx="2" fill="#64748b"/>
+  <rect x="500" y="120" width="120" height="8" fill="#FFCC00"/>
+  <text x="40" y="560" fill="#001F54" font-family="Arial,sans-serif" font-size="22" font-weight="bold">Mudanza oficina</text>
+</svg>
