@@ -2,6 +2,8 @@ import Image from "next/image";
 import { GallerySection } from "@/components/GallerySection";
 import { PartnerBrandsSection } from "@/components/PartnerBrandsSection";
 import { ReviewsSection } from "@/components/ReviewsSection";
+import { SocialMediaSection } from "@/components/SocialMediaSection";
+import { isPhotoGalleryEnabled } from "@/lib/feature-flags";
 import theme from "@/theme.json";
 
 const { navy, yellow, kraft } = theme.colors;
@@ -205,6 +207,8 @@ function PackageBox({
 }
 
 export default function Home() {
+  const showPhotoGallery = isPhotoGalleryEnabled();
+
   const features = [
     {
       title: "Mudanzas para hogar y oficina",
@@ -251,7 +255,7 @@ export default function Home() {
               Servicios
             </a>
             <a href="#galeria" className="transition hover:text-ep3-yellow">
-              Galería
+              {showPhotoGallery ? "Galería" : "Redes"}
             </a>
             <a href="#resenas" className="transition hover:text-ep3-yellow">
               Reseñas
@@ -396,7 +400,7 @@ export default function Home() {
           </div>
         </section>
 
-        <GallerySection />
+        {showPhotoGallery ? <GallerySection /> : <SocialMediaSection />}
 
         <ReviewsSection />
       </main>
