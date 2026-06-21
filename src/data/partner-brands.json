@@ -9,11 +9,6 @@
     { "name": "Red de Apoyo Solidario ONG", "logoUrl": "/partners/red-de-apoyo-solidario.png", "href": "https://www.instagram.com/reddeapoyosolidario" },
     { "name": "Santana Decoración", "logoUrl": "/partners/santana-decoracion.png", "href": "https://www.instagram.com/santanadecoracion" },
     { "name": "Chilezuela", "logoUrl": "/partners/chilezuela.png", "href": "https://www.instagram.com/p/DZbDcbRxzBC/?igsh=Y2U1cGhvM3EzcW5q" },
-    { "name": "Karina Mármol", "logoUrl": "/partners/karina-marmol.png", "href": "https://wa.me/message/YWZN2OBMRO4TC1" },
-    { "name": "Flex Delivery", "logoUrl": "" },
-    { "name": "Cargo Chile", "logoUrl": "" },
-    { "name": "Urban Store", "logoUrl": "" },
-    { "name": "Pack & Go", "logoUrl": "" },
-    { "name": "Distribuidora Sur", "logoUrl": "" }
+    { "name": "Karina Mármol", "logoUrl": "/partners/karina-marmol.png", "href": "https://wa.me/message/YWZN2OBMRO4TC1" }
   ]
 }
