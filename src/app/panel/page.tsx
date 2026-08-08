@@ -1,8 +1,9 @@
-import { and, count, eq, gte, lt, or } from "drizzle-orm";
+import { and, asc, count, eq, gte, isNotNull, lt, or } from "drizzle-orm";
 import Link from "next/link";
+import { PageHeader, PanelCard, StatusBadge } from "@/components/panel/ui";
 import { db } from "@/db";
-import { budgets, jobs, quoteRequests } from "@/db/schema";
-import { PageHeader, PanelCard } from "@/components/panel/ui";
+import { budgets, clients, jobs, quoteRequests } from "@/db/schema";
+import { formatDate, JOB_STATUS_LABELS } from "@/lib/format";
 
 export default async function PanelDashboardPage() {
   const today = new Date();
@@ -11,35 +12,64 @@ export default async function PanelDashboardPage() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = tomorrow.toISOString().slice(0, 10);
 
-  const [[openQuotes], [awaitingBudgets], [needsDriver], [todayJobs]] =
-    await Promise.all([
-      db
-        .select({ value: count() })
-        .from(quoteRequests)
-        .where(
+  const [
+    [openQuotes],
+    [awaitingBudgets],
+    [needsDriver],
+    [todayJobs],
+    upcomingJobs,
+  ] = await Promise.all([
+    db
+      .select({ value: count() })
+      .from(quoteRequests)
+      .where(
+        or(
+          eq(quoteRequests.status, "new"),
+          eq(quoteRequests.status, "in_progress"),
+        ),
+      ),
+    db
+      .select({ value: count() })
+      .from(budgets)
+      .where(eq(budgets.status, "sent")),
+    db
+      .select({ value: count() })
+      .from(jobs)
+      .where(eq(jobs.status, "pending_assignment")),
+    db
+      .select({ value: count() })
+      .from(jobs)
+      .where(
+        and(
+          gte(jobs.scheduledDate, todayStr),
+          lt(jobs.scheduledDate, tomorrowStr),
+        ),
+      ),
+    db
+      .select({
+        id: jobs.id,
+        scheduledDate: jobs.scheduledDate,
+        status: jobs.status,
+        originAddress: jobs.originAddress,
+        destinationAddress: jobs.destinationAddress,
+        clientName: clients.name,
+      })
+      .from(jobs)
+      .innerJoin(clients, eq(jobs.clientId, clients.id))
+      .where(
+        and(
+          isNotNull(jobs.scheduledDate),
+          gte(jobs.scheduledDate, todayStr),
           or(
-            eq(quoteRequests.status, "new"),
-            eq(quoteRequests.status, "in_progress"),
+            eq(jobs.status, "pending_assignment"),
+            eq(jobs.status, "assigned"),
+            eq(jobs.status, "in_progress"),
           ),
         ),
-      db
-        .select({ value: count() })
-        .from(budgets)
-        .where(eq(budgets.status, "sent")),
-      db
-        .select({ value: count() })
-        .from(jobs)
-        .where(eq(jobs.status, "pending_assignment")),
-      db
-        .select({ value: count() })
-        .from(jobs)
-        .where(
-          and(
-            gte(jobs.scheduledDate, todayStr),
-            lt(jobs.scheduledDate, tomorrowStr),
-          ),
-        ),
-    ]);
+      )
+      .orderBy(asc(jobs.scheduledDate))
+      .limit(5),
+  ]);
 
   const cards = [
     {
@@ -55,7 +85,7 @@ export default async function PanelDashboardPage() {
     {
       label: "Sin conductor",
       value: needsDriver.value,
-      href: "/panel/trabajos",
+      href: "/panel/trabajos?estado=pending_assignment",
     },
     {
       label: "Trabajos de hoy",
@@ -65,15 +95,15 @@ export default async function PanelDashboardPage() {
   ];
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Dashboard"
         description="Resumen operativo de mudanzas EP3"
       />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
-          <Link key={card.label} href={card.href}>
-            <PanelCard>
+          <Link key={card.label} href={card.href} className="block">
+            <PanelCard className="panel-card-interactive h-full">
               <p className="text-sm text-ep3-navy/70">{card.label}</p>
               <p className="mt-2 text-3xl font-semibold text-ep3-navy">
                 {card.value}
@@ -82,6 +112,49 @@ export default async function PanelDashboardPage() {
           </Link>
         ))}
       </div>
+
+      <PanelCard>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="font-semibold text-ep3-navy">Próximos trabajos</h2>
+          <Link
+            href="/panel/trabajos"
+            className="text-sm font-medium text-ep3-navy underline"
+          >
+            Ver todos
+          </Link>
+        </div>
+        {upcomingJobs.length === 0 ? (
+          <p className="text-sm text-ep3-navy/60">
+            No hay trabajos programados próximos.
+          </p>
+        ) : (
+          <ul className="divide-y divide-ep3-navy/5">
+            {upcomingJobs.map((job) => (
+              <li key={job.id}>
+                <Link
+                  href={`/panel/trabajos/${job.id}`}
+                  className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium text-ep3-navy">{job.clientName}</p>
+                    <p className="truncate text-sm text-ep3-navy/70">
+                      {job.originAddress} → {job.destinationAddress}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="text-sm text-ep3-navy/70">
+                      {formatDate(job.scheduledDate)}
+                    </span>
+                    <StatusBadge
+                      label={JOB_STATUS_LABELS[job.status] ?? job.status}
+                    />
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </PanelCard>
     </div>
   );
 }

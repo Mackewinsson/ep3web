@@ -1,6 +1,7 @@
 import { asc, desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import {
+  BackLink,
   PageHeader,
   PanelCard,
   SelectField,
@@ -74,10 +75,13 @@ export default async function TrabajoDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader
-        title={`Trabajo · ${job.clientName}`}
-        description={`Programado: ${formatDate(job.scheduledDate)}`}
-      />
+      <div>
+        <BackLink href="/panel/trabajos" label="Volver a trabajos" />
+        <PageHeader
+          title={`Trabajo · ${job.clientName}`}
+          description={`Programado: ${formatDate(job.scheduledDate)}`}
+        />
+      </div>
 
       <PanelCard>
         <div className="mb-3">

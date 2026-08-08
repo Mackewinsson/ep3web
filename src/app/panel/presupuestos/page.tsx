@@ -1,15 +1,14 @@
-import { desc, eq } from "drizzle-orm";
-import Link from "next/link";
 import {
-  DataTable,
   EmptyState,
   PageHeader,
   PanelCard,
   StatusBadge,
 } from "@/components/panel/ui";
+import { RecordList } from "@/components/panel/record-list";
 import { db } from "@/db";
 import { budgets, clients } from "@/db/schema";
 import { BUDGET_STATUS_LABELS, formatClp, formatDate } from "@/lib/format";
+import { desc, eq } from "drizzle-orm";
 
 function budgetTone(
   status: string,
@@ -46,34 +45,25 @@ export default async function PresupuestosPage() {
         {rows.length === 0 ? (
           <EmptyState message="No hay presupuestos." />
         ) : (
-          <DataTable
-            headers={["Título", "Cliente", "Total", "Válido hasta", "Estado", ""]}
-          >
-            {rows.map((row) => (
-              <tr key={row.id} className="border-b border-ep3-navy/5">
-                <td className="px-3 py-2 font-medium text-ep3-navy">
-                  {row.title}
-                </td>
-                <td className="px-3 py-2">{row.clientName}</td>
-                <td className="px-3 py-2">{formatClp(row.totalAmount)}</td>
-                <td className="px-3 py-2">{formatDate(row.validUntil)}</td>
-                <td className="px-3 py-2">
-                  <StatusBadge
-                    label={BUDGET_STATUS_LABELS[row.status] ?? row.status}
-                    tone={budgetTone(row.status)}
-                  />
-                </td>
-                <td className="px-3 py-2 text-right">
-                  <Link
-                    href={`/panel/presupuestos/${row.id}`}
-                    className="text-sm font-medium text-ep3-navy underline"
-                  >
-                    Abrir
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </DataTable>
+          <RecordList
+            emptyMessage="No hay presupuestos."
+            items={rows.map((row) => ({
+              id: row.id,
+              href: `/panel/presupuestos/${row.id}`,
+              title: row.title,
+              badge: (
+                <StatusBadge
+                  label={BUDGET_STATUS_LABELS[row.status] ?? row.status}
+                  tone={budgetTone(row.status)}
+                />
+              ),
+              fields: [
+                { label: "Cliente", value: row.clientName },
+                { label: "Total", value: formatClp(row.totalAmount) },
+                { label: "Válido hasta", value: formatDate(row.validUntil) },
+              ],
+            }))}
+          />
         )}
       </PanelCard>
     </div>

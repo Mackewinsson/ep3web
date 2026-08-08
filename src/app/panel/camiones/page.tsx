@@ -1,14 +1,13 @@
-import { desc } from "drizzle-orm";
-import Link from "next/link";
 import {
-  DataTable,
   EmptyState,
   PageHeader,
   PanelCard,
   StatusBadge,
 } from "@/components/panel/ui";
+import { RecordList } from "@/components/panel/record-list";
 import { db } from "@/db";
 import { trucks } from "@/db/schema";
+import { desc } from "drizzle-orm";
 
 export default async function CamionesPage() {
   const rows = await db.select().from(trucks).orderBy(desc(trucks.createdAt));
@@ -25,31 +24,24 @@ export default async function CamionesPage() {
         {rows.length === 0 ? (
           <EmptyState message="No hay camiones registrados." />
         ) : (
-          <DataTable headers={["Patente", "Nombre", "Capacidad", "Estado", ""]}>
-            {rows.map((row) => (
-              <tr key={row.id} className="border-b border-ep3-navy/5">
-                <td className="px-3 py-2 font-medium text-ep3-navy">
-                  {row.plate}
-                </td>
-                <td className="px-3 py-2">{row.label ?? "—"}</td>
-                <td className="px-3 py-2">{row.capacityNotes ?? "—"}</td>
-                <td className="px-3 py-2">
-                  <StatusBadge
-                    label={row.active ? "Activo" : "Inactivo"}
-                    tone={row.active ? "success" : "default"}
-                  />
-                </td>
-                <td className="px-3 py-2 text-right">
-                  <Link
-                    href={`/panel/camiones/${row.id}`}
-                    className="text-sm font-medium text-ep3-navy underline"
-                  >
-                    Ver
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </DataTable>
+          <RecordList
+            emptyMessage="No hay camiones registrados."
+            items={rows.map((row) => ({
+              id: row.id,
+              href: `/panel/camiones/${row.id}`,
+              title: row.plate,
+              badge: (
+                <StatusBadge
+                  label={row.active ? "Activo" : "Inactivo"}
+                  tone={row.active ? "success" : "default"}
+                />
+              ),
+              fields: [
+                { label: "Nombre", value: row.label ?? "—" },
+                { label: "Capacidad", value: row.capacityNotes ?? "—" },
+              ],
+            }))}
+          />
         )}
       </PanelCard>
     </div>

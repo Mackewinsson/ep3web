@@ -91,3 +91,47 @@ body {
     animation: none;
   }
 }
+
+/* Panel ops — elevated cards against cool canvas */
+.panel-surface {
+  background:
+    radial-gradient(1200px 480px at 0% 0%, rgb(0 31 84 / 0.06), transparent 55%),
+    radial-gradient(900px 420px at 100% 0%, rgb(255 204 0 / 0.08), transparent 50%),
+    #e8edf4;
+}
+
+.panel-card {
+  border-radius: 0.875rem;
+  border: 1px solid rgb(0 31 84 / 0.08);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.9) inset,
+    0 1px 2px rgb(0 31 84 / 0.04),
+    0 8px 20px -6px rgb(0 31 84 / 0.14),
+    0 18px 40px -16px rgb(0 31 84 / 0.12);
+}
+
+.panel-card-interactive {
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.panel-card-interactive:hover {
+  transform: translateY(-2px);
+  border-color: rgb(0 31 84 / 0.16);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.95) inset,
+    0 2px 4px rgb(0 31 84 / 0.05),
+    0 14px 28px -8px rgb(0 31 84 / 0.2),
+    0 28px 48px -18px rgb(0 31 84 / 0.16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-card-interactive,
+  .panel-card-interactive:hover {
+    transition: none;
+    transform: none;
+  }
+}

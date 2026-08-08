@@ -35,6 +35,14 @@ export const jobStatusEnum = pgEnum("job_status", [
   "cancelled",
 ]);
 
+export const pricingUnitEnum = pgEnum("pricing_unit", [
+  "fixed",
+  "m3",
+  "unit",
+]);
+
+export const quoteSourceEnum = pgEnum("quote_source", ["panel", "website"]);
+
 /** Staff accounts for the /panel JWT auth */
 export const staffUsers = pgTable("staff_users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -93,15 +101,46 @@ export const trucks = pgTable("trucks", {
     .notNull(),
 });
 
+/** Catalog packages shown on home + used in quotes/budgets */
+export const servicePackages = pgTable("service_packages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 160 }).notNull(),
+  slug: varchar("slug", { length: 160 }).notNull().unique(),
+  shortDescription: varchar("short_description", { length: 280 }),
+  description: text("description"),
+  pricingType: pricingUnitEnum("pricing_type").default("fixed").notNull(),
+  basePrice: numeric("base_price", { precision: 14, scale: 2 })
+    .default("0")
+    .notNull(),
+  includedM3: numeric("included_m3", { precision: 10, scale: 2 }),
+  includedUnits: integer("included_units"),
+  highlights: text("highlights"),
+  active: boolean("active").default(true).notNull(),
+  showOnHome: boolean("show_on_home").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const quoteRequests = pgTable("quote_requests", {
   id: uuid("id").defaultRandom().primaryKey(),
   clientId: uuid("client_id")
     .notNull()
     .references(() => clients.id, { onDelete: "restrict" }),
+  packageId: uuid("package_id").references(() => servicePackages.id, {
+    onDelete: "set null",
+  }),
   originAddress: text("origin_address").notNull(),
   destinationAddress: text("destination_address").notNull(),
   preferredDate: date("preferred_date"),
   volumeNotes: text("volume_notes"),
+  estimatedM3: numeric("estimated_m3", { precision: 10, scale: 2 }),
+  estimatedItems: integer("estimated_items"),
+  source: quoteSourceEnum("source").default("panel").notNull(),
   status: quoteStatusEnum("status").default("new").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -140,7 +179,11 @@ export const budgetItems = pgTable("budget_items", {
   budgetId: uuid("budget_id")
     .notNull()
     .references(() => budgets.id, { onDelete: "cascade" }),
+  packageId: uuid("package_id").references(() => servicePackages.id, {
+    onDelete: "set null",
+  }),
   description: varchar("description", { length: 300 }).notNull(),
+  pricingUnit: pricingUnitEnum("pricing_unit").default("unit").notNull(),
   quantity: numeric("quantity", { precision: 10, scale: 2 })
     .default("1")
     .notNull(),
@@ -195,10 +238,22 @@ export const clientsRelations = relations(clients, ({ many }) => ({
   jobs: many(jobs),
 }));
 
+export const servicePackagesRelations = relations(
+  servicePackages,
+  ({ many }) => ({
+    quoteRequests: many(quoteRequests),
+    budgetItems: many(budgetItems),
+  }),
+);
+
 export const quoteRequestsRelations = relations(quoteRequests, ({ one }) => ({
   client: one(clients, {
     fields: [quoteRequests.clientId],
     references: [clients.id],
+  }),
+  package: one(servicePackages, {
+    fields: [quoteRequests.packageId],
+    references: [servicePackages.id],
   }),
 }));
 
@@ -218,6 +273,10 @@ export const budgetItemsRelations = relations(budgetItems, ({ one }) => ({
   budget: one(budgets, {
     fields: [budgetItems.budgetId],
     references: [budgets.id],
+  }),
+  package: one(servicePackages, {
+    fields: [budgetItems.packageId],
+    references: [servicePackages.id],
   }),
 }));
 

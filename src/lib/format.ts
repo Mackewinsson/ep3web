@@ -41,3 +41,19 @@ export const JOB_STATUS_LABELS: Record<string, string> = {
   completed: "Completado",
   cancelled: "Cancelado",
 };
+
+export const PRICING_UNIT_LABELS: Record<string, string> = {
+  fixed: "Precio fijo",
+  m3: "Por m³",
+  unit: "Por unidad",
+};
+
+export function slugify(input: string) {
+  return input
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 140);
+}

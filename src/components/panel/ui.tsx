@@ -8,6 +8,9 @@ type PageHeaderProps = {
   actionLabel?: string;
 };
 
+const inputClassName =
+  "w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2.5 text-base text-ep3-navy outline-none focus:border-ep3-navy md:text-sm";
+
 export function PageHeader({
   title,
   description,
@@ -15,9 +18,11 @@ export function PageHeader({
   actionLabel,
 }: PageHeaderProps) {
   return (
-    <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
       <div>
-        <h1 className="text-2xl font-semibold text-ep3-navy">{title}</h1>
+        <h1 className="text-xl font-semibold text-ep3-navy md:text-2xl">
+          {title}
+        </h1>
         {description ? (
           <p className="mt-1 text-sm text-ep3-navy/70">{description}</p>
         ) : null}
@@ -25,7 +30,7 @@ export function PageHeader({
       {actionHref && actionLabel ? (
         <Link
           href={actionHref}
-          className="rounded-md bg-ep3-navy px-4 py-2 text-sm font-medium text-white hover:bg-ep3-navy/90"
+          className="inline-flex w-full items-center justify-center rounded-md bg-ep3-navy px-4 py-2.5 text-sm font-medium text-white hover:bg-ep3-navy/90 sm:w-auto"
         >
           {actionLabel}
         </Link>
@@ -34,11 +39,32 @@ export function PageHeader({
   );
 }
 
-export function PanelCard({ children }: { children: ReactNode }) {
+export function BackLink({
+  href,
+  label = "Volver",
+}: {
+  href: string;
+  label?: string;
+}) {
   return (
-    <div className="rounded-lg border border-ep3-navy/10 bg-white p-4 shadow-sm">
-      {children}
-    </div>
+    <Link
+      href={href}
+      className="mb-4 inline-flex min-h-11 items-center text-sm font-medium text-ep3-navy/70 hover:text-ep3-navy"
+    >
+      ← {label}
+    </Link>
+  );
+}
+
+export function PanelCard({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`panel-card p-4 md:p-5 ${className}`.trim()}>{children}</div>
   );
 }
 
@@ -97,7 +123,7 @@ export function Field({
         defaultValue={defaultValue ?? undefined}
         placeholder={placeholder}
         step={step}
-        className="w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2 text-ep3-navy outline-none focus:border-ep3-navy"
+        className={inputClassName}
       />
     </label>
   );
@@ -124,7 +150,7 @@ export function TextArea({
         rows={rows}
         required={required}
         defaultValue={defaultValue ?? undefined}
-        className="w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2 text-ep3-navy outline-none focus:border-ep3-navy"
+        className={inputClassName}
       />
     </label>
   );
@@ -150,7 +176,7 @@ export function SelectField({
         name={name}
         required={required}
         defaultValue={defaultValue ?? ""}
-        className="w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2 text-ep3-navy outline-none focus:border-ep3-navy"
+        className={inputClassName}
       >
         <option value="" disabled>
           Seleccionar…
@@ -169,7 +195,7 @@ export function SubmitButton({ label }: { label: string }) {
   return (
     <button
       type="submit"
-      className="rounded-md bg-ep3-yellow px-4 py-2 text-sm font-semibold text-ep3-navy hover:brightness-95"
+      className="w-full rounded-md bg-ep3-yellow px-4 py-2.5 text-sm font-semibold text-ep3-navy hover:brightness-95 sm:w-auto"
     >
       {label}
     </button>
@@ -184,7 +210,7 @@ export function DataTable({
   children: ReactNode;
 }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
       <table className="min-w-full text-left text-sm">
         <thead>
           <tr className="border-b border-ep3-navy/10 text-ep3-navy/70">

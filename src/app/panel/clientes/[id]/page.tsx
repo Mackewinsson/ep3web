@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import {
+  BackLink,
   Field,
   PageHeader,
   PanelCard,
@@ -27,6 +28,7 @@ export default async function ClienteDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-xl">
+      <BackLink href="/panel/clientes" label="Volver a clientes" />
       <PageHeader title={client.name} description="Editar cliente" />
       <PanelCard>
         <form action={action} className="space-y-4">

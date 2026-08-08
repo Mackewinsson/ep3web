@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import {
+  BackLink,
   Field,
   PageHeader,
   PanelCard,
@@ -26,6 +27,7 @@ export default async function CamionDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-xl">
+      <BackLink href="/panel/camiones" label="Volver a camiones" />
       <PageHeader title={truck.plate} description="Editar camión" />
       <PanelCard>
         <form action={action} className="space-y-4">

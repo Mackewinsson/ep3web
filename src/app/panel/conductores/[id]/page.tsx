@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import {
+  BackLink,
   Field,
   PageHeader,
   PanelCard,
@@ -26,6 +27,7 @@ export default async function ConductorDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-xl">
+      <BackLink href="/panel/conductores" label="Volver a conductores" />
       <PageHeader title={driver.name} description="Editar conductor" />
       <PanelCard>
         <form action={action} className="space-y-4">

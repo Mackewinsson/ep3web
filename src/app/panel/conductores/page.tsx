@@ -1,14 +1,13 @@
-import { desc } from "drizzle-orm";
-import Link from "next/link";
 import {
-  DataTable,
   EmptyState,
   PageHeader,
   PanelCard,
   StatusBadge,
 } from "@/components/panel/ui";
+import { RecordList } from "@/components/panel/record-list";
 import { db } from "@/db";
 import { drivers } from "@/db/schema";
+import { desc } from "drizzle-orm";
 
 export default async function ConductoresPage() {
   const rows = await db.select().from(drivers).orderBy(desc(drivers.createdAt));
@@ -25,31 +24,24 @@ export default async function ConductoresPage() {
         {rows.length === 0 ? (
           <EmptyState message="No hay conductores registrados." />
         ) : (
-          <DataTable headers={["Nombre", "Email", "Teléfono", "Estado", ""]}>
-            {rows.map((row) => (
-              <tr key={row.id} className="border-b border-ep3-navy/5">
-                <td className="px-3 py-2 font-medium text-ep3-navy">
-                  {row.name}
-                </td>
-                <td className="px-3 py-2">{row.email}</td>
-                <td className="px-3 py-2">{row.phone ?? "—"}</td>
-                <td className="px-3 py-2">
-                  <StatusBadge
-                    label={row.active ? "Activo" : "Inactivo"}
-                    tone={row.active ? "success" : "default"}
-                  />
-                </td>
-                <td className="px-3 py-2 text-right">
-                  <Link
-                    href={`/panel/conductores/${row.id}`}
-                    className="text-sm font-medium text-ep3-navy underline"
-                  >
-                    Ver
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </DataTable>
+          <RecordList
+            emptyMessage="No hay conductores registrados."
+            items={rows.map((row) => ({
+              id: row.id,
+              href: `/panel/conductores/${row.id}`,
+              title: row.name,
+              badge: (
+                <StatusBadge
+                  label={row.active ? "Activo" : "Inactivo"}
+                  tone={row.active ? "success" : "default"}
+                />
+              ),
+              fields: [
+                { label: "Email", value: row.email },
+                { label: "Teléfono", value: row.phone ?? "—" },
+              ],
+            }))}
+          />
         )}
       </PanelCard>
     </div>

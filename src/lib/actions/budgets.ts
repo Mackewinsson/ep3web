@@ -18,6 +18,7 @@ const itemSchema = z.object({
   description: z.string().min(1),
   quantity: z.coerce.number().positive(),
   unitPrice: z.coerce.number().min(0),
+  pricingUnit: z.enum(["fixed", "m3", "unit"]).default("unit"),
 });
 
 function calcTotal(
@@ -77,21 +78,7 @@ export async function updateBudgetMeta(budgetId: string, formData: FormData) {
   redirect(`/panel/presupuestos/${budgetId}`);
 }
 
-export async function addBudgetItem(budgetId: string, formData: FormData) {
-  await requireStaff();
-  const item = itemSchema.parse({
-    description: formData.get("description"),
-    quantity: formData.get("quantity"),
-    unitPrice: formData.get("unitPrice"),
-  });
-
-  await db.insert(budgetItems).values({
-    budgetId,
-    description: item.description,
-    quantity: String(item.quantity),
-    unitPrice: String(item.unitPrice),
-  });
-
+async function recalcBudgetTotal(budgetId: string) {
   const items = await db
     .select()
     .from(budgetItems)
@@ -109,9 +96,88 @@ export async function addBudgetItem(budgetId: string, formData: FormData) {
       updatedAt: new Date(),
     })
     .where(eq(budgets.id, budgetId));
+}
+
+export async function addBudgetItem(budgetId: string, formData: FormData) {
+  await requireStaff();
+  const item = itemSchema.parse({
+    description: formData.get("description"),
+    quantity: formData.get("quantity"),
+    unitPrice: formData.get("unitPrice"),
+    pricingUnit: formData.get("pricingUnit") || "unit",
+  });
+
+  const quantity = item.pricingUnit === "fixed" ? 1 : item.quantity;
+
+  await db.insert(budgetItems).values({
+    budgetId,
+    description: item.description,
+    pricingUnit: item.pricingUnit,
+    quantity: String(quantity),
+    unitPrice: String(item.unitPrice),
+  });
+
+  await recalcBudgetTotal(budgetId);
 
   revalidatePath(`/panel/presupuestos/${budgetId}`);
   redirect(`/panel/presupuestos/${budgetId}`);
+}
+
+export async function updateBudgetItem(itemId: string, formData: FormData) {
+  await requireStaff();
+  const item = itemSchema.parse({
+    description: formData.get("description"),
+    quantity: formData.get("quantity"),
+    unitPrice: formData.get("unitPrice"),
+    pricingUnit: formData.get("pricingUnit") || "unit",
+  });
+
+  const [existing] = await db
+    .select()
+    .from(budgetItems)
+    .where(eq(budgetItems.id, itemId))
+    .limit(1);
+
+  if (!existing) {
+    throw new Error("Ítem no encontrado");
+  }
+
+  const quantity = item.pricingUnit === "fixed" ? 1 : item.quantity;
+
+  await db
+    .update(budgetItems)
+    .set({
+      description: item.description,
+      pricingUnit: item.pricingUnit,
+      quantity: String(quantity),
+      unitPrice: String(item.unitPrice),
+    })
+    .where(eq(budgetItems.id, itemId));
+
+  await recalcBudgetTotal(existing.budgetId);
+
+  revalidatePath(`/panel/presupuestos/${existing.budgetId}`);
+  redirect(`/panel/presupuestos/${existing.budgetId}`);
+}
+
+export async function deleteBudgetItem(itemId: string) {
+  await requireStaff();
+
+  const [existing] = await db
+    .select()
+    .from(budgetItems)
+    .where(eq(budgetItems.id, itemId))
+    .limit(1);
+
+  if (!existing) {
+    throw new Error("Ítem no encontrado");
+  }
+
+  await db.delete(budgetItems).where(eq(budgetItems.id, itemId));
+  await recalcBudgetTotal(existing.budgetId);
+
+  revalidatePath(`/panel/presupuestos/${existing.budgetId}`);
+  redirect(`/panel/presupuestos/${existing.budgetId}`);
 }
 
 export async function setBudgetStatus(
