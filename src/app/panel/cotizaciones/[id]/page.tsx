@@ -56,7 +56,7 @@ export default async function CotizacionDetailPage({ params }: Props) {
         <BackLink href="/panel/cotizaciones" label="Volver a cotizaciones" />
         <PageHeader
           title="Detalle de cotización"
-          description={`Origen: ${quote.source === "website" ? "Web" : "Panel"}`}
+          description={`Origen: ${quote.source === "website" ? "Sitio web" : "Panel"}`}
         />
       </div>
 

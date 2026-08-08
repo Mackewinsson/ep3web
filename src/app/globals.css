@@ -92,7 +92,7 @@ body {
   }
 }
 
-/* Panel ops — elevated cards against cool canvas */
+/* Panel operativo — tarjetas elevadas sobre fondo frío */
 .panel-surface {
   background:
     radial-gradient(1200px 480px at 0% 0%, rgb(0 31 84 / 0.06), transparent 55%),

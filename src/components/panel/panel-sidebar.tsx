@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import type { StaffRole } from "@/lib/auth/constants";
 
 const ADMIN_NAV = [
-  { href: "/panel", label: "Dashboard" },
+  { href: "/panel", label: "Inicio" },
   { href: "/panel/cotizaciones", label: "Cotizaciones" },
   { href: "/panel/presupuestos", label: "Presupuestos" },
   { href: "/panel/trabajos", label: "Trabajos" },
@@ -63,7 +63,7 @@ function SidebarBrand({ role }: { role: StaffRole }) {
         Transportes EP3
       </p>
       <p className="mt-1 text-lg font-semibold">
-        {role === "driver" ? "Mis viajes" : "Panel ops"}
+        {role === "driver" ? "Mis viajes" : "Panel operativo"}
       </p>
     </div>
   );
@@ -133,7 +133,7 @@ export function PanelShell({
                 Transportes EP3
               </p>
               <p className="mt-1 text-lg font-semibold">
-                {role === "driver" ? "Mis viajes" : "Panel ops"}
+                {role === "driver" ? "Mis viajes" : "Panel operativo"}
               </p>
               <button
                 type="button"

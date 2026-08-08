@@ -33,7 +33,11 @@ export default async function PaqueteDetailPage({ params }: Props) {
       <PanelCard>
         <form action={action} className="space-y-4">
           <Field label="Nombre" name="name" required defaultValue={pkg.name} />
-          <Field label="Slug (URL)" name="slug" defaultValue={pkg.slug} />
+          <Field
+            label="Identificador web"
+            name="slug"
+            defaultValue={pkg.slug}
+          />
           <Field
             label="Resumen corto"
             name="shortDescription"
@@ -99,7 +103,7 @@ export default async function PaqueteDetailPage({ params }: Props) {
               name="showOnHome"
               defaultChecked={pkg.showOnHome}
             />
-            Mostrar en la home
+            Mostrar en el sitio web
           </label>
           <SubmitButton label="Guardar cambios" />
         </form>

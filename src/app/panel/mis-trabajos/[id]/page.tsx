@@ -78,7 +78,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 {job.originAddress}
               </p>
               <p className="mt-2 text-sm font-semibold text-ep3-navy underline">
-                Abrir en Maps
+                Abrir en el mapa
               </p>
             </a>
             <a
@@ -94,7 +94,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 {job.destinationAddress}
               </p>
               <p className="mt-2 text-sm font-semibold text-ep3-navy underline">
-                Abrir en Maps
+                Abrir en el mapa
               </p>
             </a>
           </div>

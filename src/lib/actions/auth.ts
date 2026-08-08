@@ -35,7 +35,7 @@ export async function loginAction(
   });
 
   if (!parsed.success) {
-    return { error: "Email o contraseña inválidos" };
+    return { error: "Correo o contraseña inválidos" };
   }
 
   const [user] = await db

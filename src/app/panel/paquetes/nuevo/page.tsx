@@ -19,7 +19,7 @@ export default function NuevoPaquetePage() {
         <form action={createPackage} className="space-y-4">
           <Field label="Nombre" name="name" required placeholder="Mudanza 1 dormitorio" />
           <Field
-            label="Slug (URL)"
+            label="Identificador web"
             name="slug"
             placeholder="Se genera solo si lo dejas vacío"
           />
@@ -72,7 +72,7 @@ export default function NuevoPaquetePage() {
           </label>
           <label className="flex items-center gap-2 text-sm text-ep3-navy">
             <input type="checkbox" name="showOnHome" defaultChecked />
-            Mostrar en la home
+            Mostrar en el sitio web
           </label>
           <SubmitButton label="Guardar paquete" />
         </form>

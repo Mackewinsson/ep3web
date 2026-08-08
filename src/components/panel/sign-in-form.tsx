@@ -16,7 +16,7 @@ export function SignInForm() {
         </p>
       ) : null}
       <label className="block text-sm">
-        <span className="mb-1 block font-medium text-ep3-navy">Email</span>
+        <span className="mb-1 block font-medium text-ep3-navy">Correo</span>
         <input
           name="email"
           type="email"

@@ -35,7 +35,7 @@ export default async function ClienteDetailPage({ params }: Props) {
           <Field label="Nombre" name="name" required defaultValue={client.name} />
           <Field label="Teléfono" name="phone" defaultValue={client.phone} />
           <Field
-            label="Email"
+            label="Correo"
             name="email"
             type="email"
             defaultValue={client.email}

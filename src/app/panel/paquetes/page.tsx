@@ -22,7 +22,7 @@ export default async function PaquetesPage() {
     <div>
       <PageHeader
         title="Paquetes"
-        description="Paquetes de mudanza que se muestran en la web y se usan en presupuestos"
+        description="Paquetes de mudanza que se muestran en el sitio y se usan en presupuestos"
         actionHref="/panel/paquetes/nuevo"
         actionLabel="Nuevo paquete"
       />
@@ -49,7 +49,7 @@ export default async function PaquetesPage() {
                 },
                 { label: "Precio base", value: formatClp(row.basePrice) },
                 {
-                  label: "Home",
+                  label: "En el sitio",
                   value: (
                     <StatusBadge
                       label={row.showOnHome ? "Sí" : "No"}

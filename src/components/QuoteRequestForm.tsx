@@ -90,7 +90,7 @@ export function QuoteRequestForm({
         </label>
         <label className="block text-sm sm:col-span-2">
           <span className="mb-1 block font-medium text-slate-800">
-            Email (opcional)
+            Correo (opcional)
           </span>
           <input
             name="email"

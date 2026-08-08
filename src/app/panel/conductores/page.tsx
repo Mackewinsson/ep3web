@@ -53,10 +53,10 @@ export default async function ConductoresPage() {
                   />
                 ),
                 fields: [
-                  { label: "Email", value: row.email },
+                  { label: "Correo", value: row.email },
                   { label: "Teléfono", value: row.phone ?? "—" },
                   {
-                    label: "App",
+                    label: "Acceso",
                     value: (
                       <StatusBadge
                         label={appActive ? "Con acceso" : "Sin acceso"}

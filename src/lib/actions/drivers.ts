@@ -58,7 +58,7 @@ async function syncDriverLogin(
   const password = data.appPassword?.trim();
   if (!existingLogin && (!password || password.length < 6)) {
     throw new Error(
-      "Para activar el acceso app indica una contraseña de al menos 6 caracteres.",
+      "Para activar el acceso de camionero indica una contraseña de al menos 6 caracteres.",
     );
   }
 
@@ -93,7 +93,7 @@ async function syncDriverLogin(
     .limit(1);
 
   if (emailTaken && emailTaken.driverId !== driverId) {
-    throw new Error("Ese email ya tiene una cuenta de acceso.");
+    throw new Error("Ese correo ya tiene una cuenta de acceso.");
   }
 
   const passwordHash = await bcrypt.hash(password!, 12);

@@ -14,7 +14,7 @@ export default function NuevoConductorPage() {
       <PanelCard>
         <form action={createDriver} className="space-y-4">
           <Field label="Nombre" name="name" required />
-          <Field label="Email" name="email" type="email" required />
+          <Field label="Correo" name="email" type="email" required />
           <Field label="Teléfono" name="phone" />
           <TextArea label="Licencia / notas" name="licenseNotes" />
           <label className="flex items-center gap-2 text-sm text-ep3-navy">
@@ -25,14 +25,14 @@ export default function NuevoConductorPage() {
           <div className="rounded-md border border-dashed border-ep3-navy/20 p-3 space-y-3">
             <label className="flex items-center gap-2 text-sm font-medium text-ep3-navy">
               <input type="checkbox" name="enableAppAccess" />
-              Activar acceso app (camionero)
+              Activar acceso de camionero
             </label>
             <p className="text-xs text-ep3-navy/60">
-              Usa el mismo email para entrar en /sign-in. Solo verá sus trabajos
+              Usa el mismo correo para entrar en /sign-in. Solo verá sus trabajos
               asignados.
             </p>
             <Field
-              label="Contraseña app"
+              label="Contraseña de acceso"
               name="appPassword"
               type="password"
               placeholder="Mínimo 6 caracteres"

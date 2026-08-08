@@ -15,7 +15,7 @@ export default function NuevoClientePage() {
         <form action={createClient} className="space-y-4">
           <Field label="Nombre" name="name" required />
           <Field label="Teléfono" name="phone" />
-          <Field label="Email" name="email" type="email" />
+          <Field label="Correo" name="email" type="email" />
           <TextArea label="Notas" name="notes" />
           <SubmitButton label="Guardar cliente" />
         </form>

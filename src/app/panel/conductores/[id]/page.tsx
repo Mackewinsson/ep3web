@@ -47,14 +47,14 @@ export default async function ConductorDetailPage({ params }: Props) {
       <PanelCard>
         <div className="mb-4">
           <StatusBadge
-            label={hasAppAccess ? "Tiene acceso app" : "Sin acceso app"}
+            label={hasAppAccess ? "Tiene acceso" : "Sin acceso"}
             tone={hasAppAccess ? "success" : "muted"}
           />
         </div>
         <form action={action} className="space-y-4">
           <Field label="Nombre" name="name" required defaultValue={driver.name} />
           <Field
-            label="Email"
+            label="Correo"
             name="email"
             type="email"
             required
@@ -82,7 +82,7 @@ export default async function ConductorDetailPage({ params }: Props) {
                 name="enableAppAccess"
                 defaultChecked={hasAppAccess}
               />
-              Acceso app (camionero)
+              Acceso de camionero
             </label>
             <p className="text-xs text-ep3-navy/60">
               {hasAppAccess
@@ -90,7 +90,7 @@ export default async function ConductorDetailPage({ params }: Props) {
                 : "Marca la casilla e indica una contraseña para que pueda entrar."}
             </p>
             <Field
-              label={hasAppAccess ? "Nueva contraseña (opcional)" : "Contraseña app"}
+              label={hasAppAccess ? "Nueva contraseña (opcional)" : "Contraseña de acceso"}
               name="appPassword"
               type="password"
               placeholder="Mínimo 6 caracteres"

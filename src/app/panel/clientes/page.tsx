@@ -32,7 +32,7 @@ export default async function ClientesPage() {
               title: row.name,
               fields: [
                 { label: "Teléfono", value: row.phone ?? "—" },
-                { label: "Email", value: row.email ?? "—" },
+                { label: "Correo", value: row.email ?? "—" },
               ],
             }))}
           />

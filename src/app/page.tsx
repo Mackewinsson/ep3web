@@ -228,22 +228,22 @@ export default async function Home({
     {
       title: "Mudanzas para hogar y oficina",
       description:
-        "Traslados completos dentro de Santiago y hacia regiones, con equipo capacitado para manipular muebles, electrodomesticos y cajas fragiles.",
+        "Traslados completos dentro de Santiago y hacia regiones, con equipo capacitado para manipular muebles, electrodomésticos y cajas frágiles.",
     },
     {
-      title: "Fletes express el mismo dia",
+      title: "Fletes express el mismo día",
       description:
-        "Servicio rapido para envios urgentes dentro de la Region Metropolitana, con confirmacion y seguimiento por WhatsApp.",
+        "Servicio rápido para envíos urgentes dentro de la Región Metropolitana, con confirmación y seguimiento por WhatsApp.",
     },
     {
       title: "Transporte de carga a todo Chile",
       description:
-        "Coordinamos rutas interurbanas para mercaderia, pallets y carga consolidada con tiempos de entrega claros desde el inicio.",
+        "Coordinamos rutas interurbanas para mercadería, pallets y carga consolidada con tiempos de entrega claros desde el inicio.",
     },
     {
-      title: "Entregas de paquetes ecommerce - Flex - Ventas web",
+      title: "Entregas de paquetes, Flex y ventas web",
       description:
-        "Retiramos tus paquetes y los entregamos en tiempo record, con seguimiento y atencion personalizada para que tus clientes reciban sus compras de forma eficiente y confiable.",
+        "Retiramos tus paquetes y los entregamos en tiempo récord, con seguimiento y atención personalizada para que tus clientes reciban sus compras de forma eficiente y confiable.",
     },
   ];
 
@@ -444,8 +444,8 @@ export default async function Home({
               Soluciones de transporte para cada necesidad
             </h2>
             <p className="mt-3 text-slate-600">
-              Desde mudanzas completas hasta envios puntuales, operamos con
-              protocolos de seguridad y coordinacion en tiempo real.
+              Desde mudanzas completas hasta envíos puntuales, operamos con
+              protocolos de seguridad y coordinación en tiempo real.
             </p>
           </div>
           <div className="grid gap-5 md:grid-cols-2">

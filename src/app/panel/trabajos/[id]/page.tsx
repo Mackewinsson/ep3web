@@ -103,7 +103,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
           </div>
           {job.clientEmail ? (
             <div className="sm:col-span-2">
-              <dt className="text-ep3-navy/60">Email</dt>
+              <dt className="text-ep3-navy/60">Correo</dt>
               <dd className="text-ep3-navy">{job.clientEmail}</dd>
             </div>
           ) : null}
@@ -239,8 +239,8 @@ export default async function TrabajoDetailPage({ params }: Props) {
                 <p className="mt-1 text-xs text-ep3-navy/60">
                   Asignado {formatDate(a.assignedAt)}
                   {a.emailSentAt
-                    ? " · Email enviado"
-                    : " · Email pendiente (Resend después)"}
+                    ? " · Correo enviado"
+                    : " · Correo pendiente"}
                 </p>
               </li>
             ))}

@@ -123,7 +123,7 @@ export default async function PanelDashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Dashboard"
+        title="Inicio"
         description="Resumen operativo de mudanzas EP3"
       />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">

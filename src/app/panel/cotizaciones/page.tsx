@@ -44,7 +44,7 @@ export default async function CotizacionesPage() {
     <div>
       <PageHeader
         title="Cotizaciones"
-        description="Solicitudes de presupuesto (web y panel)"
+        description="Solicitudes de presupuesto (sitio web y panel)"
         actionHref="/panel/cotizaciones/nueva"
         actionLabel="Nueva cotización"
       />
@@ -77,7 +77,7 @@ export default async function CotizacionesPage() {
                 { label: "Volumen", value: volume(row) },
                 {
                   label: "Origen",
-                  value: row.source === "website" ? "Web" : "Panel",
+                  value: row.source === "website" ? "Sitio web" : "Panel",
                 },
               ],
             }))}
