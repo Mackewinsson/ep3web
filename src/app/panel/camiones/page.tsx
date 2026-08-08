@@ -33,7 +33,7 @@ export default async function CamionesPage() {
               badge: (
                 <StatusBadge
                   label={row.active ? "Activo" : "Inactivo"}
-                  tone={row.active ? "success" : "default"}
+                  tone={row.active ? "success" : "muted"}
                 />
               ),
               fields: [

@@ -7,17 +7,8 @@ import {
 import { RecordList } from "@/components/panel/record-list";
 import { db } from "@/db";
 import { budgets, clients } from "@/db/schema";
-import { BUDGET_STATUS_LABELS, formatClp, formatDate } from "@/lib/format";
+import { BUDGET_STATUS_LABELS, budgetStatusTone, formatClp, formatDate } from "@/lib/format";
 import { desc, eq } from "drizzle-orm";
-
-function budgetTone(
-  status: string,
-): "default" | "success" | "warning" | "danger" {
-  if (status === "approved") return "success";
-  if (status === "sent") return "warning";
-  if (status === "rejected" || status === "expired") return "danger";
-  return "default";
-}
 
 export default async function PresupuestosPage() {
   const rows = await db
@@ -54,7 +45,7 @@ export default async function PresupuestosPage() {
               badge: (
                 <StatusBadge
                   label={BUDGET_STATUS_LABELS[row.status] ?? row.status}
-                  tone={budgetTone(row.status)}
+                  tone={budgetStatusTone(row.status)}
                 />
               ),
               fields: [

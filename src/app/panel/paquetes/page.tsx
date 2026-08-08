@@ -39,7 +39,7 @@ export default async function PaquetesPage() {
               badge: (
                 <StatusBadge
                   label={row.active ? "Activo" : "Inactivo"}
-                  tone={row.active ? "success" : "default"}
+                  tone={row.active ? "success" : "muted"}
                 />
               ),
               fields: [
@@ -53,7 +53,7 @@ export default async function PaquetesPage() {
                   value: (
                     <StatusBadge
                       label={row.showOnHome ? "Sí" : "No"}
-                      tone={row.showOnHome ? "success" : "default"}
+                      tone={row.showOnHome ? "success" : "muted"}
                     />
                   ),
                 },

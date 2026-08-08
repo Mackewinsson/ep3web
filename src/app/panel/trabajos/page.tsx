@@ -9,16 +9,7 @@ import {
 import { RecordList } from "@/components/panel/record-list";
 import { db } from "@/db";
 import { clients, jobs } from "@/db/schema";
-import { formatDate, JOB_STATUS_LABELS } from "@/lib/format";
-
-function jobTone(
-  status: string,
-): "default" | "success" | "warning" | "danger" {
-  if (status === "completed") return "success";
-  if (status === "pending_assignment") return "warning";
-  if (status === "cancelled") return "danger";
-  return "default";
-}
+import { formatDate, JOB_STATUS_LABELS, jobStatusTone } from "@/lib/format";
 
 const FILTERS = [
   { value: "", label: "Todos" },
@@ -108,7 +99,7 @@ export default async function TrabajosPage({ searchParams }: Props) {
               badge: (
                 <StatusBadge
                   label={JOB_STATUS_LABELS[row.status] ?? row.status}
-                  tone={jobTone(row.status)}
+                  tone={jobStatusTone(row.status)}
                 />
               ),
               fields: [

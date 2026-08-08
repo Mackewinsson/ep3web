@@ -10,6 +10,7 @@ import { requireDriver } from "@/lib/auth";
 import {
   DRIVER_JOB_STATUS_LABELS,
   formatDate,
+  jobStatusTone,
 } from "@/lib/format";
 import {
   assertDriverOwnsJob,
@@ -48,6 +49,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
       <PanelCard>
         <StatusBadge
           label={DRIVER_JOB_STATUS_LABELS[job.status] ?? job.status}
+          tone={jobStatusTone(job.status)}
         />
 
         <div className="mt-4 space-y-4">

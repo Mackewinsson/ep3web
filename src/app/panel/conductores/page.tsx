@@ -49,7 +49,7 @@ export default async function ConductoresPage() {
                 badge: (
                   <StatusBadge
                     label={row.active ? "Activo" : "Inactivo"}
-                    tone={row.active ? "success" : "default"}
+                    tone={row.active ? "success" : "muted"}
                   />
                 ),
                 fields: [
@@ -60,7 +60,7 @@ export default async function ConductoresPage() {
                     value: (
                       <StatusBadge
                         label={appActive ? "Con acceso" : "Sin acceso"}
-                        tone={appActive ? "success" : "default"}
+                        tone={appActive ? "success" : "muted"}
                       />
                     ),
                   },

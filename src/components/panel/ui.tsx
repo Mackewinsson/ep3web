@@ -79,17 +79,27 @@ export function StatusBadge({
   tone = "default",
 }: {
   label: string;
-  tone?: "default" | "success" | "warning" | "danger";
+  tone?:
+    | "default"
+    | "info"
+    | "accent"
+    | "success"
+    | "warning"
+    | "danger"
+    | "muted";
 }) {
   const tones = {
-    default: "bg-ep3-navy/10 text-ep3-navy",
-    success: "bg-emerald-100 text-emerald-800",
-    warning: "bg-amber-100 text-amber-900",
-    danger: "bg-red-100 text-red-800",
+    default: "bg-ep3-navy/10 text-ep3-navy ring-ep3-navy/15",
+    info: "bg-sky-100 text-sky-900 ring-sky-200",
+    accent: "bg-ep3-yellow text-ep3-navy ring-ep3-navy/20",
+    success: "bg-emerald-100 text-emerald-900 ring-emerald-200",
+    warning: "bg-amber-100 text-amber-950 ring-amber-300",
+    danger: "bg-red-100 text-red-900 ring-red-200",
+    muted: "bg-slate-200 text-slate-700 ring-slate-300",
   };
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${tones[tone]}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide ring-1 ring-inset ${tones[tone]}`}
     >
       {label}
     </span>

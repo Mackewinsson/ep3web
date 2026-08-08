@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageHeader, PanelCard, StatusBadge } from "@/components/panel/ui";
 import { db } from "@/db";
 import { budgets, clients, jobs, quoteRequests } from "@/db/schema";
-import { formatDate, JOB_STATUS_LABELS } from "@/lib/format";
+import { formatDate, JOB_STATUS_LABELS, jobStatusTone } from "@/lib/format";
 
 export default async function PanelDashboardPage() {
   const today = new Date();
@@ -215,6 +215,7 @@ export default async function PanelDashboardPage() {
                     </span>
                     <StatusBadge
                       label={JOB_STATUS_LABELS[job.status] ?? job.status}
+                      tone={jobStatusTone(job.status)}
                     />
                   </div>
                 </Link>

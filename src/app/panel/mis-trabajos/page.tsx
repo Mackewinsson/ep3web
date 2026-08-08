@@ -9,18 +9,9 @@ import { requireDriver } from "@/lib/auth";
 import {
   DRIVER_JOB_STATUS_LABELS,
   formatDate,
+  jobStatusTone,
 } from "@/lib/format";
 import { getDriverAssignedJobs } from "@/lib/jobs-view";
-
-function jobTone(
-  status: string,
-): "default" | "success" | "warning" | "danger" {
-  if (status === "completed") return "success";
-  if (status === "assigned") return "warning";
-  if (status === "in_progress") return "default";
-  if (status === "cancelled") return "danger";
-  return "default";
-}
 
 export default async function MisTrabajosPage() {
   const session = await requireDriver();
@@ -64,7 +55,7 @@ export default async function MisTrabajosPage() {
                     DRIVER_JOB_STATUS_LABELS[row.status] ??
                     row.status
                   }
-                  tone={jobTone(row.status)}
+                  tone={jobStatusTone(row.status)}
                 />
               ),
               fields: [

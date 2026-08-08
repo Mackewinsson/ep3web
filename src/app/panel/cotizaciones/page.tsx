@@ -7,7 +7,7 @@ import {
 import { RecordList } from "@/components/panel/record-list";
 import { db } from "@/db";
 import { clients, quoteRequests, servicePackages } from "@/db/schema";
-import { QUOTE_STATUS_LABELS } from "@/lib/format";
+import { QUOTE_STATUS_LABELS, quoteStatusTone } from "@/lib/format";
 import { desc, eq } from "drizzle-orm";
 
 export default async function CotizacionesPage() {
@@ -61,6 +61,7 @@ export default async function CotizacionesPage() {
               badge: (
                 <StatusBadge
                   label={QUOTE_STATUS_LABELS[row.status] ?? row.status}
+                  tone={quoteStatusTone(row.status)}
                 />
               ),
               fields: [

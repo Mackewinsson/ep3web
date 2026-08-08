@@ -49,6 +49,63 @@ export const DRIVER_JOB_STATUS_LABELS: Record<string, string> = {
   cancelled: "Cancelado",
 };
 
+export type StatusTone =
+  | "default"
+  | "info"
+  | "accent"
+  | "success"
+  | "warning"
+  | "danger"
+  | "muted";
+
+export function jobStatusTone(status: string): StatusTone {
+  switch (status) {
+    case "pending_assignment":
+      return "warning";
+    case "assigned":
+      return "info";
+    case "in_progress":
+      return "accent";
+    case "completed":
+      return "success";
+    case "cancelled":
+      return "danger";
+    default:
+      return "default";
+  }
+}
+
+export function quoteStatusTone(status: string): StatusTone {
+  switch (status) {
+    case "new":
+      return "accent";
+    case "in_progress":
+      return "info";
+    case "converted":
+      return "success";
+    case "closed":
+      return "muted";
+    default:
+      return "default";
+  }
+}
+
+export function budgetStatusTone(status: string): StatusTone {
+  switch (status) {
+    case "draft":
+      return "muted";
+    case "sent":
+      return "warning";
+    case "approved":
+      return "success";
+    case "rejected":
+    case "expired":
+      return "danger";
+    default:
+      return "default";
+  }
+}
+
 export const PRICING_UNIT_LABELS: Record<string, string> = {
   fixed: "Precio fijo",
   m3: "Por m³",

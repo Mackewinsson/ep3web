@@ -22,6 +22,7 @@ import {
 } from "@/lib/actions/budgets";
 import {
   BUDGET_STATUS_LABELS,
+  budgetStatusTone,
   formatClp,
   PRICING_UNIT_LABELS,
 } from "@/lib/format";
@@ -74,6 +75,7 @@ export default async function PresupuestoDetailPage({ params }: Props) {
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <StatusBadge
             label={BUDGET_STATUS_LABELS[budget.status] ?? budget.status}
+            tone={budgetStatusTone(budget.status)}
           />
           <p className="text-lg font-semibold text-ep3-navy">
             Total: {formatClp(budget.totalAmount)}

@@ -18,7 +18,7 @@ import {
   setQuoteStatus,
   updateQuoteRequest,
 } from "@/lib/actions/quotes";
-import { QUOTE_STATUS_LABELS } from "@/lib/format";
+import { QUOTE_STATUS_LABELS, quoteStatusTone } from "@/lib/format";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -64,6 +64,7 @@ export default async function CotizacionDetailPage({ params }: Props) {
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <StatusBadge
             label={QUOTE_STATUS_LABELS[quote.status] ?? quote.status}
+            tone={quoteStatusTone(quote.status)}
           />
         </div>
         <div className="flex flex-wrap gap-2">

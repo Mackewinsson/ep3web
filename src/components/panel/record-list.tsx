@@ -1,5 +1,7 @@
-import Link from "next/link";
-import type { ReactNode } from "react";
+"use client";
+
+import { useRouter } from "next/navigation";
+import type { KeyboardEvent, ReactNode } from "react";
 import { EmptyState } from "@/components/panel/ui";
 
 export type RecordItem = {
@@ -10,6 +12,133 @@ export type RecordItem = {
   badge?: ReactNode;
   action?: ReactNode;
 };
+
+function useNavigate(href?: string) {
+  const router = useRouter();
+  if (!href) {
+    return {
+      clickable: false as const,
+      onClick: undefined,
+      onKeyDown: undefined,
+    };
+  }
+  return {
+    clickable: true as const,
+    onClick: () => router.push(href),
+    onKeyDown: (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        router.push(href);
+      }
+    },
+  };
+}
+
+function CardBody({ item }: { item: RecordItem }) {
+  return (
+    <>
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-medium text-ep3-navy">{item.title}</p>
+        {item.badge}
+      </div>
+      <dl className="mt-3 space-y-1.5">
+        {item.fields.map((field) => (
+          <div
+            key={field.label}
+            className="flex justify-between gap-3 text-sm"
+          >
+            <dt className="shrink-0 text-ep3-navy/55">{field.label}</dt>
+            <dd className="min-w-0 text-right text-ep3-navy/85">
+              {field.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </>
+  );
+}
+
+function MobileCard({ item }: { item: RecordItem }) {
+  const nav = useNavigate(item.href);
+
+  return (
+    <li
+      className={`rounded-lg border border-ep3-navy/10 bg-white/80 transition ${
+        nav.clickable
+          ? "cursor-pointer hover:border-ep3-navy/25 hover:bg-white hover:shadow-sm active:scale-[0.99]"
+          : ""
+      }`}
+    >
+      <div
+        role={nav.clickable ? "link" : undefined}
+        tabIndex={nav.clickable ? 0 : undefined}
+        onClick={nav.onClick}
+        onKeyDown={nav.onKeyDown}
+        className="p-4 outline-none focus-visible:ring-2 focus-visible:ring-ep3-navy/30"
+        aria-label={nav.clickable ? `Abrir ${item.title}` : undefined}
+      >
+        <CardBody item={item} />
+      </div>
+      {item.action ? (
+        <div
+          className="border-t border-ep3-navy/5 px-4 py-3"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          {item.action}
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
+function DesktopRow({
+  item,
+  headers,
+}: {
+  item: RecordItem;
+  headers: string[];
+}) {
+  const nav = useNavigate(item.href);
+
+  return (
+    <tr
+      role={nav.clickable ? "link" : undefined}
+      tabIndex={nav.clickable ? 0 : undefined}
+      onClick={nav.onClick}
+      onKeyDown={nav.onKeyDown}
+      aria-label={nav.clickable ? `Abrir ${item.title}` : undefined}
+      className={`border-b border-ep3-navy/5 outline-none focus-visible:bg-ep3-navy/[0.04] ${
+        nav.clickable
+          ? "cursor-pointer hover:bg-ep3-navy/[0.04]"
+          : ""
+      }`}
+    >
+      <td className="px-3 py-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-medium text-ep3-navy">{item.title}</span>
+          {item.badge}
+        </div>
+      </td>
+      {headers.map((label) => {
+        const field = item.fields.find((f) => f.label === label);
+        return (
+          <td key={label} className="px-3 py-2 text-ep3-navy/80">
+            {field?.value}
+          </td>
+        );
+      })}
+      <td
+        className="px-3 py-2 text-right"
+        onClick={(e) => {
+          if (item.action) e.stopPropagation();
+        }}
+      >
+        {item.action ?? null}
+      </td>
+    </tr>
+  );
+}
 
 export function RecordList({
   items,
@@ -28,42 +157,7 @@ export function RecordList({
     <>
       <ul className="space-y-3 md:hidden">
         {items.map((item) => (
-          <li
-            key={item.id}
-            className="rounded-lg border border-ep3-navy/10 bg-white/80 p-4"
-          >
-            <div className="flex items-start justify-between gap-2">
-              {item.href ? (
-                <Link
-                  href={item.href}
-                  className="font-medium text-ep3-navy hover:underline"
-                >
-                  {item.title}
-                </Link>
-              ) : (
-                <p className="font-medium text-ep3-navy">{item.title}</p>
-              )}
-              {item.badge}
-            </div>
-            <dl className="mt-3 space-y-1.5">
-              {item.fields.map((field) => (
-                <div
-                  key={field.label}
-                  className="flex justify-between gap-3 text-sm"
-                >
-                  <dt className="shrink-0 text-ep3-navy/55">{field.label}</dt>
-                  <dd className="min-w-0 text-right text-ep3-navy/85">
-                    {field.value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            {item.action ? (
-              <div className="mt-3 border-t border-ep3-navy/5 pt-3">
-                {item.action}
-              </div>
-            ) : null}
-          </li>
+          <MobileCard key={item.id} item={item} />
         ))}
       </ul>
 
@@ -82,41 +176,7 @@ export function RecordList({
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.id} className="border-b border-ep3-navy/5">
-                <td className="px-3 py-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {item.href ? (
-                      <Link
-                        href={item.href}
-                        className="font-medium text-ep3-navy hover:underline"
-                      >
-                        {item.title}
-                      </Link>
-                    ) : (
-                      <span className="font-medium text-ep3-navy">
-                        {item.title}
-                      </span>
-                    )}
-                    {item.badge}
-                  </div>
-                </td>
-                {item.fields.map((field) => (
-                  <td key={field.label} className="px-3 py-2 text-ep3-navy/80">
-                    {field.value}
-                  </td>
-                ))}
-                <td className="px-3 py-2 text-right">
-                  {item.action ??
-                    (item.href ? (
-                      <Link
-                        href={item.href}
-                        className="text-sm font-medium text-ep3-navy underline"
-                      >
-                        Abrir
-                      </Link>
-                    ) : null)}
-                </td>
-              </tr>
+              <DesktopRow key={item.id} item={item} headers={headers} />
             ))}
           </tbody>
         </table>

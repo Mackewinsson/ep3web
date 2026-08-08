@@ -48,7 +48,7 @@ export default async function ConductorDetailPage({ params }: Props) {
         <div className="mb-4">
           <StatusBadge
             label={hasAppAccess ? "Tiene acceso app" : "Sin acceso app"}
-            tone={hasAppAccess ? "success" : "default"}
+            tone={hasAppAccess ? "success" : "muted"}
           />
         </div>
         <form action={action} className="space-y-4">

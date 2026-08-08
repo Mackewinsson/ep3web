@@ -17,7 +17,7 @@ import {
   updateJobSchedule,
   updateJobStatus,
 } from "@/lib/actions/jobs";
-import { formatDate, JOB_STATUS_LABELS } from "@/lib/format";
+import { formatDate, JOB_STATUS_LABELS, jobStatusTone } from "@/lib/format";
 import {
   formatVolume,
   getJobOperationalDetail,
@@ -79,7 +79,10 @@ export default async function TrabajoDetailPage({ params }: Props) {
 
       <PanelCard>
         <div className="mb-3">
-          <StatusBadge label={JOB_STATUS_LABELS[job.status] ?? job.status} />
+          <StatusBadge
+            label={JOB_STATUS_LABELS[job.status] ?? job.status}
+            tone={jobStatusTone(job.status)}
+          />
         </div>
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
           <div>
