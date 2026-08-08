@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { servicePackages } from "@/db/schema";
-import { requireStaff } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { slugify } from "@/lib/format";
 
 const packageSchema = z.object({
@@ -74,7 +74,7 @@ function revalidatePackages() {
 }
 
 export async function createPackage(formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const row = toRow(parsePackageForm(formData));
   await db.insert(servicePackages).values(row);
   revalidatePackages();
@@ -82,7 +82,7 @@ export async function createPackage(formData: FormData) {
 }
 
 export async function updatePackage(id: string, formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const row = toRow(parsePackageForm(formData));
   await db
     .update(servicePackages)
@@ -93,7 +93,7 @@ export async function updatePackage(id: string, formData: FormData) {
 }
 
 export async function togglePackageActive(id: string) {
-  await requireStaff();
+  await requireAdmin();
   const [pkg] = await db
     .select({ id: servicePackages.id, active: servicePackages.active })
     .from(servicePackages)

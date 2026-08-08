@@ -12,7 +12,11 @@ export default async function PanelLayout({
   const session = await getSession();
 
   return (
-    <PanelShell userName={session?.name} logoutAction={logoutAction}>
+    <PanelShell
+      userName={session?.name}
+      role={session?.role ?? "admin"}
+      logoutAction={logoutAction}
+    >
       {children}
     </PanelShell>
   );

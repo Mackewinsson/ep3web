@@ -15,6 +15,13 @@
       "when": 1786187518567,
       "tag": "0001_colorful_black_widow",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786188695735,
+      "tag": "0002_goofy_sharon_carter",
+      "breakpoints": true
     }
   ]
 }

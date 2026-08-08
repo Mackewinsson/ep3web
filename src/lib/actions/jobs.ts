@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -12,11 +12,26 @@ import {
   jobs,
   trucks,
 } from "@/db/schema";
-import { requireStaff } from "@/lib/auth";
+import { requireAdmin, requireDriver } from "@/lib/auth";
 
 const assignSchema = z.object({
   driverId: z.string().uuid(),
   truckId: z.string().uuid(),
+  notes: z.string().optional(),
+  scheduledTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional()
+    .or(z.literal("")),
+});
+
+const scheduleSchema = z.object({
+  scheduledDate: z.string().optional().or(z.literal("")),
+  scheduledTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional()
+    .or(z.literal("")),
   notes: z.string().optional(),
 });
 
@@ -29,7 +44,7 @@ export async function updateJobStatus(
     | "completed"
     | "cancelled",
 ) {
-  await requireStaff();
+  await requireAdmin();
   await db
     .update(jobs)
     .set({ status, updatedAt: new Date() })
@@ -37,15 +52,41 @@ export async function updateJobStatus(
   revalidatePath(`/panel/trabajos/${jobId}`);
   revalidatePath("/panel/trabajos");
   revalidatePath("/panel");
+  revalidatePath("/panel/mis-trabajos");
+  redirect(`/panel/trabajos/${jobId}`);
+}
+
+export async function updateJobSchedule(jobId: string, formData: FormData) {
+  await requireAdmin();
+  const parsed = scheduleSchema.parse({
+    scheduledDate: formData.get("scheduledDate") || "",
+    scheduledTime: formData.get("scheduledTime") || "",
+    notes: formData.get("notes") || undefined,
+  });
+
+  await db
+    .update(jobs)
+    .set({
+      scheduledDate: parsed.scheduledDate || null,
+      scheduledTime: parsed.scheduledTime || null,
+      notes: parsed.notes,
+      updatedAt: new Date(),
+    })
+    .where(eq(jobs.id, jobId));
+
+  revalidatePath(`/panel/trabajos/${jobId}`);
+  revalidatePath("/panel/trabajos");
+  revalidatePath("/panel/mis-trabajos");
   redirect(`/panel/trabajos/${jobId}`);
 }
 
 export async function assignJob(jobId: string, formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const parsed = assignSchema.parse({
     driverId: formData.get("driverId"),
     truckId: formData.get("truckId"),
     notes: formData.get("notes") || undefined,
+    scheduledTime: formData.get("scheduledTime") || "",
   });
 
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
@@ -73,7 +114,6 @@ export async function assignJob(jobId: string, formData: FormData) {
     throw new Error("Datos de asignación incompletos");
   }
 
-  // Resend deferred — email wiring comes later
   await db.insert(jobAssignments).values({
     jobId,
     driverId: parsed.driverId,
@@ -84,11 +124,61 @@ export async function assignJob(jobId: string, formData: FormData) {
 
   await db
     .update(jobs)
-    .set({ status: "assigned", updatedAt: new Date() })
+    .set({
+      status: "assigned",
+      scheduledTime: parsed.scheduledTime || job.scheduledTime,
+      updatedAt: new Date(),
+    })
     .where(eq(jobs.id, jobId));
 
   revalidatePath(`/panel/trabajos/${jobId}`);
   revalidatePath("/panel/trabajos");
   revalidatePath("/panel");
+  revalidatePath("/panel/mis-trabajos");
   redirect(`/panel/trabajos/${jobId}`);
+}
+
+export async function driverAdvanceJob(
+  jobId: string,
+  nextStatus: "in_progress" | "completed",
+) {
+  const session = await requireDriver();
+  const driverId = session.driverId!;
+
+  const [latest] = await db
+    .select({
+      assignmentId: jobAssignments.id,
+      driverId: jobAssignments.driverId,
+      status: jobs.status,
+    })
+    .from(jobAssignments)
+    .innerJoin(jobs, eq(jobAssignments.jobId, jobs.id))
+    .where(
+      and(eq(jobAssignments.jobId, jobId), eq(jobAssignments.driverId, driverId)),
+    )
+    .orderBy(desc(jobAssignments.assignedAt))
+    .limit(1);
+
+  if (!latest) {
+    throw new Error("Trabajo no asignado a este conductor");
+  }
+
+  if (nextStatus === "in_progress" && latest.status !== "assigned") {
+    throw new Error("Solo puedes marcar En camino un trabajo por iniciar");
+  }
+  if (nextStatus === "completed" && latest.status !== "in_progress") {
+    throw new Error("Solo puedes finalizar un trabajo en camino");
+  }
+
+  await db
+    .update(jobs)
+    .set({ status: nextStatus, updatedAt: new Date() })
+    .where(eq(jobs.id, jobId));
+
+  revalidatePath(`/panel/mis-trabajos/${jobId}`);
+  revalidatePath("/panel/mis-trabajos");
+  revalidatePath(`/panel/trabajos/${jobId}`);
+  revalidatePath("/panel/trabajos");
+  revalidatePath("/panel");
+  redirect(`/panel/mis-trabajos/${jobId}`);
 }

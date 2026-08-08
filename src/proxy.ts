@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
+  homePathForRole,
   SESSION_COOKIE,
   verifySessionToken,
 } from "@/lib/auth/session";
+
+const DRIVER_ALLOWED_PREFIXES = ["/panel/mis-trabajos"];
+
+function isDriverAllowedPath(pathname: string) {
+  return DRIVER_ALLOWED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -26,7 +35,25 @@ export async function proxy(request: NextRequest) {
 
   if (isSignIn && session) {
     const url = request.nextUrl.clone();
-    url.pathname = "/panel";
+    url.pathname = homePathForRole(session.role);
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  if (isPanel && session?.role === "driver" && !isDriverAllowedPath(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/panel/mis-trabajos";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  if (
+    isPanel &&
+    session?.role === "admin" &&
+    pathname.startsWith("/panel/mis-trabajos")
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/panel/trabajos";
     url.search = "";
     return NextResponse.redirect(url);
   }

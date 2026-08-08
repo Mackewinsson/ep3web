@@ -8,6 +8,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { staffUsers } from "@/db/schema";
 import {
+  homePathForRole,
   SESSION_COOKIE,
   sessionCookieOptions,
   signSessionToken,
@@ -47,6 +48,10 @@ export async function loginAction(
     return { error: "Credenciales incorrectas" };
   }
 
+  if (user.role === "driver" && !user.driverId) {
+    return { error: "Cuenta de camionero sin conductor vinculado" };
+  }
+
   const ok = await bcrypt.compare(parsed.data.password, user.passwordHash);
   if (!ok) {
     return { error: "Credenciales incorrectas" };
@@ -56,12 +61,14 @@ export async function loginAction(
     sub: user.id,
     email: user.email,
     name: user.name,
+    role: user.role,
+    driverId: user.driverId,
   });
 
   const jar = await cookies();
   jar.set(SESSION_COOKIE, token, sessionCookieOptions());
 
-  redirect("/panel");
+  redirect(homePathForRole(user.role));
 }
 
 export async function logoutAction() {

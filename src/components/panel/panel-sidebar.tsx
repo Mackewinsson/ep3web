@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { StaffRole } from "@/lib/auth/constants";
 
-const NAV = [
+const ADMIN_NAV = [
   { href: "/panel", label: "Dashboard" },
   { href: "/panel/cotizaciones", label: "Cotizaciones" },
   { href: "/panel/presupuestos", label: "Presupuestos" },
@@ -15,12 +16,23 @@ const NAV = [
   { href: "/panel/camiones", label: "Camiones" },
 ] as const;
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+const DRIVER_NAV = [
+  { href: "/panel/mis-trabajos", label: "Mis trabajos" },
+] as const;
+
+function NavLinks({
+  role,
+  onNavigate,
+}: {
+  role: StaffRole;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
+  const items = role === "driver" ? DRIVER_NAV : ADMIN_NAV;
 
   return (
     <>
-      {NAV.map((item) => {
+      {items.map((item) => {
         const active =
           item.href === "/panel"
             ? pathname === "/panel"
@@ -44,13 +56,15 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function SidebarBrand() {
+function SidebarBrand({ role }: { role: StaffRole }) {
   return (
     <div className="border-b border-white/10 px-5 py-5">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-ep3-yellow">
         Transportes EP3
       </p>
-      <p className="mt-1 text-lg font-semibold">Panel ops</p>
+      <p className="mt-1 text-lg font-semibold">
+        {role === "driver" ? "Mis viajes" : "Panel ops"}
+      </p>
     </div>
   );
 }
@@ -58,10 +72,12 @@ function SidebarBrand() {
 export function PanelShell({
   children,
   userName,
+  role = "admin",
   logoutAction,
 }: {
   children: React.ReactNode;
   userName?: string | null;
+  role?: StaffRole;
   logoutAction: () => Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
@@ -81,14 +97,17 @@ export function PanelShell({
   }, [open]);
 
   const firstName = userName?.split(" ")[0];
+  const subtitle =
+    role === "driver"
+      ? "Tus mudanzas y fletes asignados"
+      : "Operaciones · mudanzas y fletes";
 
   return (
     <div className="panel-surface flex min-h-screen">
-      {/* Desktop sidebar */}
       <aside className="hidden w-56 shrink-0 flex-col border-r border-ep3-navy/20 bg-ep3-navy text-white shadow-[8px_0_28px_-12px_rgb(0_31_84_/_0.45)] md:flex">
-        <SidebarBrand />
+        <SidebarBrand role={role} />
         <nav className="flex flex-1 flex-col gap-1 p-3">
-          <NavLinks />
+          <NavLinks role={role} />
         </nav>
         <div className="border-t border-white/10 p-3">
           <Link
@@ -100,7 +119,6 @@ export function PanelShell({
         </div>
       </aside>
 
-      {/* Mobile drawer */}
       {open ? (
         <div className="fixed inset-0 z-40 md:hidden">
           <button
@@ -114,7 +132,9 @@ export function PanelShell({
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-ep3-yellow">
                 Transportes EP3
               </p>
-              <p className="mt-1 text-lg font-semibold">Panel ops</p>
+              <p className="mt-1 text-lg font-semibold">
+                {role === "driver" ? "Mis viajes" : "Panel ops"}
+              </p>
               <button
                 type="button"
                 aria-label="Cerrar"
@@ -125,7 +145,7 @@ export function PanelShell({
               </button>
             </div>
             <nav className="flex flex-1 flex-col gap-1 p-3">
-              <NavLinks onNavigate={() => setOpen(false)} />
+              <NavLinks role={role} onNavigate={() => setOpen(false)} />
             </nav>
             <div className="border-t border-white/10 p-3">
               <Link
@@ -155,9 +175,7 @@ export function PanelShell({
                 <span className="block h-0.5 w-5 bg-ep3-navy" />
               </span>
             </button>
-            <p className="text-sm text-ep3-navy/70">
-              Operaciones · mudanzas y fletes
-            </p>
+            <p className="text-sm text-ep3-navy/70">{subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
             {firstName ? (

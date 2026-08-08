@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { trucks } from "@/db/schema";
-import { requireStaff } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 
 const truckSchema = z.object({
   plate: z.string().min(1).max(20),
@@ -16,7 +16,7 @@ const truckSchema = z.object({
 });
 
 export async function createTruck(formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const parsed = truckSchema.parse({
     plate: formData.get("plate"),
     label: formData.get("label") || undefined,
@@ -30,7 +30,7 @@ export async function createTruck(formData: FormData) {
 }
 
 export async function updateTruck(id: string, formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const parsed = truckSchema.parse({
     plate: formData.get("plate"),
     label: formData.get("label") || undefined,

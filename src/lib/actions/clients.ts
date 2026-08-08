@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { clients } from "@/db/schema";
-import { requireStaff } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 
 const clientSchema = z.object({
   name: z.string().min(1).max(200),
@@ -16,7 +16,7 @@ const clientSchema = z.object({
 });
 
 export async function createClient(formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const parsed = clientSchema.parse({
     name: formData.get("name"),
     phone: formData.get("phone") || undefined,
@@ -36,7 +36,7 @@ export async function createClient(formData: FormData) {
 }
 
 export async function updateClient(id: string, formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const parsed = clientSchema.parse({
     name: formData.get("name"),
     phone: formData.get("phone") || undefined,

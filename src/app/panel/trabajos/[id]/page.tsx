@@ -2,6 +2,7 @@ import { asc, desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import {
   BackLink,
+  Field,
   PageHeader,
   PanelCard,
   SelectField,
@@ -10,36 +11,24 @@ import {
   TextArea,
 } from "@/components/panel/ui";
 import { db } from "@/db";
+import { drivers, jobAssignments, trucks } from "@/db/schema";
 import {
-  clients,
-  drivers,
-  jobAssignments,
-  jobs,
-  trucks,
-} from "@/db/schema";
-import { assignJob, updateJobStatus } from "@/lib/actions/jobs";
+  assignJob,
+  updateJobSchedule,
+  updateJobStatus,
+} from "@/lib/actions/jobs";
 import { formatDate, JOB_STATUS_LABELS } from "@/lib/format";
+import {
+  formatVolume,
+  getJobOperationalDetail,
+  mapsUrl,
+} from "@/lib/jobs-view";
 
 type Props = { params: Promise<{ id: string }> };
 
 export default async function TrabajoDetailPage({ params }: Props) {
   const { id } = await params;
-
-  const [job] = await db
-    .select({
-      id: jobs.id,
-      originAddress: jobs.originAddress,
-      destinationAddress: jobs.destinationAddress,
-      scheduledDate: jobs.scheduledDate,
-      status: jobs.status,
-      notes: jobs.notes,
-      clientName: clients.name,
-    })
-    .from(jobs)
-    .innerJoin(clients, eq(jobs.clientId, clients.id))
-    .where(eq(jobs.id, id))
-    .limit(1);
-
+  const job = await getJobOperationalDetail(id);
   if (!job) notFound();
 
   const assignments = await db
@@ -72,6 +61,11 @@ export default async function TrabajoDetailPage({ params }: Props) {
     .orderBy(asc(trucks.plate));
 
   const assignAction = assignJob.bind(null, id);
+  const scheduleAction = updateJobSchedule.bind(null, id);
+  const volume = formatVolume(job.estimatedM3, job.estimatedItems);
+  const when = [formatDate(job.scheduledDate), job.scheduledTime]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -79,27 +73,75 @@ export default async function TrabajoDetailPage({ params }: Props) {
         <BackLink href="/panel/trabajos" label="Volver a trabajos" />
         <PageHeader
           title={`Trabajo · ${job.clientName}`}
-          description={`Programado: ${formatDate(job.scheduledDate)}`}
+          description={when ? `Programado: ${when}` : "Sin fecha programada"}
         />
       </div>
 
       <PanelCard>
         <div className="mb-3">
-          <StatusBadge
-            label={JOB_STATUS_LABELS[job.status] ?? job.status}
-          />
+          <StatusBadge label={JOB_STATUS_LABELS[job.status] ?? job.status} />
         </div>
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
           <div>
+            <dt className="text-ep3-navy/60">Cliente</dt>
+            <dd className="font-medium text-ep3-navy">{job.clientName}</dd>
+          </div>
+          <div>
+            <dt className="text-ep3-navy/60">Teléfono</dt>
+            <dd className="font-medium text-ep3-navy">
+              {job.clientPhone ? (
+                <a href={`tel:${job.clientPhone}`} className="underline">
+                  {job.clientPhone}
+                </a>
+              ) : (
+                "—"
+              )}
+            </dd>
+          </div>
+          {job.clientEmail ? (
+            <div className="sm:col-span-2">
+              <dt className="text-ep3-navy/60">Email</dt>
+              <dd className="text-ep3-navy">{job.clientEmail}</dd>
+            </div>
+          ) : null}
+          <div>
             <dt className="text-ep3-navy/60">Origen</dt>
-            <dd className="font-medium text-ep3-navy">{job.originAddress}</dd>
+            <dd className="font-medium text-ep3-navy">
+              <a
+                href={mapsUrl(job.originAddress)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                {job.originAddress}
+              </a>
+            </dd>
           </div>
           <div>
             <dt className="text-ep3-navy/60">Destino</dt>
             <dd className="font-medium text-ep3-navy">
-              {job.destinationAddress}
+              <a
+                href={mapsUrl(job.destinationAddress)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                {job.destinationAddress}
+              </a>
             </dd>
           </div>
+          {volume ? (
+            <div>
+              <dt className="text-ep3-navy/60">Carga</dt>
+              <dd className="text-ep3-navy">{volume}</dd>
+            </div>
+          ) : null}
+          {job.volumeNotes ? (
+            <div className="sm:col-span-2">
+              <dt className="text-ep3-navy/60">Detalle volumen</dt>
+              <dd className="text-ep3-navy">{job.volumeNotes}</dd>
+            </div>
+          ) : null}
           {job.notes ? (
             <div className="sm:col-span-2">
               <dt className="text-ep3-navy/60">Notas</dt>
@@ -113,9 +155,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
             <form action={updateJobStatus.bind(null, id, "in_progress")}>
               <button
                 type="submit"
-                className="rounded-md bg-ep3-navy px-3 py-1.5 text-sm text-white"
+                className="min-h-11 rounded-md bg-ep3-navy px-3 py-2 text-sm text-white"
               >
-                Marcar en curso
+                Marcar en camino
               </button>
             </form>
           ) : null}
@@ -123,9 +165,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
             <form action={updateJobStatus.bind(null, id, "completed")}>
               <button
                 type="submit"
-                className="rounded-md bg-emerald-700 px-3 py-1.5 text-sm text-white"
+                className="min-h-11 rounded-md bg-emerald-700 px-3 py-2 text-sm text-white"
               >
-                Completar
+                Finalizar
               </button>
             </form>
           ) : null}
@@ -133,13 +175,41 @@ export default async function TrabajoDetailPage({ params }: Props) {
             <form action={updateJobStatus.bind(null, id, "cancelled")}>
               <button
                 type="submit"
-                className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-700"
+                className="min-h-11 rounded-md border border-red-300 px-3 py-2 text-sm text-red-700"
               >
                 Cancelar
               </button>
             </form>
           ) : null}
         </div>
+      </PanelCard>
+
+      <PanelCard>
+        <h2 className="mb-3 font-semibold text-ep3-navy">Fecha y hora</h2>
+        <form action={scheduleAction} className="grid gap-3 sm:grid-cols-2">
+          <Field
+            label="Fecha"
+            name="scheduledDate"
+            type="date"
+            defaultValue={job.scheduledDate ?? undefined}
+          />
+          <Field
+            label="Hora"
+            name="scheduledTime"
+            type="time"
+            defaultValue={job.scheduledTime ?? undefined}
+          />
+          <div className="sm:col-span-2">
+            <TextArea
+              label="Notas del trabajo"
+              name="notes"
+              defaultValue={job.notes}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <SubmitButton label="Guardar programación" />
+          </div>
+        </form>
       </PanelCard>
 
       <PanelCard>
@@ -160,6 +230,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
                   {a.truckLabel ? ` (${a.truckLabel})` : ""}
                 </p>
                 <p className="text-ep3-navy/70">{a.driverEmail}</p>
+                {a.notes ? (
+                  <p className="mt-1 text-ep3-navy/80">Notas: {a.notes}</p>
+                ) : null}
                 <p className="mt-1 text-xs text-ep3-navy/60">
                   Asignado {formatDate(a.assignedAt)}
                   {a.emailSentAt
@@ -177,7 +250,10 @@ export default async function TrabajoDetailPage({ params }: Props) {
               Necesitas al menos un conductor y un camión activos para asignar.
             </p>
           ) : (
-            <form action={assignAction} className="space-y-4 border-t border-ep3-navy/10 pt-4">
+            <form
+              action={assignAction}
+              className="space-y-4 border-t border-ep3-navy/10 pt-4"
+            >
               <h3 className="font-medium text-ep3-navy">
                 Asignar conductor y camión
               </h3>
@@ -198,6 +274,12 @@ export default async function TrabajoDetailPage({ params }: Props) {
                   value: t.id,
                   label: t.label ? `${t.plate} — ${t.label}` : t.plate,
                 }))}
+              />
+              <Field
+                label="Hora llegada (opcional)"
+                name="scheduledTime"
+                type="time"
+                defaultValue={job.scheduledTime ?? undefined}
               />
               <TextArea label="Notas para el conductor" name="notes" />
               <SubmitButton label="Asignar conductor" />

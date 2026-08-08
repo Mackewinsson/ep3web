@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { budgetItems, budgets, jobs, quoteRequests } from "@/db/schema";
-import { requireStaff } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 
 const budgetMetaSchema = z.object({
   title: z.string().min(1).max(200),
@@ -32,7 +32,7 @@ function calcTotal(
 }
 
 export async function createBudget(formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const clientId = z.string().uuid().parse(formData.get("clientId"));
   const meta = budgetMetaSchema.parse({
     title: formData.get("title"),
@@ -57,7 +57,7 @@ export async function createBudget(formData: FormData) {
 }
 
 export async function updateBudgetMeta(budgetId: string, formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const meta = budgetMetaSchema.parse({
     title: formData.get("title"),
     validUntil: formData.get("validUntil") || undefined,
@@ -99,7 +99,7 @@ async function recalcBudgetTotal(budgetId: string) {
 }
 
 export async function addBudgetItem(budgetId: string, formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const item = itemSchema.parse({
     description: formData.get("description"),
     quantity: formData.get("quantity"),
@@ -124,7 +124,7 @@ export async function addBudgetItem(budgetId: string, formData: FormData) {
 }
 
 export async function updateBudgetItem(itemId: string, formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const item = itemSchema.parse({
     description: formData.get("description"),
     quantity: formData.get("quantity"),
@@ -161,7 +161,7 @@ export async function updateBudgetItem(itemId: string, formData: FormData) {
 }
 
 export async function deleteBudgetItem(itemId: string) {
-  await requireStaff();
+  await requireAdmin();
 
   const [existing] = await db
     .select()
@@ -184,7 +184,7 @@ export async function setBudgetStatus(
   budgetId: string,
   status: "draft" | "sent" | "approved" | "rejected" | "expired",
 ) {
-  await requireStaff();
+  await requireAdmin();
 
   const [budget] = await db
     .select()

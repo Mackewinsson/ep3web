@@ -43,20 +43,7 @@ export const pricingUnitEnum = pgEnum("pricing_unit", [
 
 export const quoteSourceEnum = pgEnum("quote_source", ["panel", "website"]);
 
-/** Staff accounts for the /panel JWT auth */
-export const staffUsers = pgTable("staff_users", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  email: varchar("email", { length: 200 }).notNull().unique(),
-  name: varchar("name", { length: 200 }).notNull(),
-  passwordHash: text("password_hash").notNull(),
-  active: boolean("active").default(true).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export const staffRoleEnum = pgEnum("staff_role", ["admin", "driver"]);
 
 export const clients = pgTable("clients", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -78,6 +65,25 @@ export const drivers = pgTable("drivers", {
   email: varchar("email", { length: 200 }).notNull(),
   phone: varchar("phone", { length: 40 }),
   licenseNotes: text("license_notes"),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** Staff accounts for the /panel JWT auth (admin or linked driver) */
+export const staffUsers = pgTable("staff_users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: varchar("email", { length: 200 }).notNull().unique(),
+  name: varchar("name", { length: 200 }).notNull(),
+  passwordHash: text("password_hash").notNull(),
+  role: staffRoleEnum("role").default("admin").notNull(),
+  driverId: uuid("driver_id")
+    .unique()
+    .references(() => drivers.id, { onDelete: "set null" }),
   active: boolean("active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -204,6 +210,7 @@ export const jobs = pgTable("jobs", {
   originAddress: text("origin_address").notNull(),
   destinationAddress: text("destination_address").notNull(),
   scheduledDate: date("scheduled_date"),
+  scheduledTime: varchar("scheduled_time", { length: 5 }),
   status: jobStatusEnum("status").default("pending_assignment").notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true })

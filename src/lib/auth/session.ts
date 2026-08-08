@@ -3,10 +3,12 @@ import {
   SESSION_COOKIE,
   SESSION_MAX_AGE_SECONDS,
   type SessionPayload,
+  type StaffRole,
 } from "./constants";
 
-export type { SessionPayload };
+export type { SessionPayload, StaffRole };
 export { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS };
+
 function getSecretKey() {
   const secret = process.env.JWT_SECRET;
   if (!secret || secret.length < 16) {
@@ -15,10 +17,16 @@ function getSecretKey() {
   return new TextEncoder().encode(secret);
 }
 
+function parseRole(value: unknown): StaffRole {
+  return value === "driver" ? "driver" : "admin";
+}
+
 export async function signSessionToken(payload: SessionPayload) {
   return new SignJWT({
     email: payload.email,
     name: payload.name,
+    role: payload.role,
+    driverId: payload.driverId ?? null,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
@@ -36,7 +44,15 @@ export async function verifySessionToken(
     const email = typeof payload.email === "string" ? payload.email : null;
     const name = typeof payload.name === "string" ? payload.name : null;
     if (!sub || !email || !name) return null;
-    return { sub, email, name };
+    const driverId =
+      typeof payload.driverId === "string" ? payload.driverId : null;
+    return {
+      sub,
+      email,
+      name,
+      role: parseRole(payload.role),
+      driverId,
+    };
   } catch {
     return null;
   }
@@ -50,4 +66,8 @@ export function sessionCookieOptions(maxAge = SESSION_MAX_AGE_SECONDS) {
     path: "/",
     maxAge,
   };
+}
+
+export function homePathForRole(role: StaffRole) {
+  return role === "driver" ? "/panel/mis-trabajos" : "/panel";
 }

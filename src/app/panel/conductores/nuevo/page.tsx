@@ -21,6 +21,24 @@ export default function NuevoConductorPage() {
             <input type="checkbox" name="active" defaultChecked />
             Activo
           </label>
+
+          <div className="rounded-md border border-dashed border-ep3-navy/20 p-3 space-y-3">
+            <label className="flex items-center gap-2 text-sm font-medium text-ep3-navy">
+              <input type="checkbox" name="enableAppAccess" />
+              Activar acceso app (camionero)
+            </label>
+            <p className="text-xs text-ep3-navy/60">
+              Usa el mismo email para entrar en /sign-in. Solo verá sus trabajos
+              asignados.
+            </p>
+            <Field
+              label="Contraseña app"
+              name="appPassword"
+              type="password"
+              placeholder="Mínimo 6 caracteres"
+            />
+          </div>
+
           <SubmitButton label="Guardar conductor" />
         </form>
       </PanelCard>

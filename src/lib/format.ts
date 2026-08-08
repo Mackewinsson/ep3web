@@ -37,8 +37,15 @@ export const BUDGET_STATUS_LABELS: Record<string, string> = {
 export const JOB_STATUS_LABELS: Record<string, string> = {
   pending_assignment: "Sin conductor",
   assigned: "Asignado",
-  in_progress: "En curso",
-  completed: "Completado",
+  in_progress: "En camino",
+  completed: "Finalizado",
+  cancelled: "Cancelado",
+};
+
+export const DRIVER_JOB_STATUS_LABELS: Record<string, string> = {
+  assigned: "Por iniciar",
+  in_progress: "En camino",
+  completed: "Finalizado",
   cancelled: "Cancelado",
 };
 

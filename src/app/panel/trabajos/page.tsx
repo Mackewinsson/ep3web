@@ -24,8 +24,8 @@ const FILTERS = [
   { value: "", label: "Todos" },
   { value: "pending_assignment", label: "Sin conductor" },
   { value: "assigned", label: "Asignado" },
-  { value: "in_progress", label: "En curso" },
-  { value: "completed", label: "Completado" },
+  { value: "in_progress", label: "En camino" },
+  { value: "completed", label: "Finalizado" },
   { value: "cancelled", label: "Cancelado" },
 ] as const;
 
@@ -55,6 +55,7 @@ export default async function TrabajosPage({ searchParams }: Props) {
       scheduledDate: jobs.scheduledDate,
       status: jobs.status,
       clientName: clients.name,
+      clientPhone: clients.phone,
     })
     .from(jobs)
     .innerJoin(clients, eq(jobs.clientId, clients.id));
@@ -120,6 +121,7 @@ export default async function TrabajosPage({ searchParams }: Props) {
                   ),
                 },
                 { label: "Fecha", value: formatDate(row.scheduledDate) },
+                { label: "Teléfono", value: row.clientPhone ?? "—" },
               ],
             }))}
           />

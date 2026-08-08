@@ -11,7 +11,7 @@ import {
   quoteRequests,
   servicePackages,
 } from "@/db/schema";
-import { requireStaff } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { upsertClientByContact } from "@/lib/clients";
 
 const quoteFieldsSchema = z.object({
@@ -72,7 +72,7 @@ function volumeFields(parsed: z.infer<typeof quoteFieldsSchema>) {
 }
 
 export async function createQuoteRequest(formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const parsed = parseQuoteFields(formData);
   const clientId = await resolveClientId(parsed);
 
@@ -94,7 +94,7 @@ export async function createQuoteRequest(formData: FormData) {
 }
 
 export async function updateQuoteRequest(quoteId: string, formData: FormData) {
-  await requireStaff();
+  await requireAdmin();
   const parsed = parseQuoteFields(formData);
   const clientId = parsed.clientId
     ? parsed.clientId
@@ -124,7 +124,7 @@ export async function setQuoteStatus(
   quoteId: string,
   status: "new" | "in_progress" | "closed",
 ) {
-  await requireStaff();
+  await requireAdmin();
 
   await db
     .update(quoteRequests)
@@ -138,7 +138,7 @@ export async function setQuoteStatus(
 }
 
 export async function convertQuoteToBudget(quoteId: string) {
-  await requireStaff();
+  await requireAdmin();
 
   const [quote] = await db
     .select()

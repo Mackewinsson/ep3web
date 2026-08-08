@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
+  homePathForRole,
   SESSION_COOKIE,
   verifySessionToken,
   type SessionPayload,
@@ -19,6 +20,22 @@ export async function requireStaff(): Promise<StaffSession> {
   const session = await getSession();
   if (!session) {
     redirect("/sign-in");
+  }
+  return session;
+}
+
+export async function requireAdmin(): Promise<StaffSession> {
+  const session = await requireStaff();
+  if (session.role !== "admin") {
+    redirect(homePathForRole(session.role));
+  }
+  return session;
+}
+
+export async function requireDriver(): Promise<StaffSession> {
+  const session = await requireStaff();
+  if (session.role !== "driver" || !session.driverId) {
+    redirect(homePathForRole(session.role));
   }
   return session;
 }
