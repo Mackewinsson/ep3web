@@ -37,7 +37,7 @@ const wizardSchema = z.object({
   contact: z.object({
     name: z.string().min(2).max(200),
     phone: z.string().min(8).max(40),
-    email: z.string().email().optional().or(z.literal("")),
+    email: z.string().email(),
     preferredDate: z.string().optional(),
     notes: z.string().optional(),
   }),

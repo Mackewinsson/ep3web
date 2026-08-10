@@ -24,7 +24,7 @@ Catalog categories/items: tables `moving_categories` / `moving_catalog_items`, s
 
 ## Public → ops flow
 
-1. User completes `/cotizar` (public UI shows volume/inventory, **not** price)
+1. User completes `/cotizar` (public UI shows **no** volume/price; last screen is thank-you + email notice)
 2. Server action recalculates with DB config (never trust client totals)
 3. Creates `clients` + `quote_requests` (source=website) + `budgets` (status=**draft**) + `budget_items`
    - One **unit** line per inventory item (+ packing boxes) for ops editing

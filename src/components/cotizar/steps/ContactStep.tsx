@@ -37,13 +37,15 @@ export function ContactStep({ value, onChange }: Props) {
         </label>
         <label className="block text-sm sm:col-span-2">
           <span className="mb-1 block font-medium text-slate-800">
-            Correo (opcional)
+            Correo
           </span>
           <input
             type="email"
             className={fieldClass}
             value={value.email}
             onChange={(e) => onChange({ ...value, email: e.target.value })}
+            required
+            placeholder="Para enviarte la cotización"
           />
         </label>
         <label className="block text-sm sm:col-span-2">
@@ -77,5 +79,9 @@ export function ContactStep({ value, onChange }: Props) {
 }
 
 export function isContactValid(value: QuoteWizardState["contact"]): boolean {
-  return value.name.trim().length >= 2 && value.phone.trim().length >= 8;
+  return (
+    value.name.trim().length >= 2 &&
+    value.phone.trim().length >= 8 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email.trim())
+  );
 }

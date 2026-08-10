@@ -21,8 +21,7 @@ export default async function CotizarPage() {
           Cotiza tu mudanza
         </h1>
         <p className="mx-auto mt-2 max-w-lg text-pretty text-sm leading-relaxed text-slate-600 sm:text-base">
-          Completa los pasos y te armamos una estimación clara según el volumen
-          y las condiciones de acceso.
+          Completa los pasos y te contactamos con tu cotización por correo.
         </p>
       </div>
       <QuoteWizard

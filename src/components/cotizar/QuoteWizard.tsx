@@ -22,7 +22,7 @@ import {
   isParkingValid,
   ParkingStep,
 } from "@/components/cotizar/steps/ParkingStep";
-import { SummaryStep } from "@/components/cotizar/steps/SummaryStep";
+import { ThankYouStep } from "@/components/cotizar/steps/ThankYouStep";
 import {
   suggestBoxes,
   sumQuantities,
@@ -67,7 +67,7 @@ const STEPS = [
   "parkingOrigin",
   "parkingDestination",
   "contact",
-  "summary",
+  "thanks",
 ] as const;
 
 export function QuoteWizard({
@@ -134,7 +134,7 @@ export function QuoteWizard({
         return isParkingValid(state.parkingDestination);
       case "contact":
         return isContactValid(state.contact);
-      case "summary":
+      case "thanks":
         return true;
       default:
         return false;
@@ -177,34 +177,45 @@ export function QuoteWizard({
     setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
   };
 
-  const progress = ((stepIndex + 1) / STEPS.length) * 100;
+  const progress =
+    step === "thanks"
+      ? 100
+      : ((stepIndex + 1) / (STEPS.length - 1)) * 100;
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-2xl">
       <div className="mb-4 sm:mb-6">
-        <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-500">
-          <span className="shrink-0 tabular-nums">
-            Paso {stepIndex + 1} de {STEPS.length}
-          </span>
-          <button
-            type="button"
-            className="min-h-9 shrink truncate underline underline-offset-2 hover:text-slate-800"
-            onClick={() => {
-              setState(createInitialQuoteState());
-              setStepIndex(0);
-              setDone(false);
-              localStorage.removeItem(STORAGE_KEY);
-            }}
-          >
-            Empezar de nuevo
-          </button>
-        </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
-          <div
-            className="h-full rounded-full bg-ep3-navy transition-all"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+        {step !== "thanks" || !done ? (
+          <>
+            <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-500">
+              <span className="shrink-0 tabular-nums">
+                {step === "thanks"
+                  ? "Listo"
+                  : `Paso ${stepIndex + 1} de ${STEPS.length - 1}`}
+              </span>
+              <button
+                type="button"
+                className="min-h-9 shrink truncate underline underline-offset-2 hover:text-slate-800"
+                onClick={() => {
+                  setState(createInitialQuoteState());
+                  setStepIndex(0);
+                  setDone(false);
+                  localStorage.removeItem(STORAGE_KEY);
+                }}
+              >
+                Empezar de nuevo
+              </button>
+            </div>
+            {step !== "thanks" ? (
+              <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className="h-full rounded-full bg-ep3-navy transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            ) : null}
+          </>
+        ) : null}
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-8">
@@ -297,12 +308,9 @@ export function QuoteWizard({
               />
             ) : null}
 
-            {step === "summary" ? (
-              <SummaryStep
+            {step === "thanks" ? (
+              <ThankYouStep
                 state={state}
-                catalog={catalog}
-                pricing={pricing}
-                done={done}
                 onDone={() => {
                   setDone(true);
                   localStorage.removeItem(STORAGE_KEY);
@@ -313,7 +321,7 @@ export function QuoteWizard({
         )}
       </div>
 
-      {hydrated && (step !== "summary" || !done) ? (
+      {hydrated && step !== "thanks" ? (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/85 sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
           <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 pb-[env(safe-area-inset-bottom)] sm:pb-0">
             <button
@@ -324,16 +332,14 @@ export function QuoteWizard({
             >
               Anterior
             </button>
-            {step !== "summary" ? (
-              <button
-                type="button"
-                onClick={goNext}
-                disabled={!canNext}
-                className="min-h-11 flex-1 rounded-lg bg-ep3-navy px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:brightness-110 disabled:opacity-40 sm:flex-none"
-              >
-                Siguiente
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={goNext}
+              disabled={!canNext}
+              className="min-h-11 flex-1 rounded-lg bg-ep3-navy px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:brightness-110 disabled:opacity-40 sm:flex-none"
+            >
+              {step === "contact" ? "Enviar solicitud" : "Siguiente"}
+            </button>
           </div>
         </div>
       ) : null}
