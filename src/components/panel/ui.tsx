@@ -9,7 +9,7 @@ type PageHeaderProps = {
 };
 
 const inputClassName =
-  "w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2.5 text-base text-ep3-navy outline-none focus:border-ep3-navy md:text-sm";
+  "w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2.5 text-base text-ep3-navy outline-none placeholder:text-ep3-navy/45 focus:border-ep3-navy md:text-sm";
 
 export function PageHeader({
   title,

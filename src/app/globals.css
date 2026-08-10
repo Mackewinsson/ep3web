@@ -92,12 +92,26 @@ body {
   }
 }
 
-/* Panel operativo — tarjetas elevadas sobre fondo frío */
+/* Panel operativo — tarjetas elevadas sobre fondo frío (siempre tema claro) */
 .panel-surface {
+  color-scheme: light;
+  color: #001f54;
   background:
     radial-gradient(1200px 480px at 0% 0%, rgb(0 31 84 / 0.06), transparent 55%),
     radial-gradient(900px 420px at 100% 0%, rgb(255 204 0 / 0.08), transparent 50%),
     #e8edf4;
+}
+
+.panel-surface input,
+.panel-surface select,
+.panel-surface textarea {
+  color: #001f54;
+}
+
+.panel-surface input::placeholder,
+.panel-surface textarea::placeholder {
+  color: rgb(0 31 84 / 0.45);
+  opacity: 1;
 }
 
 .panel-card {

@@ -37,6 +37,8 @@ export default async function TrabajoDetailPage({ params }: Props) {
       assignedAt: jobAssignments.assignedAt,
       emailSentAt: jobAssignments.emailSentAt,
       notes: jobAssignments.notes,
+      driverId: jobAssignments.driverId,
+      truckId: jobAssignments.truckId,
       driverName: drivers.name,
       driverEmail: drivers.email,
       truckPlate: trucks.plate,
@@ -48,11 +50,26 @@ export default async function TrabajoDetailPage({ params }: Props) {
     .where(eq(jobAssignments.jobId, id))
     .orderBy(desc(jobAssignments.assignedAt));
 
+  const latestAssignment = assignments[0] ?? null;
+
   const activeDrivers = await db
     .select({ id: drivers.id, name: drivers.name, email: drivers.email })
     .from(drivers)
     .where(eq(drivers.active, true))
     .orderBy(asc(drivers.name));
+
+  // Keep current assignee selectable even if marked inactive
+  const driverOptions = [...activeDrivers];
+  if (
+    latestAssignment &&
+    !driverOptions.some((d) => d.id === latestAssignment.driverId)
+  ) {
+    driverOptions.unshift({
+      id: latestAssignment.driverId,
+      name: latestAssignment.driverName,
+      email: latestAssignment.driverEmail,
+    });
+  }
 
   const driverLogins = await db
     .select({ driverId: staffUsers.driverId })
@@ -75,6 +92,18 @@ export default async function TrabajoDetailPage({ params }: Props) {
     .from(trucks)
     .where(eq(trucks.active, true))
     .orderBy(asc(trucks.plate));
+
+  const truckOptions = [...activeTrucks];
+  if (
+    latestAssignment &&
+    !truckOptions.some((t) => t.id === latestAssignment.truckId)
+  ) {
+    truckOptions.unshift({
+      id: latestAssignment.truckId,
+      plate: latestAssignment.truckPlate,
+      label: latestAssignment.truckLabel,
+    });
+  }
 
   const assignAction = assignJob.bind(null, id);
   const scheduleAction = updateJobSchedule.bind(null, id);
@@ -104,6 +133,12 @@ export default async function TrabajoDetailPage({ params }: Props) {
           <div>
             <dt className="text-ep3-navy/60">Cliente</dt>
             <dd className="font-medium text-ep3-navy">{job.clientName}</dd>
+          </div>
+          <div>
+            <dt className="text-ep3-navy/60">Conductor</dt>
+            <dd className="font-medium text-ep3-navy">
+              {latestAssignment?.driverName ?? "Sin asignar"}
+            </dd>
           </div>
           <div>
             <dt className="text-ep3-navy/60">Teléfono</dt>
@@ -264,7 +299,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
         )}
 
         {job.status === "pending_assignment" || job.status === "assigned" ? (
-          activeDrivers.length === 0 || activeTrucks.length === 0 ? (
+          driverOptions.length === 0 || truckOptions.length === 0 ? (
             <p className="text-sm text-amber-800">
               Necesitas al menos un conductor y un camión activos para asignar.
             </p>
@@ -274,13 +309,16 @@ export default async function TrabajoDetailPage({ params }: Props) {
               className="space-y-4 border-t border-ep3-navy/10 pt-4"
             >
               <h3 className="font-medium text-ep3-navy">
-                Asignar conductor y camión
+                {latestAssignment
+                  ? "Reasignar conductor y camión"
+                  : "Asignar conductor y camión"}
               </h3>
               <SelectField
                 label="Conductor"
                 name="driverId"
                 required
-                options={activeDrivers.map((d) => ({
+                defaultValue={latestAssignment?.driverId}
+                options={driverOptions.map((d) => ({
                   value: d.id,
                   label: driversWithAppAccess.has(d.id)
                     ? `${d.name} (${d.email})`
@@ -295,7 +333,8 @@ export default async function TrabajoDetailPage({ params }: Props) {
                 label="Camión"
                 name="truckId"
                 required
-                options={activeTrucks.map((t) => ({
+                defaultValue={latestAssignment?.truckId}
+                options={truckOptions.map((t) => ({
                   value: t.id,
                   label: t.label ? `${t.plate} — ${t.label}` : t.plate,
                 }))}
@@ -306,8 +345,16 @@ export default async function TrabajoDetailPage({ params }: Props) {
                 type="time"
                 defaultValue={job.scheduledTime ?? undefined}
               />
-              <TextArea label="Notas para el conductor" name="notes" />
-              <SubmitButton label="Asignar conductor" />
+              <TextArea
+                label="Notas para el conductor"
+                name="notes"
+                defaultValue={latestAssignment?.notes}
+              />
+              <SubmitButton
+                label={
+                  latestAssignment ? "Actualizar asignación" : "Asignar conductor"
+                }
+              />
             </form>
           )
         ) : null}

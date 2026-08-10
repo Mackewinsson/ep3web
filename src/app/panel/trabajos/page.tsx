@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import {
   EmptyState,
@@ -8,7 +8,7 @@ import {
 } from "@/components/panel/ui";
 import { RecordList } from "@/components/panel/record-list";
 import { db } from "@/db";
-import { clients, jobs } from "@/db/schema";
+import { clients, drivers, jobAssignments, jobs } from "@/db/schema";
 import { formatDate, JOB_STATUS_LABELS, jobStatusTone } from "@/lib/format";
 
 const FILTERS = [
@@ -57,6 +57,28 @@ export default async function TrabajosPage({ searchParams }: Props) {
         .orderBy(desc(jobs.createdAt))
     : await query.orderBy(desc(jobs.createdAt));
 
+  const jobIds = rows.map((r) => r.id);
+  const assignmentByJob = new Map<string, string>();
+
+  if (jobIds.length > 0) {
+    const assignmentRows = await db
+      .select({
+        jobId: jobAssignments.jobId,
+        driverName: drivers.name,
+        assignedAt: jobAssignments.assignedAt,
+      })
+      .from(jobAssignments)
+      .innerJoin(drivers, eq(jobAssignments.driverId, drivers.id))
+      .where(inArray(jobAssignments.jobId, jobIds))
+      .orderBy(desc(jobAssignments.assignedAt));
+
+    for (const row of assignmentRows) {
+      if (!assignmentByJob.has(row.jobId)) {
+        assignmentByJob.set(row.jobId, row.driverName);
+      }
+    }
+  }
+
   return (
     <div>
       <PageHeader
@@ -92,29 +114,36 @@ export default async function TrabajosPage({ searchParams }: Props) {
         ) : (
           <RecordList
             emptyMessage="No hay trabajos con este filtro."
-            items={rows.map((row) => ({
-              id: row.id,
-              href: `/panel/trabajos/${row.id}`,
-              title: row.clientName,
-              badge: (
-                <StatusBadge
-                  label={JOB_STATUS_LABELS[row.status] ?? row.status}
-                  tone={jobStatusTone(row.status)}
-                />
-              ),
-              fields: [
-                {
-                  label: "Ruta",
-                  value: (
-                    <span className="line-clamp-2">
-                      {row.originAddress} → {row.destinationAddress}
-                    </span>
-                  ),
-                },
-                { label: "Fecha", value: formatDate(row.scheduledDate) },
-                { label: "Teléfono", value: row.clientPhone ?? "—" },
-              ],
-            }))}
+            items={rows.map((row) => {
+              const assignedDriver = assignmentByJob.get(row.id);
+              return {
+                id: row.id,
+                href: `/panel/trabajos/${row.id}`,
+                title: row.clientName,
+                badge: (
+                  <StatusBadge
+                    label={JOB_STATUS_LABELS[row.status] ?? row.status}
+                    tone={jobStatusTone(row.status)}
+                  />
+                ),
+                fields: [
+                  {
+                    label: "Ruta",
+                    value: (
+                      <span className="line-clamp-2">
+                        {row.originAddress} → {row.destinationAddress}
+                      </span>
+                    ),
+                  },
+                  { label: "Fecha", value: formatDate(row.scheduledDate) },
+                  {
+                    label: "Conductor",
+                    value: assignedDriver ?? "Sin asignar",
+                  },
+                  { label: "Teléfono", value: row.clientPhone ?? "—" },
+                ],
+              };
+            })}
           />
         )}
       </PanelCard>

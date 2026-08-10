@@ -3,6 +3,7 @@ import { db } from "@/db";
 import {
   budgets,
   clients,
+  drivers,
   jobAssignments,
   jobs,
   quoteRequests,
@@ -85,11 +86,14 @@ export async function getJobOperationalDetail(jobId: string) {
     .select({
       notes: jobAssignments.notes,
       driverId: jobAssignments.driverId,
+      truckId: jobAssignments.truckId,
+      driverName: drivers.name,
       truckPlate: trucks.plate,
       truckLabel: trucks.label,
       assignedAt: jobAssignments.assignedAt,
     })
     .from(jobAssignments)
+    .innerJoin(drivers, eq(jobAssignments.driverId, drivers.id))
     .innerJoin(trucks, eq(jobAssignments.truckId, trucks.id))
     .where(eq(jobAssignments.jobId, jobId))
     .orderBy(desc(jobAssignments.assignedAt))

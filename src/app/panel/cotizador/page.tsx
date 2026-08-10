@@ -16,6 +16,11 @@ import {
 import { requireAdmin } from "@/lib/auth";
 import { DEFAULT_PRICING_CONFIG } from "@/lib/quote-pricing";
 
+const fieldClass =
+  "w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2.5 text-base text-ep3-navy outline-none placeholder:text-ep3-navy/45 focus:border-ep3-navy md:text-sm";
+
+const labelClass = "mb-1 block text-sm font-medium text-ep3-navy";
+
 export default async function CotizadorAdminPage() {
   await requireAdmin();
 
@@ -40,17 +45,17 @@ export default async function CotizadorAdminPage() {
     : DEFAULT_PRICING_CONFIG;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-ep3-navy">
       <PageHeader
         title="Cotizador web"
         description="Parámetros de volumen, cajas y precio usados en /cotizar. Solo admin."
       />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-ep3-navy">
           Cálculo (fuente única)
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-ep3-navy/65">
           Lógica en <code className="text-xs">src/lib/quote-pricing/</code>.
           Estos valores alimentan esa lógica.
         </p>
@@ -58,64 +63,62 @@ export default async function CotizadorAdminPage() {
           action={updateQuotePricingSettings}
           className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
-          <label className="text-sm">
-            <span className="mb-1 block font-medium">Cajas por m³</span>
+          <label className="block">
+            <span className={labelClass}>Cajas por m³</span>
             <input
               name="boxesPerM3"
               type="number"
               step="0.01"
               min="0.01"
               defaultValue={cfg.boxesPerM3}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className={fieldClass}
               required
             />
           </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-medium">Mínimo de cajas</span>
+          <label className="block">
+            <span className={labelClass}>Mínimo de cajas</span>
             <input
               name="minBoxes"
               type="number"
               min="0"
               defaultValue={cfg.minBoxes}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className={fieldClass}
               required
             />
           </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-medium">Volumen por caja (m³)</span>
+          <label className="block">
+            <span className={labelClass}>Volumen por caja (m³)</span>
             <input
               name="boxVolumeM3"
               type="number"
               step="0.001"
               min="0.001"
               defaultValue={cfg.boxVolumeM3}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className={fieldClass}
               required
             />
           </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-medium">Precio por m³ (CLP)</span>
+          <label className="block">
+            <span className={labelClass}>Precio por m³ (CLP)</span>
             <input
               name="pricePerM3"
               type="number"
               min="0"
               step="1"
               defaultValue={cfg.pricePerM3}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className={fieldClass}
               required
             />
           </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-medium">
-              Recargo piso sin ascensor (CLP)
-            </span>
+          <label className="block">
+            <span className={labelClass}>Recargo piso sin ascensor (CLP)</span>
             <input
               name="noElevatorPerFloor"
               type="number"
               min="0"
               step="1"
               defaultValue={cfg.noElevatorPerFloor}
-              className="w-full rounded-md border border-slate-300 px-3 py-2"
+              className={fieldClass}
               required
             />
           </label>
@@ -131,7 +134,7 @@ export default async function CotizadorAdminPage() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-ep3-navy">
           Nueva categoría
         </h2>
         <form
@@ -142,7 +145,8 @@ export default async function CotizadorAdminPage() {
             name="name"
             placeholder="Nombre categoría"
             required
-            className="min-w-[220px] flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+            aria-label="Nombre categoría"
+            className={`min-w-[220px] flex-1 ${fieldClass}`}
           />
           <button
             type="submit"
@@ -154,7 +158,7 @@ export default async function CotizadorAdminPage() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Nuevo ítem</h2>
+        <h2 className="text-lg font-semibold text-ep3-navy">Nuevo ítem</h2>
         <form
           action={createMovingCatalogItem}
           className="mt-3 grid gap-3 sm:grid-cols-4"
@@ -162,7 +166,8 @@ export default async function CotizadorAdminPage() {
           <select
             name="categoryId"
             required
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm sm:col-span-2"
+            aria-label="Categoría"
+            className={`${fieldClass} sm:col-span-2`}
             defaultValue=""
           >
             <option value="" disabled>
@@ -178,7 +183,8 @@ export default async function CotizadorAdminPage() {
             name="name"
             placeholder="Nombre ítem"
             required
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+            aria-label="Nombre ítem"
+            className={fieldClass}
           />
           <input
             name="volumeM3"
@@ -187,7 +193,8 @@ export default async function CotizadorAdminPage() {
             min="0.01"
             placeholder="m³"
             required
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+            aria-label="Volumen en m³"
+            className={fieldClass}
           />
           <button
             type="submit"
@@ -199,7 +206,7 @@ export default async function CotizadorAdminPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Catálogo</h2>
+        <h2 className="text-lg font-semibold text-ep3-navy">Catálogo</h2>
         {categories.map((category) => {
           const catItems = items.filter((i) => i.categoryId === category.id);
           return (
@@ -207,9 +214,9 @@ export default async function CotizadorAdminPage() {
               key={category.id}
               className="overflow-hidden rounded-xl border border-slate-200 bg-white"
             >
-              <div className="border-b border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold">
+              <div className="border-b border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-ep3-navy">
                 {category.name}{" "}
-                <span className="font-normal text-slate-400">
+                <span className="font-normal text-ep3-navy/50">
                   ({catItems.length})
                 </span>
               </div>
@@ -226,7 +233,8 @@ export default async function CotizadorAdminPage() {
                       <input
                         name="name"
                         defaultValue={item.name}
-                        className="min-w-[160px] flex-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                        aria-label="Nombre del ítem"
+                        className={`min-w-[160px] flex-1 ${fieldClass}`}
                       />
                       <input
                         name="volumeM3"
@@ -234,11 +242,12 @@ export default async function CotizadorAdminPage() {
                         step="0.01"
                         min="0.01"
                         defaultValue={Number(item.volumeM3)}
-                        className="w-24 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                        aria-label="Volumen m³"
+                        className={`w-24 ${fieldClass}`}
                       />
                       <button
                         type="submit"
-                        className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold"
+                        className="rounded-md border border-ep3-navy/20 px-3 py-1.5 text-xs font-semibold text-ep3-navy"
                       >
                         Guardar
                       </button>
@@ -255,7 +264,7 @@ export default async function CotizadorAdminPage() {
                         className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
                           item.active
                             ? "bg-emerald-50 text-emerald-800"
-                            : "bg-slate-100 text-slate-500"
+                            : "bg-slate-100 text-ep3-navy/55"
                         }`}
                       >
                         {item.active ? "Activo" : "Inactivo"}
@@ -264,7 +273,7 @@ export default async function CotizadorAdminPage() {
                   </li>
                 ))}
                 {!catItems.length ? (
-                  <li className="px-4 py-3 text-sm text-slate-400">
+                  <li className="px-4 py-3 text-sm text-ep3-navy/50">
                     Sin ítems
                   </li>
                 ) : null}
