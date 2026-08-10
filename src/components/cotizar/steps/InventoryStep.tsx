@@ -15,6 +15,7 @@ type Props = {
   quantities: Record<string, number>;
   packingBoxes: number;
   onQuantityChange: (itemId: string, qty: number) => void;
+  onPackingBoxesChange: (boxes: number) => void;
 };
 
 export function InventoryStep({
@@ -23,6 +24,7 @@ export function InventoryStep({
   quantities,
   packingBoxes,
   onQuantityChange,
+  onPackingBoxesChange,
 }: Props) {
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(
     catalog.categories[0]?.id ?? null,
@@ -54,6 +56,43 @@ export function InventoryStep({
               </span>
             ) : null}
           </p>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-dashed border-ep3-navy/25 bg-ep3-navy/5 px-3 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ep3-navy">
+              Cajas de embalaje
+            </p>
+            <p className="text-xs text-slate-500">
+              Ropa, loza, libros… Al continuar te sugerimos una cantidad según
+              el volumen.
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              aria-label="Quitar una caja"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 text-lg text-slate-700 active:bg-slate-100"
+              onClick={() =>
+                onPackingBoxesChange(Math.max(0, packingBoxes - 1))
+              }
+            >
+              −
+            </button>
+            <span className="w-8 text-center text-sm font-semibold tabular-nums">
+              {packingBoxes}
+            </span>
+            <button
+              type="button"
+              aria-label="Agregar una caja"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 bg-ep3-navy text-lg font-bold text-ep3-yellow active:brightness-110"
+              onClick={() => onPackingBoxesChange(packingBoxes + 1)}
+            >
+              +
+            </button>
+          </div>
         </div>
       </div>
 

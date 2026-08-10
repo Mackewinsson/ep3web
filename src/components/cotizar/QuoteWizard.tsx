@@ -167,18 +167,12 @@ export function QuoteWizard({
     if (stepIndex > 0) setStepIndex((i) => i - 1);
   };
 
-  const acceptBoxes = () => {
+  const confirmBoxes = (boxes: number) => {
     setState((prev) => ({
       ...prev,
-      packingBoxes: suggestedBoxes,
+      packingBoxes: Math.max(0, Math.floor(boxes)),
       boxesPromptSeen: true,
     }));
-    setShowBoxesModal(false);
-    setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
-  };
-
-  const declineBoxes = () => {
-    setState((prev) => ({ ...prev, boxesPromptSeen: true }));
     setShowBoxesModal(false);
     setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
   };
@@ -248,6 +242,9 @@ export function QuoteWizard({
                 quantities={state.quantities}
                 packingBoxes={state.packingBoxes}
                 onQuantityChange={setQuantity}
+                onPackingBoxesChange={(packingBoxes) =>
+                  setState((s) => ({ ...s, packingBoxes }))
+                }
               />
             ) : null}
 
@@ -344,8 +341,7 @@ export function QuoteWizard({
       {showBoxesModal ? (
         <BoxesSuggestModal
           suggested={suggestedBoxes}
-          onAccept={acceptBoxes}
-          onDecline={declineBoxes}
+          onConfirm={confirmBoxes}
         />
       ) : null}
     </div>
