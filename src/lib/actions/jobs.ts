@@ -131,6 +131,15 @@ export async function assignJob(jobId: string, formData: FormData) {
     })
     .where(eq(jobs.id, jobId));
 
+  const { notifyDriver } = await import("@/lib/notifications");
+  await notifyDriver({
+    driverId: parsed.driverId,
+    type: "job_assigned",
+    title: "Nuevo trabajo asignado",
+    body: `${client.name}: ${job.originAddress} → ${job.destinationAddress}`,
+    href: `/panel/mis-trabajos/${jobId}`,
+  });
+
   revalidatePath(`/panel/trabajos/${jobId}`);
   revalidatePath("/panel/trabajos");
   revalidatePath("/panel");
@@ -174,6 +183,19 @@ export async function driverAdvanceJob(
     .update(jobs)
     .set({ status: nextStatus, updatedAt: new Date() })
     .where(eq(jobs.id, jobId));
+
+  if (nextStatus === "completed") {
+    const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
+    const { notifyAdmins } = await import("@/lib/notifications");
+    await notifyAdmins({
+      type: "job_completed",
+      title: "Trabajo completado",
+      body: job
+        ? `${job.originAddress} → ${job.destinationAddress}`
+        : `Trabajo ${jobId}`,
+      href: `/panel/trabajos/${jobId}`,
+    });
+  }
 
   revalidatePath(`/panel/mis-trabajos/${jobId}`);
   revalidatePath("/panel/mis-trabajos");

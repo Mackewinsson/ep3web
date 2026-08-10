@@ -22,6 +22,13 @@
       "when": 1786188695735,
       "tag": "0002_goofy_sharon_carter",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786359413134,
+      "tag": "0003_quote_catalog",
+      "breakpoints": true
     }
   ]
 }

@@ -269,8 +269,8 @@ export default async function Home({
             <a href="#paquetes" className="transition hover:text-ep3-yellow">
               Paquetes
             </a>
-            <a href="#presupuesto" className="transition hover:text-ep3-yellow">
-              Presupuesto
+            <a href="/cotizar" className="transition hover:text-ep3-yellow">
+              Cotizar
             </a>
             <a href="#servicios" className="transition hover:text-ep3-yellow">
               Servicios
@@ -302,10 +302,10 @@ export default async function Home({
             Paquetes
           </a>
           <a
-            href="#presupuesto"
+            href="/cotizar"
             className="shrink-0 rounded-full px-3 py-2 transition hover:bg-white/10 hover:text-ep3-yellow"
           >
-            Presupuesto
+            Cotizar
           </a>
           <a
             href="#servicios"
@@ -396,11 +396,11 @@ export default async function Home({
                 priority
               />
               <a
-                href="#presupuesto"
+                href="/cotizar"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold shadow-lg transition hover:brightness-110 hover:shadow-xl sm:w-auto md:px-8 md:py-3.5"
                 style={{ background: yellow, color: navy }}
               >
-                Pedir presupuesto
+                Cotizar mudanza
               </a>
               <a
                 href="https://wa.link/9rr0si"

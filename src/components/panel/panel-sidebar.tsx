@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { NotificationBell } from "@/components/panel/notification-bell";
 import type { StaffRole } from "@/lib/auth/constants";
+import type { NotificationDto } from "@/lib/notifications";
 
 const ADMIN_NAV = [
   { href: "/panel", label: "Inicio" },
   { href: "/panel/cotizaciones", label: "Cotizaciones" },
   { href: "/panel/presupuestos", label: "Presupuestos" },
   { href: "/panel/trabajos", label: "Trabajos" },
+  { href: "/panel/cotizador", label: "Cotizador web" },
   { href: "/panel/paquetes", label: "Paquetes" },
   { href: "/panel/clientes", label: "Clientes" },
   { href: "/panel/conductores", label: "Conductores" },
@@ -74,11 +77,15 @@ export function PanelShell({
   userName,
   role = "admin",
   logoutAction,
+  notifications = [],
+  unreadCount = 0,
 }: {
   children: React.ReactNode;
   userName?: string | null;
   role?: StaffRole;
   logoutAction: () => Promise<void>;
+  notifications?: NotificationDto[];
+  unreadCount?: number;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -178,6 +185,10 @@ export function PanelShell({
             <p className="text-sm text-ep3-navy/70">{subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
+            <NotificationBell
+              initialItems={notifications}
+              unreadCount={unreadCount}
+            />
             {firstName ? (
               <span className="text-sm text-ep3-navy/80">{firstName}</span>
             ) : null}

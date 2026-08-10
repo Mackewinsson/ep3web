@@ -239,6 +239,14 @@ export async function setBudgetStatus(
         })
         .returning();
 
+      const { notifyAdmins } = await import("@/lib/notifications");
+      await notifyAdmins({
+        type: "new_job",
+        title: "Nuevo trabajo sin conductor",
+        body: `${budget.title} — asignar conductor y camión`,
+        href: `/panel/trabajos/${job.id}`,
+      });
+
       revalidatePath("/panel/trabajos");
       revalidatePath("/panel");
       redirect(`/panel/trabajos/${job.id}`);

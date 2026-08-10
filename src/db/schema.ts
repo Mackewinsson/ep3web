@@ -239,6 +239,80 @@ export const jobAssignments = pgTable("job_assignments", {
   notes: text("notes"),
 });
 
+/** Singleton-ish pricing knobs for /cotizar (admin editable) */
+export const quotePricingSettings = pgTable("quote_pricing_settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  boxesPerM3: numeric("boxes_per_m3", { precision: 8, scale: 3 })
+    .default("0.700")
+    .notNull(),
+  minBoxes: integer("min_boxes").default(6).notNull(),
+  boxVolumeM3: numeric("box_volume_m3", { precision: 8, scale: 3 })
+    .default("0.080")
+    .notNull(),
+  pricePerM3: numeric("price_per_m3", { precision: 14, scale: 2 })
+    .default("25000")
+    .notNull(),
+  noElevatorPerFloor: numeric("no_elevator_per_floor", {
+    precision: 14,
+    scale: 2,
+  })
+    .default("15000")
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const movingCategories = pgTable("moving_categories", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  slug: varchar("slug", { length: 120 }).notNull().unique(),
+  name: varchar("name", { length: 160 }).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const movingCatalogItems = pgTable("moving_catalog_items", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  categoryId: uuid("category_id")
+    .notNull()
+    .references(() => movingCategories.id, { onDelete: "cascade" }),
+  slug: varchar("slug", { length: 160 }).notNull().unique(),
+  name: varchar("name", { length: 200 }).notNull(),
+  volumeM3: numeric("volume_m3", { precision: 10, scale: 3 })
+    .default("0.1")
+    .notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** In-app notifications for panel staff (admin / driver) */
+export const notifications = pgTable("notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  staffUserId: uuid("staff_user_id")
+    .notNull()
+    .references(() => staffUsers.id, { onDelete: "cascade" }),
+  type: varchar("type", { length: 60 }).notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  body: text("body"),
+  href: varchar("href", { length: 300 }),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const clientsRelations = relations(clients, ({ many }) => ({
   quoteRequests: many(quoteRequests),
   budgets: many(budgets),
@@ -311,5 +385,29 @@ export const jobAssignmentsRelations = relations(jobAssignments, ({ one }) => ({
   truck: one(trucks, {
     fields: [jobAssignments.truckId],
     references: [trucks.id],
+  }),
+}));
+
+export const movingCategoriesRelations = relations(
+  movingCategories,
+  ({ many }) => ({
+    items: many(movingCatalogItems),
+  }),
+);
+
+export const movingCatalogItemsRelations = relations(
+  movingCatalogItems,
+  ({ one }) => ({
+    category: one(movingCategories, {
+      fields: [movingCatalogItems.categoryId],
+      references: [movingCategories.id],
+    }),
+  }),
+);
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  staffUser: one(staffUsers, {
+    fields: [notifications.staffUserId],
+    references: [staffUsers.id],
   }),
 }));

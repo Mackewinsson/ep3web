@@ -1,0 +1,743 @@
+{
+  "categories": [
+    {
+      "id": "camas",
+      "name": "Camas",
+      "items": [
+        {
+          "id": "cama-king-incluye-colchon",
+          "name": "Cama King (incluye Colchón)",
+          "volumeM3": 1.2
+        },
+        {
+          "id": "cama-2-plazas-incluye-colchon",
+          "name": "Cama 2 Plazas (incluye Colchón)",
+          "volumeM3": 1
+        },
+        {
+          "id": "cama-1-1-2-plaza-incluye-colchon",
+          "name": "Cama 1 1/2 Plaza (incluye Colchón)",
+          "volumeM3": 0.8
+        },
+        {
+          "id": "cama-1-plaza-incluye-colchon",
+          "name": "Cama 1 Plaza (incluye Colchón)",
+          "volumeM3": 0.6
+        },
+        {
+          "id": "cama-nido-incluye-colchon",
+          "name": "Cama Nido (incluye Colchón)",
+          "volumeM3": 0.7
+        },
+        {
+          "id": "camarote-incluye-colchon",
+          "name": "Camarote (incluye Colchón)",
+          "volumeM3": 1.1
+        },
+        {
+          "id": "respaldo-de-cama-pequeno",
+          "name": "Respaldo de Cama pequeño",
+          "volumeM3": 0.15
+        },
+        {
+          "id": "cuna-desarmable",
+          "name": "Cuna Desarmable",
+          "volumeM3": 0.35
+        },
+        {
+          "id": "cuna-no-desarmable",
+          "name": "Cuna No Desarmable",
+          "volumeM3": 0.45
+        },
+        {
+          "id": "colchon-king-o-2-plazas",
+          "name": "Colchón King o 2 Plazas",
+          "volumeM3": 0.45
+        },
+        {
+          "id": "colchon-1-o-1-1-2-plaza",
+          "name": "Colchón 1 o 1 1/2 Plaza",
+          "volumeM3": 0.3
+        },
+        {
+          "id": "cama-clinica-hasta-100kg-de-peso",
+          "name": "Cama clínica (hasta 100Kg de peso)",
+          "volumeM3": 1.3
+        },
+        {
+          "id": "respaldo-de-cama-mediano",
+          "name": "Respaldo de Cama mediano",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "respaldo-de-cama-grande",
+          "name": "Respaldo de Cama grande",
+          "volumeM3": 0.35
+        },
+        {
+          "id": "base-cama-1-plaza",
+          "name": "Base cama 1 plaza",
+          "volumeM3": 0.35
+        }
+      ]
+    },
+    {
+      "id": "comodas-veladores",
+      "name": "Cómodas, Veladores y Otros",
+      "items": [
+        {
+          "id": "velador",
+          "name": "Velador",
+          "volumeM3": 0.15
+        },
+        {
+          "id": "comoda",
+          "name": "Cómoda",
+          "volumeM3": 0.5
+        },
+        {
+          "id": "estante",
+          "name": "Estante",
+          "volumeM3": 0.55
+        },
+        {
+          "id": "repisa-escalera",
+          "name": "Repisa Escalera",
+          "volumeM3": 0.45
+        },
+        {
+          "id": "biblioteca",
+          "name": "Biblioteca",
+          "volumeM3": 0.7
+        },
+        {
+          "id": "rack-tv-pequeno",
+          "name": "Rack TV Pequeño",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "rack-tv-mediano",
+          "name": "Rack TV Mediano",
+          "volumeM3": 0.4
+        },
+        {
+          "id": "rack-tv-grande",
+          "name": "Rack TV Grande",
+          "volumeM3": 0.8
+        },
+        {
+          "id": "bar",
+          "name": "Bar",
+          "volumeM3": 0.7
+        },
+        {
+          "id": "vitrina-o-buffet",
+          "name": "Vitrina o Buffet",
+          "volumeM3": 0.75
+        },
+        {
+          "id": "ropero",
+          "name": "Ropero",
+          "volumeM3": 1
+        },
+        {
+          "id": "zapatera",
+          "name": "Zapatera",
+          "volumeM3": 0.3
+        }
+      ]
+    },
+    {
+      "id": "mesas",
+      "name": "Mesas",
+      "items": [
+        {
+          "id": "arrimo",
+          "name": "Arrimo",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "escritorio-mediano",
+          "name": "Escritorio Mediano",
+          "volumeM3": 0.45
+        },
+        {
+          "id": "escritorio-grande",
+          "name": "Escritorio Grande",
+          "volumeM3": 0.65
+        },
+        {
+          "id": "escritorio-mediano-de-vidrio",
+          "name": "Escritorio Mediano de Vidrio",
+          "volumeM3": 0.45
+        },
+        {
+          "id": "escritorio-grande-de-vidrio",
+          "name": "Escritorio Grande de Vidrio",
+          "volumeM3": 0.65
+        },
+        {
+          "id": "mesa-de-centro",
+          "name": "Mesa de Centro",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "mesa-de-centro-de-vidrio",
+          "name": "Mesa de Centro de Vidrio",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "mesa-lateral-nido",
+          "name": "Mesa Lateral/Nido",
+          "volumeM3": 0.12
+        },
+        {
+          "id": "mesa-lateral-nido-de-vidrio",
+          "name": "Mesa Lateral/Nido de Vidrio",
+          "volumeM3": 0.12
+        },
+        {
+          "id": "mesa-de-cocina",
+          "name": "Mesa de Cocina",
+          "volumeM3": 0.4
+        },
+        {
+          "id": "mesa-comedor-4-personas",
+          "name": "Mesa Comedor 4 Personas",
+          "volumeM3": 0.55
+        },
+        {
+          "id": "mesa-comedor-6-personas",
+          "name": "Mesa Comedor 6 Personas",
+          "volumeM3": 0.75
+        },
+        {
+          "id": "mesa-comedor-8-personas",
+          "name": "Mesa Comedor 8 Personas",
+          "volumeM3": 0.95
+        },
+        {
+          "id": "mesa-comedor-10-personas",
+          "name": "Mesa Comedor 10 Personas",
+          "volumeM3": 1.15
+        },
+        {
+          "id": "mesa-comedor-vidrio-4-personas",
+          "name": "Mesa Comedor Vidrio 4 Personas",
+          "volumeM3": 0.55
+        },
+        {
+          "id": "mesa-comedor-vidrio-6-personas",
+          "name": "Mesa Comedor Vidrio 6 Personas",
+          "volumeM3": 0.75
+        },
+        {
+          "id": "mesa-comedor-vidrio-8-personas",
+          "name": "Mesa Comedor Vidrio 8 Personas",
+          "volumeM3": 0.95
+        },
+        {
+          "id": "mesa-comedor-vidrio-10-personas",
+          "name": "Mesa Comedor Vidrio 10 Personas",
+          "volumeM3": 1.15
+        },
+        {
+          "id": "tocador",
+          "name": "Tocador",
+          "volumeM3": 0.4
+        },
+        {
+          "id": "mesa-plegable",
+          "name": "Mesa Plegable",
+          "volumeM3": 0.2
+        }
+      ]
+    },
+    {
+      "id": "sofas",
+      "name": "Sofás",
+      "items": [
+        {
+          "id": "sitial",
+          "name": "Sitial",
+          "volumeM3": 0.35
+        },
+        {
+          "id": "sillon",
+          "name": "Sillón",
+          "volumeM3": 0.5
+        },
+        {
+          "id": "sofa-2-cuerpos",
+          "name": "Sofá 2 Cuerpos",
+          "volumeM3": 0.9
+        },
+        {
+          "id": "sofa-3-cuerpos",
+          "name": "Sofá 3 Cuerpos",
+          "volumeM3": 1.3
+        },
+        {
+          "id": "sofa-4-cuerpos",
+          "name": "Sofá 4 Cuerpos",
+          "volumeM3": 1.6
+        },
+        {
+          "id": "sillon-en-l",
+          "name": "Sillon en L",
+          "volumeM3": 2
+        },
+        {
+          "id": "futon-o-sofa-cama-de-1-plaza",
+          "name": "Futón o Sofá Cama de 1 Plaza",
+          "volumeM3": 0.7
+        },
+        {
+          "id": "futon-o-sofa-cama-de-2-plazas",
+          "name": "Futón o Sofá Cama de 2 Plazas",
+          "volumeM3": 1
+        },
+        {
+          "id": "puf",
+          "name": "Puf",
+          "volumeM3": 0.15
+        },
+        {
+          "id": "bergere",
+          "name": "Bergere",
+          "volumeM3": 0.55
+        }
+      ]
+    },
+    {
+      "id": "sillas",
+      "name": "Sillas",
+      "items": [
+        {
+          "id": "silla-de-comedor",
+          "name": "Silla de Comedor",
+          "volumeM3": 0.12
+        },
+        {
+          "id": "silla-de-cocina",
+          "name": "Silla de Cocina",
+          "volumeM3": 0.1
+        },
+        {
+          "id": "silla-de-escritorio",
+          "name": "Silla de Escritorio",
+          "volumeM3": 0.15
+        },
+        {
+          "id": "silla-reclinable",
+          "name": "Silla Reclinable",
+          "volumeM3": 0.4
+        },
+        {
+          "id": "silla-mecedora",
+          "name": "Silla Mecedora",
+          "volumeM3": 0.3
+        },
+        {
+          "id": "piso-de-baja-altura",
+          "name": "Piso de Baja Altura",
+          "volumeM3": 0.08
+        },
+        {
+          "id": "piso-alto",
+          "name": "Piso Alto",
+          "volumeM3": 0.12
+        },
+        {
+          "id": "silla-plegable",
+          "name": "Silla plegable",
+          "volumeM3": 0.08
+        },
+        {
+          "id": "piso-plastico-apilable",
+          "name": "Piso plástico apilable",
+          "volumeM3": 0.06
+        },
+        {
+          "id": "banqueta-comedor",
+          "name": "Banqueta comedor",
+          "volumeM3": 0.1
+        }
+      ]
+    },
+    {
+      "id": "cocina",
+      "name": "Cocina",
+      "items": [
+        {
+          "id": "refrigerador-1-puerta",
+          "name": "Refrigerador 1 Puerta",
+          "volumeM3": 0.7
+        },
+        {
+          "id": "refrigerador-2-puertas-side-by-side",
+          "name": "Refrigerador 2 Puertas Side by Side",
+          "volumeM3": 1.1
+        },
+        {
+          "id": "congeladora-o-freezer",
+          "name": "Congeladora o Freezer",
+          "volumeM3": 0.8
+        },
+        {
+          "id": "frigobar",
+          "name": "Frigobar",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "cava-de-vinos",
+          "name": "Cava de Vinos",
+          "volumeM3": 0.35
+        },
+        {
+          "id": "cocina",
+          "name": "Cocina",
+          "volumeM3": 0.55
+        },
+        {
+          "id": "horno-electrico",
+          "name": "Horno Eléctrico",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "microonda",
+          "name": "Microonda",
+          "volumeM3": 0.12
+        },
+        {
+          "id": "lavadora",
+          "name": "Lavadora",
+          "volumeM3": 0.55
+        },
+        {
+          "id": "secadora",
+          "name": "Secadora",
+          "volumeM3": 0.55
+        },
+        {
+          "id": "lavavajilla",
+          "name": "Lavavajilla",
+          "volumeM3": 0.4
+        },
+        {
+          "id": "artefactos-pequenos",
+          "name": "Artefactos Pequeños",
+          "volumeM3": 0.15
+        }
+      ]
+    },
+    {
+      "id": "electronica",
+      "name": "Electrónica",
+      "items": [
+        {
+          "id": "tv-pequena",
+          "name": "TV Pequeña",
+          "volumeM3": 0.12
+        },
+        {
+          "id": "tv-mediana",
+          "name": "TV Mediana",
+          "volumeM3": 0.2
+        },
+        {
+          "id": "tv-grande",
+          "name": "TV Grande",
+          "volumeM3": 0.3
+        },
+        {
+          "id": "tv-gigante",
+          "name": "TV Gigante",
+          "volumeM3": 0.45
+        },
+        {
+          "id": "computador-de-escritorio",
+          "name": "Computador de Escritorio",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "impresora-pequena",
+          "name": "Impresora Pequeña",
+          "volumeM3": 0.1
+        },
+        {
+          "id": "impresora-mediana",
+          "name": "Impresora Mediana",
+          "volumeM3": 0.2
+        },
+        {
+          "id": "equipo-de-musica",
+          "name": "Equipo de Música",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "aspiradora",
+          "name": "Aspiradora",
+          "volumeM3": 0.15
+        },
+        {
+          "id": "ac-portatil",
+          "name": "AC Portátil",
+          "volumeM3": 0.3
+        }
+      ]
+    },
+    {
+      "id": "lamparas",
+      "name": "Lámparas",
+      "items": [
+        {
+          "id": "lamparas-de-noche",
+          "name": "Lamparas de Noche",
+          "volumeM3": 0.05
+        },
+        {
+          "id": "lamparas-de-pie",
+          "name": "Lamparas de Pie",
+          "volumeM3": 0.12
+        },
+        {
+          "id": "lampara-colgante",
+          "name": "Lampara Colgante",
+          "volumeM3": 0.1
+        },
+        {
+          "id": "lampara-colgante-de-vidrio",
+          "name": "Lampara Colgante de Vidrio",
+          "volumeM3": 0.12
+        }
+      ]
+    },
+    {
+      "id": "miscelaneos",
+      "name": "Misceláneos",
+      "items": [
+        {
+          "id": "alfombra-pequena",
+          "name": "Alfombra Pequeña",
+          "volumeM3": 0.15
+        },
+        {
+          "id": "alfombra-grande",
+          "name": "Alfombra Grande",
+          "volumeM3": 0.35
+        },
+        {
+          "id": "baul",
+          "name": "Baúl",
+          "volumeM3": 0.35
+        },
+        {
+          "id": "biombo",
+          "name": "Biombo",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "canasto",
+          "name": "Canasto",
+          "volumeM3": 0.1
+        },
+        {
+          "id": "cuadros-pequenos",
+          "name": "Cuadros Pequeños",
+          "volumeM3": 0.05
+        },
+        {
+          "id": "cuadros-grandes",
+          "name": "Cuadros Grandes",
+          "volumeM3": 0.12
+        },
+        {
+          "id": "espejos",
+          "name": "Espejos",
+          "volumeM3": 0.1
+        },
+        {
+          "id": "estufa-a-gas",
+          "name": "Estufa a Gas",
+          "volumeM3": 0.2
+        },
+        {
+          "id": "estufa-electrica-pequena",
+          "name": "Estufa Electrica Pequeña",
+          "volumeM3": 0.12
+        },
+        {
+          "id": "estufa-electrica-grande",
+          "name": "Estufa Electrica Grande",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "bicicleta",
+          "name": "Bicicleta",
+          "volumeM3": 0.4
+        },
+        {
+          "id": "bolso-de-golf-y-palos",
+          "name": "Bolso de Golf y Palos",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "trotadora-eliptica-u-otra-maquina",
+          "name": "Trotadora, Elíptica u Otra Máquina",
+          "volumeM3": 1.2
+        },
+        {
+          "id": "mesa-de-ping-pong",
+          "name": "Mesa de Ping Pong",
+          "volumeM3": 1.5
+        },
+        {
+          "id": "mesa-de-taca-taca",
+          "name": "Mesa de Taca Taca",
+          "volumeM3": 0.8
+        },
+        {
+          "id": "cama-elastica",
+          "name": "Cama Elástica",
+          "volumeM3": 1
+        },
+        {
+          "id": "rascador-de-gatos",
+          "name": "Rascador de Gatos",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "organo-electrico-horizontal",
+          "name": "Organo Eléctrico Horizontal",
+          "volumeM3": 0.7
+        },
+        {
+          "id": "guitarra-bajo",
+          "name": "Guitarra / Bajo",
+          "volumeM3": 0.15
+        },
+        {
+          "id": "piano-vertical-sin-cola",
+          "name": "Piano Vertical (sin Cola)",
+          "volumeM3": 1.8
+        },
+        {
+          "id": "piano-de-cola",
+          "name": "Piano de Cola",
+          "volumeM3": 3.5
+        },
+        {
+          "id": "perchero",
+          "name": "Perchero",
+          "volumeM3": 0.15
+        },
+        {
+          "id": "mesa-de-planchado",
+          "name": "Mesa de planchado",
+          "volumeM3": 0.1
+        },
+        {
+          "id": "banco-de-pesas",
+          "name": "Banco de pesas",
+          "volumeM3": 0.5
+        },
+        {
+          "id": "disco-de-pesa",
+          "name": "Disco de pesa",
+          "volumeM3": 0.05
+        },
+        {
+          "id": "casa-de-ninos-plastica",
+          "name": "Casa de niños plástica",
+          "volumeM3": 0.6
+        },
+        {
+          "id": "ventilador",
+          "name": "Ventilador",
+          "volumeM3": 0.12
+        },
+        {
+          "id": "pelota-de-pilates",
+          "name": "Pelota de pilates",
+          "volumeM3": 0.08
+        },
+        {
+          "id": "escalera-plegable-pequena",
+          "name": "Escalera plegable pequeña",
+          "volumeM3": 0.1
+        },
+        {
+          "id": "escalera-plegable-grande",
+          "name": "Escalera plegable grande",
+          "volumeM3": 0.2
+        },
+        {
+          "id": "almohada",
+          "name": "Almohada",
+          "volumeM3": 0.03
+        },
+        {
+          "id": "cojin",
+          "name": "Cojín",
+          "volumeM3": 0.03
+        },
+        {
+          "id": "dispensador-de-agua",
+          "name": "Dispensador de agua",
+          "volumeM3": 0.2
+        },
+        {
+          "id": "colgador-de-ropa",
+          "name": "Colgador de ropa",
+          "volumeM3": 0.1
+        },
+        {
+          "id": "tabla-de-surf",
+          "name": "Tabla de surf",
+          "volumeM3": 0.3
+        },
+        {
+          "id": "tabla-de-snowboard",
+          "name": "Tabla de Snowboard",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "bidon-20-litros",
+          "name": "Bidón (20 litros)",
+          "volumeM3": 0.05
+        },
+        {
+          "id": "plancha-de-ropa-con-pedestal",
+          "name": "Plancha de ropa con pedestal",
+          "volumeM3": 0.15
+        },
+        {
+          "id": "jaula-de-pesas",
+          "name": "Jaula de pesas",
+          "volumeM3": 1
+        },
+        {
+          "id": "piso-goma-eva-individual",
+          "name": "Piso goma eva (individual)",
+          "volumeM3": 0.05
+        },
+        {
+          "id": "cooler",
+          "name": "Cooler",
+          "volumeM3": 0.15
+        },
+        {
+          "id": "arbol-de-navidad",
+          "name": "Árbol de navidad",
+          "volumeM3": 0.35
+        }
+      ]
+    }
+  ],
+  "packingBox": {
+    "id": "caja-de-mudanza",
+    "name": "Caja de mudanza",
+    "volumeM3": 0.08
+  }
+}
