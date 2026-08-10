@@ -162,7 +162,7 @@ export async function submitWizardQuote(
       title: `Cotización web — ${data.contact.name}`,
       currency: "CLP",
       totalAmount: estimate.totalAmount.toFixed(2),
-      status: "sent",
+      status: "draft",
       notes: volumeNotes,
     })
     .returning();

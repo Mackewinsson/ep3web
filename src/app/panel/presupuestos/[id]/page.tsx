@@ -2,7 +2,6 @@ import { asc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import {
   BackLink,
-  DataTable,
   Field,
   PageHeader,
   PanelCard,
@@ -56,7 +55,10 @@ export default async function PresupuestoDetailPage({ params }: Props) {
     .select()
     .from(budgetItems)
     .where(eq(budgetItems.budgetId, id))
-    .orderBy(asc(budgetItems.sortOrder));
+    .orderBy(asc(budgetItems.sortOrder), asc(budgetItems.description));
+
+  const inventoryItems = items.filter((i) => i.pricingUnit === "unit");
+  const chargeItems = items.filter((i) => i.pricingUnit !== "unit");
 
   const updateMeta = updateBudgetMeta.bind(null, id);
   const addItem = addBudgetItem.bind(null, id);
@@ -130,118 +132,58 @@ export default async function PresupuestoDetailPage({ params }: Props) {
         </form>
       </PanelCard>
 
-      <PanelCard>
-        <h2 className="mb-3 font-semibold text-ep3-navy">Ítems</h2>
-        {items.length === 0 ? (
-          <p className="mb-4 text-sm text-ep3-navy/60">Sin ítems aún.</p>
-        ) : (
-          <DataTable
-            headers={[
-              "Descripción",
-              "Unidad",
-              "Cant.",
-              "P. unitario",
-              "Subtotal",
-              "",
-            ]}
-          >
-            {items.map((item) => {
-              const sub = Number(item.quantity) * Number(item.unitPrice);
-              return (
-                <tr key={item.id} className="border-b border-ep3-navy/5 align-top">
-                  <td className="px-2 py-3" colSpan={6}>
-                    <form
-                      action={updateBudgetItem.bind(null, item.id)}
-                      className="grid gap-2 lg:grid-cols-[2fr_1fr_0.8fr_1fr_auto_auto] lg:items-end"
-                    >
-                      <label className="block text-sm">
-                        <span className="mb-1 block text-xs text-ep3-navy/55">
-                          Descripción
-                        </span>
-                        <input
-                          name="description"
-                          required
-                          defaultValue={item.description}
-                          className={inputClassName}
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        <span className="mb-1 block text-xs text-ep3-navy/55">
-                          Unidad
-                        </span>
-                        <select
-                          name="pricingUnit"
-                          defaultValue={item.pricingUnit}
-                          className={inputClassName}
-                        >
-                          <option value="fixed">
-                            {PRICING_UNIT_LABELS.fixed}
-                          </option>
-                          <option value="m3">{PRICING_UNIT_LABELS.m3}</option>
-                          <option value="unit">
-                            {PRICING_UNIT_LABELS.unit}
-                          </option>
-                        </select>
-                      </label>
-                      <label className="block text-sm">
-                        <span className="mb-1 block text-xs text-ep3-navy/55">
-                          Cant.
-                        </span>
-                        <input
-                          name="quantity"
-                          type="number"
-                          step="0.01"
-                          required
-                          defaultValue={item.quantity}
-                          className={inputClassName}
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        <span className="mb-1 block text-xs text-ep3-navy/55">
-                          Precio
-                        </span>
-                        <input
-                          name="unitPrice"
-                          type="number"
-                          step="1"
-                          required
-                          defaultValue={item.unitPrice}
-                          className={inputClassName}
-                        />
-                      </label>
-                      <div className="flex flex-col justify-end">
-                        <span className="mb-1 text-xs text-ep3-navy/55">
-                          Subtotal
-                        </span>
-                        <span className="py-2 text-sm font-medium text-ep3-navy">
-                          {formatClp(sub)}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-2 lg:justify-end">
-                        <button
-                          type="submit"
-                          className="min-h-11 rounded-md bg-ep3-navy px-3 py-2 text-sm text-white"
-                        >
-                          Guardar
-                        </button>
-                        <button
-                          formAction={deleteBudgetItem.bind(null, item.id)}
-                          type="submit"
-                          className="min-h-11 rounded-md border border-red-300 px-3 py-2 text-sm text-red-700"
-                        >
-                          Borrar
-                        </button>
-                      </div>
-                    </form>
-                  </td>
-                </tr>
-              );
-            })}
-          </DataTable>
-        )}
+      <section className="space-y-3">
+        <div>
+          <h2 className="font-semibold text-ep3-navy">
+            Inventario del cliente
+          </h2>
+          <p className="mt-1 text-sm text-ep3-navy/60">
+            Cada ítem que eligió en el cotizador. Puedes cambiar cantidad,
+            descripción, precio o borrarlo.
+          </p>
+        </div>
 
-        <form action={addItem} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="sm:col-span-2 lg:col-span-2">
+        {inventoryItems.length === 0 ? (
+          <PanelCard>
+            <p className="text-sm text-ep3-navy/60">
+              Sin ítems de inventario aún. Agrégalos abajo (unidad = por
+              unidad).
+            </p>
+          </PanelCard>
+        ) : (
+          <div className="space-y-3">
+            {inventoryItems.map((item) => (
+              <BudgetItemCard key={item.id} item={item} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="font-semibold text-ep3-navy">Cargos / precio</h2>
+          <p className="mt-1 text-sm text-ep3-navy/60">
+            Líneas de m³ o monto fijo (estimación interna y recargos).
+          </p>
+        </div>
+
+        {chargeItems.length === 0 ? (
+          <PanelCard>
+            <p className="text-sm text-ep3-navy/60">Sin cargos aún.</p>
+          </PanelCard>
+        ) : (
+          <div className="space-y-3">
+            {chargeItems.map((item) => (
+              <BudgetItemCard key={item.id} item={item} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <PanelCard>
+        <h2 className="mb-3 font-semibold text-ep3-navy">Agregar ítem</h2>
+        <form action={addItem} className="grid gap-3 sm:grid-cols-2">
+          <div className="sm:col-span-2">
             <Field label="Descripción" name="description" required />
           </div>
           <SelectField
@@ -250,9 +192,9 @@ export default async function PresupuestoDetailPage({ params }: Props) {
             required
             defaultValue="unit"
             options={[
-              { value: "fixed", label: "Precio fijo" },
+              { value: "unit", label: "Por unidad (inventario)" },
               { value: "m3", label: "Por m³" },
-              { value: "unit", label: "Por unidad" },
+              { value: "fixed", label: "Precio fijo" },
             ]}
           />
           <Field
@@ -264,17 +206,117 @@ export default async function PresupuestoDetailPage({ params }: Props) {
             required
           />
           <Field
-            label="Precio"
+            label="Precio unitario"
             name="unitPrice"
             type="number"
             step="1"
+            defaultValue={0}
             required
           />
-          <div className="sm:col-span-2 lg:col-span-5">
+          <div className="sm:col-span-2">
             <SubmitButton label="Agregar ítem" />
           </div>
         </form>
       </PanelCard>
     </div>
+  );
+}
+
+function BudgetItemCard({
+  item,
+}: {
+  item: {
+    id: string;
+    description: string;
+    pricingUnit: "fixed" | "m3" | "unit";
+    quantity: string;
+    unitPrice: string;
+  };
+}) {
+  const sub = Number(item.quantity) * Number(item.unitPrice);
+
+  return (
+    <PanelCard>
+      <form
+        action={updateBudgetItem.bind(null, item.id)}
+        className="space-y-3"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-ep3-navy/50">
+            {PRICING_UNIT_LABELS[item.pricingUnit] ?? item.pricingUnit}
+          </p>
+          <p className="text-sm font-semibold text-ep3-navy">
+            Subtotal: {formatClp(sub)}
+          </p>
+        </div>
+
+        <label className="block text-sm">
+          <span className="mb-1 block text-xs text-ep3-navy/55">
+            Descripción
+          </span>
+          <input
+            name="description"
+            required
+            defaultValue={item.description}
+            className={inputClassName}
+          />
+        </label>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <label className="block text-sm">
+            <span className="mb-1 block text-xs text-ep3-navy/55">Unidad</span>
+            <select
+              name="pricingUnit"
+              defaultValue={item.pricingUnit}
+              className={inputClassName}
+            >
+              <option value="unit">{PRICING_UNIT_LABELS.unit}</option>
+              <option value="m3">{PRICING_UNIT_LABELS.m3}</option>
+              <option value="fixed">{PRICING_UNIT_LABELS.fixed}</option>
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-xs text-ep3-navy/55">Cantidad</span>
+            <input
+              name="quantity"
+              type="number"
+              step="0.01"
+              required
+              defaultValue={item.quantity}
+              className={inputClassName}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block text-xs text-ep3-navy/55">
+              Precio unitario
+            </span>
+            <input
+              name="unitPrice"
+              type="number"
+              step="1"
+              required
+              defaultValue={item.unitPrice}
+              className={inputClassName}
+            />
+          </label>
+        </div>
+
+        <div className="flex flex-wrap gap-2 border-t border-ep3-navy/10 pt-3">
+          <button
+            type="submit"
+            className="min-h-11 rounded-md bg-ep3-navy px-3 py-2 text-sm text-white"
+          >
+            Guardar
+          </button>
+          <button
+            formAction={deleteBudgetItem.bind(null, item.id)}
+            type="submit"
+            className="min-h-11 rounded-md border border-red-300 px-3 py-2 text-sm text-red-700"
+          >
+            Quitar
+          </button>
+        </div>
+      </form>
+    </PanelCard>
   );
 }

@@ -160,21 +160,31 @@ export function buildQuoteEstimate(input: {
 
   const budgetLines: BudgetLineDraft[] = [];
 
+  // One editable ops line per catalog item the client selected (price 0 until admin adjusts)
+  for (const line of lines) {
+    budgetLines.push({
+      description: line.name,
+      pricingUnit: "unit",
+      quantity: line.quantity,
+      unitPrice: 0,
+    });
+  }
+
+  if (packingBoxes > 0) {
+    budgetLines.push({
+      description: "Caja de mudanza",
+      pricingUnit: "unit",
+      quantity: packingBoxes,
+      unitPrice: 0,
+    });
+  }
+
   if (totalM3 > 0) {
     budgetLines.push({
       description: `Mudanza estimada (${formatM3(totalM3)} m³)`,
       pricingUnit: "m3",
       quantity: Number(totalM3.toFixed(2)),
       unitPrice: config.pricePerM3,
-    });
-  }
-
-  if (packingBoxes > 0) {
-    budgetLines.push({
-      description: `Embalaje — ${packingBoxes} cajas de mudanza`,
-      pricingUnit: "unit",
-      quantity: packingBoxes,
-      unitPrice: 0,
     });
   }
 

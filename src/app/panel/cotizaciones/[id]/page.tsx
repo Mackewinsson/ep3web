@@ -12,7 +12,7 @@ import {
   TextArea,
 } from "@/components/panel/ui";
 import { db } from "@/db";
-import { clients, quoteRequests, servicePackages } from "@/db/schema";
+import { budgets, clients, quoteRequests, servicePackages } from "@/db/schema";
 import {
   convertQuoteToBudget,
   setQuoteStatus,
@@ -36,7 +36,7 @@ export default async function CotizacionDetailPage({ params }: Props) {
 
   if (!quote) notFound();
 
-  const [clientRows, packageRows] = await Promise.all([
+  const [clientRows, packageRows, linkedBudgets] = await Promise.all([
     db
       .select({ id: clients.id, name: clients.name })
       .from(clients)
@@ -46,6 +46,11 @@ export default async function CotizacionDetailPage({ params }: Props) {
       .from(servicePackages)
       .where(eq(servicePackages.active, true))
       .orderBy(asc(servicePackages.sortOrder)),
+    db
+      .select({ id: budgets.id, title: budgets.title, status: budgets.status })
+      .from(budgets)
+      .where(eq(budgets.quoteRequestId, id))
+      .orderBy(asc(budgets.createdAt)),
   ]);
 
   const update = updateQuoteRequest.bind(null, id);
@@ -59,6 +64,30 @@ export default async function CotizacionDetailPage({ params }: Props) {
           description={`Origen: ${quote.source === "website" ? "Sitio web" : "Panel"}`}
         />
       </div>
+
+      {linkedBudgets.length > 0 ? (
+        <PanelCard>
+          <h2 className="mb-2 font-semibold text-ep3-navy">
+            Inventario editable
+          </h2>
+          <p className="mb-3 text-sm text-ep3-navy/65">
+            Los ítems que eligió el cliente (agregar / quitar / cantidad) se
+            editan en el presupuesto vinculado.
+          </p>
+          <ul className="space-y-2">
+            {linkedBudgets.map((b) => (
+              <li key={b.id}>
+                <Link
+                  href={`/panel/presupuestos/${b.id}`}
+                  className="text-sm font-medium text-ep3-navy underline"
+                >
+                  {b.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </PanelCard>
+      ) : null}
 
       <PanelCard>
         <div className="mb-4 flex flex-wrap items-center gap-3">

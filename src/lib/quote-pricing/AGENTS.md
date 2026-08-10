@@ -24,7 +24,9 @@ Catalog categories/items: tables `moving_categories` / `moving_catalog_items`, s
 
 ## Public → ops flow
 
-1. User completes `/cotizar`
+1. User completes `/cotizar` (public UI shows volume/inventory, **not** price)
 2. Server action recalculates with DB config (never trust client totals)
-3. Creates `clients` + `quote_requests` (source=website) + `budgets` (status=sent) + `budget_items`
-4. Admin reviews presupuesto → approve → `jobs` (existing `setBudgetStatus`)
+3. Creates `clients` + `quote_requests` (source=website) + `budgets` (status=**draft**) + `budget_items`
+   - One **unit** line per inventory item (+ packing boxes) for ops editing
+   - Separate **m3/fixed** charge lines for internal price estimate
+4. Admin reviews/adjusts presupuesto cards in panel → mark sent / email client → approve → `jobs`

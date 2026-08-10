@@ -17,7 +17,6 @@ import {
   PARKING_LABELS,
   PROPERTY_TYPE_LABELS,
 } from "@/lib/quote-wizard-types";
-import { formatClp } from "@/lib/format";
 
 type Props = {
   state: QuoteWizardState;
@@ -71,10 +70,10 @@ export function SummaryStep({
   if (done) {
     return (
       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center text-emerald-900">
-        <h2 className="text-xl font-bold">¡Cotización enviada!</h2>
+        <h2 className="text-xl font-bold">¡Solicitud enviada!</h2>
         <p className="mt-2 text-sm">
-          Creamos tu solicitud y un presupuesto estimado en el panel. Te
-          contactaremos para confirmar.
+          Revisaremos tu mudanza y te enviaremos la cotización por correo o
+          WhatsApp. Si prefieres, escríbenos ahora.
         </p>
         <a
           href="https://wa.link/9rr0si"
@@ -91,19 +90,17 @@ export function SummaryStep({
   return (
     <div className="space-y-5">
       <h2 className="text-balance text-xl font-bold text-slate-900 sm:text-2xl">
-        Resumen de tu cotización
+        Resumen de tu solicitud
       </h2>
 
       <section className="rounded-xl border border-ep3-navy/20 bg-ep3-navy/5 p-4 text-sm">
-        <p className="font-semibold text-ep3-navy">Estimación automática</p>
+        <p className="font-semibold text-ep3-navy">Volumen estimado</p>
         <p className="mt-1 text-slate-700">
           {formatM3(estimate.totalM3)} m³ · {estimate.totalItems} ítems
         </p>
-        <p className="mt-1 break-words text-lg font-bold text-ep3-navy">
-          {formatClp(estimate.totalAmount)}
-        </p>
-        <p className="mt-1 text-xs text-slate-500">
-          Valor referencial. El equipo puede ajustarlo al revisar.
+        <p className="mt-2 text-xs text-slate-500">
+          El precio lo revisamos en el panel y te lo enviamos por correo cuando
+          esté listo.
         </p>
       </section>
 
