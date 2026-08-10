@@ -90,7 +90,7 @@ export function SummaryStep({
 
   return (
     <div className="space-y-5">
-      <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
+      <h2 className="text-balance text-xl font-bold text-slate-900 sm:text-2xl">
         Resumen de tu cotización
       </h2>
 
@@ -99,7 +99,7 @@ export function SummaryStep({
         <p className="mt-1 text-slate-700">
           {formatM3(estimate.totalM3)} m³ · {estimate.totalItems} ítems
         </p>
-        <p className="mt-1 text-lg font-bold text-ep3-navy">
+        <p className="mt-1 break-words text-lg font-bold text-ep3-navy">
           {formatClp(estimate.totalAmount)}
         </p>
         <p className="mt-1 text-xs text-slate-500">
@@ -109,7 +109,7 @@ export function SummaryStep({
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
         <h3 className="font-semibold text-slate-900">Direcciones</h3>
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2 break-words text-slate-600">
           <strong>Origen:</strong>{" "}
           {state.origin.propertyType
             ? PROPERTY_TYPE_LABELS[state.origin.propertyType]
@@ -119,7 +119,7 @@ export function SummaryStep({
             ? ` (${formatAddressExtras(state.origin)})`
             : ""}
         </p>
-        <p className="mt-1 text-slate-600">
+        <p className="mt-1 break-words text-slate-600">
           <strong>Destino:</strong>{" "}
           {state.destination.propertyType
             ? PROPERTY_TYPE_LABELS[state.destination.propertyType]
@@ -173,7 +173,7 @@ export function SummaryStep({
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
-        <p>
+        <p className="break-words">
           <strong>Contacto:</strong> {state.contact.name} · {state.contact.phone}
           {state.contact.email ? ` · ${state.contact.email}` : ""}
         </p>
@@ -194,7 +194,7 @@ export function SummaryStep({
         type="button"
         onClick={submit}
         disabled={pending}
-        className="w-full rounded-lg bg-ep3-yellow px-4 py-3 text-sm font-bold text-ep3-navy hover:brightness-95 disabled:opacity-60"
+        className="min-h-12 w-full rounded-lg bg-ep3-yellow px-4 py-3 text-sm font-bold text-ep3-navy hover:brightness-95 disabled:opacity-60"
       >
         {pending ? "Enviando…" : "Enviar cotización"}
       </button>

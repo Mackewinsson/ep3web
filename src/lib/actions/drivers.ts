@@ -85,15 +85,36 @@ async function syncDriverLogin(
     return;
   }
 
-  // Email might already be used by another staff user
+  // Email might already be used by another staff user — link orphan driver logins
   const [emailTaken] = await db
-    .select({ id: staffUsers.id, driverId: staffUsers.driverId })
+    .select({
+      id: staffUsers.id,
+      driverId: staffUsers.driverId,
+      role: staffUsers.role,
+    })
     .from(staffUsers)
     .where(eq(staffUsers.email, data.email))
     .limit(1);
 
-  if (emailTaken && emailTaken.driverId !== driverId) {
-    throw new Error("Ese correo ya tiene una cuenta de acceso.");
+  if (emailTaken) {
+    if (emailTaken.role !== "driver") {
+      throw new Error("Ese correo ya tiene una cuenta de acceso (admin).");
+    }
+    if (emailTaken.driverId && emailTaken.driverId !== driverId) {
+      throw new Error("Ese correo ya tiene una cuenta de acceso.");
+    }
+    const passwordHash = await bcrypt.hash(password!, 12);
+    await db
+      .update(staffUsers)
+      .set({
+        name: data.name,
+        passwordHash,
+        driverId,
+        active: true,
+        updatedAt: new Date(),
+      })
+      .where(eq(staffUsers.id, emailTaken.id));
+    return;
   }
 
   const passwordHash = await bcrypt.hash(password!, 12);

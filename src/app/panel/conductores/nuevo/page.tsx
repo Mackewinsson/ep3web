@@ -24,12 +24,13 @@ export default function NuevoConductorPage() {
 
           <div className="rounded-md border border-dashed border-ep3-navy/20 p-3 space-y-3">
             <label className="flex items-center gap-2 text-sm font-medium text-ep3-navy">
-              <input type="checkbox" name="enableAppAccess" />
+              <input type="checkbox" name="enableAppAccess" defaultChecked />
               Activar acceso de camionero
             </label>
             <p className="text-xs text-ep3-navy/60">
-              Usa el mismo correo para entrar en /sign-in. Solo verá sus trabajos
-              asignados.
+              Crea el usuario de panel (mismo correo) y lo vincula al conductor.
+              Sin esto no puede entrar a Mis trabajos ni recibir notificaciones
+              al asignarle un trabajo.
             </p>
             <Field
               label="Contraseña de acceso"

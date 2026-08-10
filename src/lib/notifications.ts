@@ -1,6 +1,6 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { notifications, staffUsers } from "@/db/schema";
+import { drivers, notifications, staffUsers } from "@/db/schema";
 
 export type NotificationDto = {
   id: string;
@@ -52,8 +52,9 @@ async function activeAdmins() {
     .where(and(eq(staffUsers.role, "admin"), eq(staffUsers.active, true)));
 }
 
-async function staffForDriver(driverId: string) {
-  const [row] = await db
+/** Resolves the panel login for a driver; heals email↔driver_id if unlinked. */
+export async function resolveDriverStaffUser(driverId: string) {
+  const [byLink] = await db
     .select({ id: staffUsers.id })
     .from(staffUsers)
     .where(
@@ -64,7 +65,38 @@ async function staffForDriver(driverId: string) {
       ),
     )
     .limit(1);
-  return row ?? null;
+  if (byLink) return byLink;
+
+  const [driver] = await db
+    .select({ email: drivers.email })
+    .from(drivers)
+    .where(eq(drivers.id, driverId))
+    .limit(1);
+  if (!driver?.email) return null;
+
+  const [byEmail] = await db
+    .select({ id: staffUsers.id, driverId: staffUsers.driverId })
+    .from(staffUsers)
+    .where(
+      and(
+        eq(staffUsers.email, driver.email.toLowerCase()),
+        eq(staffUsers.role, "driver"),
+        eq(staffUsers.active, true),
+      ),
+    )
+    .limit(1);
+
+  if (!byEmail) return null;
+
+  // Heal orphan staff row so future lookups and session auth stay consistent
+  if (byEmail.driverId !== driverId) {
+    await db
+      .update(staffUsers)
+      .set({ driverId, updatedAt: new Date() })
+      .where(eq(staffUsers.id, byEmail.id));
+  }
+
+  return { id: byEmail.id };
 }
 
 export async function notifyAdmins(input: {
@@ -86,15 +118,16 @@ export async function notifyAdmins(input: {
   );
 }
 
+/** @returns true if a notification was created for the driver's panel user */
 export async function notifyDriver(input: {
   driverId: string;
   type: string;
   title: string;
   body?: string;
   href?: string;
-}) {
-  const staff = await staffForDriver(input.driverId);
-  if (!staff) return;
+}): Promise<boolean> {
+  const staff = await resolveDriverStaffUser(input.driverId);
+  if (!staff) return false;
   await db.insert(notifications).values({
     staffUserId: staff.id,
     type: input.type,
@@ -102,4 +135,5 @@ export async function notifyDriver(input: {
     body: input.body ?? null,
     href: input.href ?? null,
   });
+  return true;
 }

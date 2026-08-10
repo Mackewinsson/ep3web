@@ -1,4 +1,4 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import {
   BackLink,
@@ -11,7 +11,7 @@ import {
   TextArea,
 } from "@/components/panel/ui";
 import { db } from "@/db";
-import { drivers, jobAssignments, trucks } from "@/db/schema";
+import { drivers, jobAssignments, staffUsers, trucks } from "@/db/schema";
 import {
   assignJob,
   updateJobSchedule,
@@ -53,6 +53,22 @@ export default async function TrabajoDetailPage({ params }: Props) {
     .from(drivers)
     .where(eq(drivers.active, true))
     .orderBy(asc(drivers.name));
+
+  const driverLogins = await db
+    .select({ driverId: staffUsers.driverId })
+    .from(staffUsers)
+    .where(
+      and(
+        eq(staffUsers.role, "driver"),
+        eq(staffUsers.active, true),
+        isNotNull(staffUsers.driverId),
+      ),
+    );
+  const driversWithAppAccess = new Set(
+    driverLogins
+      .map((l) => l.driverId)
+      .filter((id): id is string => Boolean(id)),
+  );
 
   const activeTrucks = await db
     .select({ id: trucks.id, plate: trucks.plate, label: trucks.label })
@@ -266,9 +282,15 @@ export default async function TrabajoDetailPage({ params }: Props) {
                 required
                 options={activeDrivers.map((d) => ({
                   value: d.id,
-                  label: `${d.name} (${d.email})`,
+                  label: driversWithAppAccess.has(d.id)
+                    ? `${d.name} (${d.email})`
+                    : `${d.name} (${d.email}) — sin acceso app`,
                 }))}
               />
+              <p className="text-xs text-ep3-navy/55">
+                Si el conductor aparece “sin acceso app”, actívalo en Conductores
+                o no recibirá notificaciones ni verá Mis trabajos.
+              </p>
               <SelectField
                 label="Camión"
                 name="truckId"

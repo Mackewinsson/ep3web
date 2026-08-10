@@ -22,11 +22,13 @@ export function CategoryAccordion({
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
       <button
         type="button"
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+        className="flex min-h-12 w-full items-center justify-between gap-3 px-3 py-3 text-left sm:px-4"
         onClick={onToggle}
         aria-expanded={open}
       >
-        <span className="text-sm font-semibold text-slate-900">{category.name}</span>
+        <span className="min-w-0 text-sm font-semibold text-slate-900">
+          {category.name}
+        </span>
         <svg
           viewBox="0 0 20 20"
           className={`h-5 w-5 shrink-0 text-ep3-navy transition-transform duration-200 ${

@@ -13,7 +13,7 @@ type Props = {
 export function ContactStep({ value, onChange }: Props) {
   return (
     <div className="space-y-5">
-      <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
+      <h2 className="text-balance text-xl font-bold text-slate-900 sm:text-2xl">
         ¿Cómo te contactamos?
       </h2>
       <div className="grid gap-4 sm:grid-cols-2">

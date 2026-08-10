@@ -86,8 +86,8 @@ export default async function ConductorDetailPage({ params }: Props) {
             </label>
             <p className="text-xs text-ep3-navy/60">
               {hasAppAccess
-                ? "Deja la contraseña en blanco para mantener la actual, o escribe una nueva."
-                : "Marca la casilla e indica una contraseña para que pueda entrar."}
+                ? "Deja la contraseña en blanco para mantener la actual, o escribe una nueva. Con acceso activo recibe notificaciones al asignarle trabajos."
+                : "Marca la casilla e indica una contraseña. Sin acceso no verá Mis trabajos ni recibirá la campana al asignarle un trabajo."}
             </p>
             <Field
               label={hasAppAccess ? "Nueva contraseña (opcional)" : "Contraseña de acceso"}

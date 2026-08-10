@@ -118,7 +118,7 @@ export function ChileAddressAutocomplete({
             <li key={s.id} role="option">
               <button
                 type="button"
-                className="w-full px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-50"
+          className="w-full px-3 py-3 text-left text-sm leading-snug text-slate-800 hover:bg-slate-50 active:bg-slate-50"
                 onClick={() => pick(s)}
               >
                 {s.label}

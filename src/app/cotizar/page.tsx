@@ -15,12 +15,12 @@ export default async function CotizarPage() {
   const { catalog, pricing } = await getMovingCatalogForWizard();
 
   return (
-    <div>
-      <div className="mb-8 text-center">
-        <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
+    <div className="min-w-0">
+      <div className="mb-5 text-center sm:mb-8">
+        <h1 className="text-balance text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
           Cotiza tu mudanza
         </h1>
-        <p className="mx-auto mt-2 max-w-lg text-sm text-slate-600 sm:text-base">
+        <p className="mx-auto mt-2 max-w-lg text-pretty text-sm leading-relaxed text-slate-600 sm:text-base">
           Completa los pasos y te armamos una estimación clara según el volumen
           y las condiciones de acceso.
         </p>

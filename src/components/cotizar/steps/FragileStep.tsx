@@ -19,7 +19,7 @@ function Choice({
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-xl border px-4 py-4 text-left text-base font-medium transition ${
+      className={`flex min-h-14 w-full items-center gap-3 rounded-xl border px-4 py-4 text-left text-base font-medium transition ${
         selected
           ? "border-ep3-navy bg-ep3-navy/5 text-ep3-navy"
           : "border-slate-300 text-slate-700 hover:border-slate-400"
@@ -44,7 +44,7 @@ export function FragileStep({ value, notes, onChange }: Props) {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
+        <h2 className="text-balance text-xl font-bold leading-snug text-slate-900 sm:text-2xl">
           ¿Algún mueble <em className="underline">muy</em> delicado con el que
           tengamos que tener más cuidado aún?
         </h2>
@@ -72,7 +72,7 @@ export function FragileStep({ value, notes, onChange }: Props) {
             Cuéntanos cuáles (opcional)
           </span>
           <textarea
-            className="w-full rounded-md border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-ep3-navy"
+            className="w-full rounded-md border border-slate-300 px-3 py-2.5 text-base outline-none focus:border-ep3-navy md:text-sm"
             rows={3}
             value={notes}
             onChange={(e) => onChange(true, e.target.value)}

@@ -27,7 +27,7 @@ function Choice({
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-medium transition ${
+      className={`flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-medium transition ${
         selected
           ? "border-ep3-navy bg-ep3-navy/5 text-ep3-navy"
           : "border-slate-300 text-slate-700 hover:border-slate-400"
@@ -71,11 +71,13 @@ export function AddressStep({
 
   return (
     <div className="space-y-5">
-      <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">{title}</h2>
+      <h2 className="text-balance text-xl font-bold leading-snug text-slate-900 sm:text-2xl">
+        {title}
+      </h2>
 
       {showMapPlaceholder ? (
         <div
-          className="flex h-44 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-sm text-slate-500"
+          className="flex h-36 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-sm text-slate-500 sm:h-44"
           aria-hidden
         >
           Mapa (próximamente)
@@ -100,7 +102,7 @@ export function AddressStep({
             ))}
           </select>
         </label>
-        <label className="block text-sm">
+        <label className="block min-w-0 text-sm">
           <span className="mb-1 block font-medium text-slate-800">Dirección</span>
           <ChileAddressAutocomplete
             value={value.address}
@@ -111,7 +113,7 @@ export function AddressStep({
       </div>
 
       {isApartment ? (
-        <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
           <p className="text-sm font-medium text-slate-800">
             Datos del departamento
           </p>
@@ -135,7 +137,7 @@ export function AddressStep({
             <p className="mb-2 text-sm font-medium text-slate-800">
               ¿Hay ascensor?
             </p>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <Choice
                 label="Sí"
                 selected={value.hasElevator === true}

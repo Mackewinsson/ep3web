@@ -9,15 +9,15 @@ type Props = {
 export function BoxesSuggestModal({ suggested, onAccept, onDecline }: Props) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="boxes-modal-title"
     >
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+      <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-xl sm:rounded-2xl sm:p-6 sm:pb-6">
         <h2
           id="boxes-modal-title"
-          className="text-center text-xl font-bold text-slate-900"
+          className="text-balance text-center text-xl font-bold text-slate-900"
         >
           ¿Todo listo para cotizar?
         </h2>
@@ -38,7 +38,7 @@ export function BoxesSuggestModal({ suggested, onAccept, onDecline }: Props) {
           <button
             type="button"
             onClick={onAccept}
-            className="w-full rounded-lg bg-ep3-navy px-4 py-3 text-sm font-bold uppercase tracking-wide text-ep3-yellow hover:brightness-110"
+            className="min-h-12 w-full rounded-lg bg-ep3-navy px-4 py-3 text-sm font-bold uppercase tracking-wide text-ep3-yellow hover:brightness-110"
           >
             Sí, considerar {suggested} cajas
           </button>
@@ -46,7 +46,7 @@ export function BoxesSuggestModal({ suggested, onAccept, onDecline }: Props) {
           <button
             type="button"
             onClick={onDecline}
-            className="w-full text-sm font-medium text-slate-600 underline hover:text-slate-900"
+            className="min-h-11 w-full text-sm font-medium text-slate-600 underline hover:text-slate-900"
           >
             No, mantener mi estimación
           </button>

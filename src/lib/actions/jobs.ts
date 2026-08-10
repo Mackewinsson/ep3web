@@ -131,14 +131,23 @@ export async function assignJob(jobId: string, formData: FormData) {
     })
     .where(eq(jobs.id, jobId));
 
-  const { notifyDriver } = await import("@/lib/notifications");
-  await notifyDriver({
+  const { notifyAdmins, notifyDriver } = await import("@/lib/notifications");
+  const notified = await notifyDriver({
     driverId: parsed.driverId,
     type: "job_assigned",
     title: "Nuevo trabajo asignado",
     body: `${client.name}: ${job.originAddress} → ${job.destinationAddress}`,
     href: `/panel/mis-trabajos/${jobId}`,
   });
+
+  if (!notified) {
+    await notifyAdmins({
+      type: "driver_no_app_access",
+      title: "Asignación sin acceso de camionero",
+      body: `${driver.name} no tiene usuario de panel vinculado. Activa “Acceso de camionero” en Conductores para que reciba notificaciones y vea Mis trabajos.`,
+      href: `/panel/conductores/${driver.id}`,
+    });
+  }
 
   revalidatePath(`/panel/trabajos/${jobId}`);
   revalidatePath("/panel/trabajos");

@@ -15,7 +15,9 @@ const OPTIONS: ParkingOption[] = ["near", "far", "underground"];
 export function ParkingStep({ title, value, onChange }: Props) {
   return (
     <div className="space-y-5">
-      <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">{title}</h2>
+      <h2 className="text-balance text-xl font-bold leading-snug text-slate-900 sm:text-2xl">
+        {title}
+      </h2>
       <div className="space-y-3">
         {OPTIONS.map((opt) => {
           const selected = value === opt;
@@ -24,7 +26,7 @@ export function ParkingStep({ title, value, onChange }: Props) {
               key={opt}
               type="button"
               onClick={() => onChange(opt)}
-              className={`flex w-full items-center gap-3 rounded-xl border px-4 py-4 text-left text-base font-medium transition ${
+              className={`flex min-h-14 w-full items-center gap-3 rounded-xl border px-4 py-4 text-left text-base font-medium transition ${
                 selected
                   ? "border-ep3-navy bg-ep3-navy/5 text-ep3-navy"
                   : "border-slate-300 text-slate-700 hover:border-slate-400"
