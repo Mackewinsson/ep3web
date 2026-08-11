@@ -76,7 +76,10 @@ export default async function MisTrabajosPage() {
                     .filter(Boolean)
                     .join(" · "),
                 },
-                { label: "Camión", value: row.truckPlate },
+                {
+                  label: "Camión",
+                  value: row.truckPlate ?? "Por elegir",
+                },
               ],
             }))}
           />

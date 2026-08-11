@@ -43,10 +43,12 @@ export default async function TrabajoDetailPage({ params }: Props) {
       driverEmail: drivers.email,
       truckPlate: trucks.plate,
       truckLabel: trucks.label,
+      salvoConductoFolio: jobAssignments.salvoConductoFolio,
+      salvoConductoCompletedAt: jobAssignments.salvoConductoCompletedAt,
     })
     .from(jobAssignments)
     .innerJoin(drivers, eq(jobAssignments.driverId, drivers.id))
-    .innerJoin(trucks, eq(jobAssignments.truckId, trucks.id))
+    .leftJoin(trucks, eq(jobAssignments.truckId, trucks.id))
     .where(eq(jobAssignments.jobId, id))
     .orderBy(desc(jobAssignments.assignedAt));
 
@@ -95,12 +97,12 @@ export default async function TrabajoDetailPage({ params }: Props) {
 
   const truckOptions = [...activeTrucks];
   if (
-    latestAssignment &&
+    latestAssignment?.truckId &&
     !truckOptions.some((t) => t.id === latestAssignment.truckId)
   ) {
     truckOptions.unshift({
       id: latestAssignment.truckId,
-      plate: latestAssignment.truckPlate,
+      plate: latestAssignment.truckPlate ?? "—",
       label: latestAssignment.truckLabel,
     });
   }
@@ -138,6 +140,34 @@ export default async function TrabajoDetailPage({ params }: Props) {
             <dt className="text-ep3-navy/60">Conductor</dt>
             <dd className="font-medium text-ep3-navy">
               {latestAssignment?.driverName ?? "Sin asignar"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-ep3-navy/60">Camión</dt>
+            <dd className="font-medium text-ep3-navy">
+              {latestAssignment?.truckPlate
+                ? `${latestAssignment.truckPlate}${
+                    latestAssignment.truckLabel
+                      ? ` · ${latestAssignment.truckLabel}`
+                      : ""
+                  }`
+                : latestAssignment
+                  ? "Pendiente (elige el conductor)"
+                  : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-ep3-navy/60">Salvo conducto</dt>
+            <dd className="font-medium text-ep3-navy">
+              {latestAssignment?.salvoConductoCompletedAt
+                ? `Registrado${
+                    latestAssignment.salvoConductoFolio
+                      ? ` · ${latestAssignment.salvoConductoFolio}`
+                      : ""
+                  }`
+                : latestAssignment
+                  ? "Pendiente"
+                  : "—"}
             </dd>
           </div>
           <div>
@@ -280,8 +310,10 @@ export default async function TrabajoDetailPage({ params }: Props) {
                 className="rounded-md border border-ep3-navy/10 p-3 text-sm"
               >
                 <p className="font-medium text-ep3-navy">
-                  {a.driverName} · {a.truckPlate}
-                  {a.truckLabel ? ` (${a.truckLabel})` : ""}
+                  {a.driverName}
+                  {a.truckPlate
+                    ? ` · ${a.truckPlate}${a.truckLabel ? ` (${a.truckLabel})` : ""}`
+                    : " · Camión pendiente"}
                 </p>
                 <p className="text-ep3-navy/70">{a.driverEmail}</p>
                 {a.notes ? (
@@ -292,6 +324,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
                   {a.emailSentAt
                     ? " · Correo enviado"
                     : " · Correo pendiente"}
+                  {a.salvoConductoCompletedAt
+                    ? ` · Salvo conducto ${a.salvoConductoFolio ?? "OK"}`
+                    : " · Sin salvo conducto"}
                 </p>
               </li>
             ))}
@@ -299,9 +334,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
         )}
 
         {job.status === "pending_assignment" || job.status === "assigned" ? (
-          driverOptions.length === 0 || truckOptions.length === 0 ? (
+          driverOptions.length === 0 ? (
             <p className="text-sm text-amber-800">
-              Necesitas al menos un conductor y un camión activos para asignar.
+              Necesitas al menos un conductor activo para asignar.
             </p>
           ) : (
             <form
@@ -310,8 +345,8 @@ export default async function TrabajoDetailPage({ params }: Props) {
             >
               <h3 className="font-medium text-ep3-navy">
                 {latestAssignment
-                  ? "Reasignar conductor y camión"
-                  : "Asignar conductor y camión"}
+                  ? "Reasignar conductor"
+                  : "Asignar conductor"}
               </h3>
               <SelectField
                 label="Conductor"
@@ -330,15 +365,25 @@ export default async function TrabajoDetailPage({ params }: Props) {
                 o no recibirá notificaciones ni verá Mis trabajos.
               </p>
               <SelectField
-                label="Camión"
+                label="Camión (opcional)"
                 name="truckId"
                 required
-                defaultValue={latestAssignment?.truckId}
-                options={truckOptions.map((t) => ({
-                  value: t.id,
-                  label: t.label ? `${t.plate} — ${t.label}` : t.plate,
-                }))}
+                defaultValue={latestAssignment?.truckId ?? "none"}
+                options={[
+                  {
+                    value: "none",
+                    label: "Lo elige el conductor",
+                  },
+                  ...truckOptions.map((t) => ({
+                    value: t.id,
+                    label: t.label ? `${t.plate} — ${t.label}` : t.plate,
+                  })),
+                ]}
               />
+              <p className="text-xs text-ep3-navy/55">
+                Si dejas “Lo elige el conductor”, el camionero debe elegir el
+                camión y registrar el salvo conducto antes de marcar En camino.
+              </p>
               <Field
                 label="Hora llegada (opcional)"
                 name="scheduledTime"

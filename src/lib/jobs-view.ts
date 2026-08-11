@@ -29,7 +29,7 @@ export async function getDriverAssignedJobs(driverId: string) {
     .from(jobAssignments)
     .innerJoin(jobs, eq(jobAssignments.jobId, jobs.id))
     .innerJoin(clients, eq(jobs.clientId, clients.id))
-    .innerJoin(trucks, eq(jobAssignments.truckId, trucks.id))
+    .leftJoin(trucks, eq(jobAssignments.truckId, trucks.id))
     .where(eq(jobAssignments.driverId, driverId))
     .orderBy(desc(jobAssignments.assignedAt));
 }
@@ -84,6 +84,7 @@ export async function getJobOperationalDetail(jobId: string) {
 
   const [assignment] = await db
     .select({
+      id: jobAssignments.id,
       notes: jobAssignments.notes,
       driverId: jobAssignments.driverId,
       truckId: jobAssignments.truckId,
@@ -91,10 +92,17 @@ export async function getJobOperationalDetail(jobId: string) {
       truckPlate: trucks.plate,
       truckLabel: trucks.label,
       assignedAt: jobAssignments.assignedAt,
+      salvoConductoFolio: jobAssignments.salvoConductoFolio,
+      salvoConductoIssuedAt: jobAssignments.salvoConductoIssuedAt,
+      salvoConductoOriginCommune: jobAssignments.salvoConductoOriginCommune,
+      salvoConductoDestinationCommune:
+        jobAssignments.salvoConductoDestinationCommune,
+      salvoConductoNotes: jobAssignments.salvoConductoNotes,
+      salvoConductoCompletedAt: jobAssignments.salvoConductoCompletedAt,
     })
     .from(jobAssignments)
     .innerJoin(drivers, eq(jobAssignments.driverId, drivers.id))
-    .innerJoin(trucks, eq(jobAssignments.truckId, trucks.id))
+    .leftJoin(trucks, eq(jobAssignments.truckId, trucks.id))
     .where(eq(jobAssignments.jobId, jobId))
     .orderBy(desc(jobAssignments.assignedAt))
     .limit(1);
@@ -104,8 +112,17 @@ export async function getJobOperationalDetail(jobId: string) {
     estimatedM3,
     estimatedItems,
     volumeNotes,
-    assignment,
+    assignment: assignment ?? null,
   };
+}
+
+export function isReadyForEnCamino(assignment: {
+  truckId: string | null;
+  salvoConductoCompletedAt: Date | null;
+} | null) {
+  return Boolean(
+    assignment?.truckId && assignment?.salvoConductoCompletedAt,
+  );
 }
 
 export async function assertDriverOwnsJob(jobId: string, driverId: string) {
@@ -119,14 +136,16 @@ export async function assertDriverOwnsJob(jobId: string, driverId: string) {
   return Boolean(row);
 }
 
-export function mapsUrl(address: string) {
-  return `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+export function formatVolume(
+  estimatedM3: string | null,
+  estimatedItems: number | null,
+) {
+  const parts: string[] = [];
+  if (estimatedM3) parts.push(`${estimatedM3} m³`);
+  if (estimatedItems != null) parts.push(`${estimatedItems} ítems`);
+  return parts.length ? parts.join(" · ") : null;
 }
 
-export function formatVolume(m3: string | null, items: number | null) {
-  const parts = [
-    m3 ? `${m3} m³` : null,
-    items != null ? `${items} ítems` : null,
-  ].filter(Boolean);
-  return parts.length > 0 ? parts.join(" · ") : null;
+export function mapsUrl(address: string) {
+  return `https://maps.google.com/?q=${encodeURIComponent(address)}`;
 }

@@ -229,14 +229,29 @@ export const jobAssignments = pgTable("job_assignments", {
   driverId: uuid("driver_id")
     .notNull()
     .references(() => drivers.id, { onDelete: "restrict" }),
-  truckId: uuid("truck_id")
-    .notNull()
-    .references(() => trucks.id, { onDelete: "restrict" }),
+  /** Chosen by the driver before going en camino (admin may prefill optionally) */
+  truckId: uuid("truck_id").references(() => trucks.id, {
+    onDelete: "restrict",
+  }),
   assignedAt: timestamp("assigned_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
   emailSentAt: timestamp("email_sent_at", { withTimezone: true }),
   notes: text("notes"),
+  /** Salvo conducto — required before driver marks en camino */
+  salvoConductoFolio: varchar("salvo_conducto_folio", { length: 80 }),
+  salvoConductoIssuedAt: date("salvo_conducto_issued_at"),
+  salvoConductoOriginCommune: varchar("salvo_conducto_origin_commune", {
+    length: 120,
+  }),
+  salvoConductoDestinationCommune: varchar(
+    "salvo_conducto_destination_commune",
+    { length: 120 },
+  ),
+  salvoConductoNotes: text("salvo_conducto_notes"),
+  salvoConductoCompletedAt: timestamp("salvo_conducto_completed_at", {
+    withTimezone: true,
+  }),
 });
 
 /** Singleton-ish pricing knobs for /cotizar (admin editable) */
