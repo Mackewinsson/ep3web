@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import {
   BackLink,
@@ -33,22 +33,48 @@ export default async function CamionDetailPage({ params }: Props) {
     .limit(1);
   if (!truck) notFound();
 
-  const driverOptions = await db
+  const operatorOptions = await db
     .select({ id: drivers.id, name: drivers.name })
+    .from(drivers)
+    .where(and(isNull(drivers.operatorId), eq(drivers.active, true)))
+    .orderBy(asc(drivers.name));
+
+  if (
+    truck.operatorId &&
+    !operatorOptions.some((o) => o.id === truck.operatorId)
+  ) {
+    const [owner] = await db
+      .select({ id: drivers.id, name: drivers.name })
+      .from(drivers)
+      .where(eq(drivers.id, truck.operatorId))
+      .limit(1);
+    if (owner) operatorOptions.unshift(owner);
+  }
+
+  const crewOptions = await db
+    .select({
+      id: drivers.id,
+      name: drivers.name,
+      operatorId: drivers.operatorId,
+    })
     .from(drivers)
     .where(eq(drivers.active, true))
     .orderBy(asc(drivers.name));
 
   if (
     truck.defaultDriverId &&
-    !driverOptions.some((d) => d.id === truck.defaultDriverId)
+    !crewOptions.some((d) => d.id === truck.defaultDriverId)
   ) {
     const [inactive] = await db
-      .select({ id: drivers.id, name: drivers.name })
+      .select({
+        id: drivers.id,
+        name: drivers.name,
+        operatorId: drivers.operatorId,
+      })
       .from(drivers)
       .where(eq(drivers.id, truck.defaultDriverId))
       .limit(1);
-    if (inactive) driverOptions.unshift(inactive);
+    if (inactive) crewOptions.unshift(inactive);
   }
 
   const action = updateTruck.bind(null, id);
@@ -116,26 +142,34 @@ export default async function CamionDetailPage({ params }: Props) {
       </PanelCard>
 
       <PanelCard>
-        <form action={action} className="space-y-4">
-          <TruckFormFields
-            driverOptions={driverOptions}
-            values={{
-              plate: truck.plate,
-              label: truck.label,
-              capacityNotes: truck.capacityNotes,
-              defaultDriverId: truck.defaultDriverId,
-              permisoCirculacionNumber: truck.permisoCirculacionNumber,
-              permisoCirculacionExpiresAt: truck.permisoCirculacionExpiresAt,
-              soapPolicyNumber: truck.soapPolicyNumber,
-              soapInsurer: truck.soapInsurer,
-              soapExpiresAt: truck.soapExpiresAt,
-              revisionTecnicaFolio: truck.revisionTecnicaFolio,
-              revisionTecnicaExpiresAt: truck.revisionTecnicaExpiresAt,
-              active: truck.active,
-            }}
-          />
-          <SubmitButton label="Guardar cambios" />
-        </form>
+        {operatorOptions.length === 0 ? (
+          <p className="text-sm text-amber-800">
+            Necesitas al menos un operador para guardar este camión.
+          </p>
+        ) : (
+          <form action={action} className="space-y-4">
+            <TruckFormFields
+              operatorOptions={operatorOptions}
+              crewOptions={crewOptions}
+              values={{
+                plate: truck.plate,
+                label: truck.label,
+                capacityNotes: truck.capacityNotes,
+                operatorId: truck.operatorId,
+                defaultDriverId: truck.defaultDriverId,
+                permisoCirculacionNumber: truck.permisoCirculacionNumber,
+                permisoCirculacionExpiresAt: truck.permisoCirculacionExpiresAt,
+                soapPolicyNumber: truck.soapPolicyNumber,
+                soapInsurer: truck.soapInsurer,
+                soapExpiresAt: truck.soapExpiresAt,
+                revisionTecnicaFolio: truck.revisionTecnicaFolio,
+                revisionTecnicaExpiresAt: truck.revisionTecnicaExpiresAt,
+                active: truck.active,
+              }}
+            />
+            <SubmitButton label="Guardar cambios" />
+          </form>
+        )}
       </PanelCard>
     </div>
   );

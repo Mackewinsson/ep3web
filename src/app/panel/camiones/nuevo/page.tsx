@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import {
   PageHeader,
   PanelCard,
@@ -13,8 +13,18 @@ import { requireAdmin } from "@/lib/auth";
 export default async function NuevoCamionPage() {
   await requireAdmin();
 
-  const driverOptions = await db
+  const operatorOptions = await db
     .select({ id: drivers.id, name: drivers.name })
+    .from(drivers)
+    .where(and(isNull(drivers.operatorId), eq(drivers.active, true)))
+    .orderBy(asc(drivers.name));
+
+  const crewOptions = await db
+    .select({
+      id: drivers.id,
+      name: drivers.name,
+      operatorId: drivers.operatorId,
+    })
     .from(drivers)
     .where(eq(drivers.active, true))
     .orderBy(asc(drivers.name));
@@ -23,13 +33,23 @@ export default async function NuevoCamionPage() {
     <div className="mx-auto max-w-xl">
       <PageHeader
         title="Nuevo camión"
-        description="Patente, conductor habitual y documentos vigentes (sin adjuntos)"
+        description="Asigna el camión a un operador y registra documentos vigentes"
       />
       <PanelCard>
-        <form action={createTruck} className="space-y-4">
-          <TruckFormFields driverOptions={driverOptions} />
-          <SubmitButton label="Guardar camión" />
-        </form>
+        {operatorOptions.length === 0 ? (
+          <p className="text-sm text-amber-800">
+            Primero crea un operador activo en Conductores.
+          </p>
+        ) : (
+          <form action={createTruck} className="space-y-4">
+            <TruckFormFields
+              operatorOptions={operatorOptions}
+              crewOptions={crewOptions}
+              values={{ operatorId: operatorOptions[0]?.id }}
+            />
+            <SubmitButton label="Guardar camión" />
+          </form>
+        )}
       </PanelCard>
     </div>
   );

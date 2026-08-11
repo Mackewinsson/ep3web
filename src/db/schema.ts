@@ -10,6 +10,7 @@ import {
   timestamp,
   uuid,
   varchar,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 export const quoteStatusEnum = pgEnum("quote_status", [
@@ -65,6 +66,13 @@ export const drivers = pgTable("drivers", {
   email: varchar("email", { length: 200 }).notNull(),
   phone: varchar("phone", { length: 40 }),
   licenseNotes: text("license_notes"),
+  /**
+   * null = operador (cuenta flota asignable).
+   * set = conductor de flota bajo ese operador.
+   */
+  operatorId: uuid("operator_id").references((): AnyPgColumn => drivers.id, {
+    onDelete: "set null",
+  }),
   active: boolean("active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -98,7 +106,11 @@ export const trucks = pgTable("trucks", {
   plate: varchar("plate", { length: 20 }).notNull(),
   label: varchar("label", { length: 120 }),
   capacityNotes: text("capacity_notes"),
-  /** Conductor habitual asignado por admin */
+  /** Operador dueño de este camión (flota) */
+  operatorId: uuid("operator_id").references(() => drivers.id, {
+    onDelete: "set null",
+  }),
+  /** Conductor habitual dentro de la flota */
   defaultDriverId: uuid("default_driver_id").references(() => drivers.id, {
     onDelete: "set null",
   }),
@@ -242,11 +254,16 @@ export const jobAssignments = pgTable("job_assignments", {
   jobId: uuid("job_id")
     .notNull()
     .references(() => jobs.id, { onDelete: "cascade" }),
+  /** Operador a quien se asignó el trabajo */
   driverId: uuid("driver_id")
     .notNull()
     .references(() => drivers.id, { onDelete: "restrict" }),
-  /** Chosen by the driver before going en camino (admin may prefill optionally) */
+  /** Camión elegido al aceptar el servicio */
   truckId: uuid("truck_id").references(() => trucks.id, {
+    onDelete: "restrict",
+  }),
+  /** Conductor de flota elegido al aceptar */
+  crewDriverId: uuid("crew_driver_id").references(() => drivers.id, {
     onDelete: "restrict",
   }),
   assignedAt: timestamp("assigned_at", { withTimezone: true })
@@ -254,7 +271,7 @@ export const jobAssignments = pgTable("job_assignments", {
     .notNull(),
   emailSentAt: timestamp("email_sent_at", { withTimezone: true }),
   notes: text("notes"),
-  /** Salvo conducto — required before driver marks en camino */
+  /** Salvo conducto — required before operator marks en camino */
   salvoConductoFolio: varchar("salvo_conducto_folio", { length: 80 }),
   salvoConductoIssuedAt: date("salvo_conducto_issued_at"),
   salvoConductoOriginCommune: varchar("salvo_conducto_origin_commune", {
@@ -412,6 +429,12 @@ export const jobAssignmentsRelations = relations(jobAssignments, ({ one }) => ({
   driver: one(drivers, {
     fields: [jobAssignments.driverId],
     references: [drivers.id],
+    relationName: "assignmentOperator",
+  }),
+  crewDriver: one(drivers, {
+    fields: [jobAssignments.crewDriverId],
+    references: [drivers.id],
+    relationName: "assignmentCrew",
   }),
   truck: one(trucks, {
     fields: [jobAssignments.truckId],

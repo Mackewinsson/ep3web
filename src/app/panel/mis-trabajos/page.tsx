@@ -37,7 +37,7 @@ export default async function MisTrabajosPage() {
     <div>
       <PageHeader
         title="Mis trabajos"
-        description="Mudanzas y fletes asignados a ti"
+        description="Servicios asignados a tu flota"
       />
       <PanelCard>
         {ordered.length === 0 ? (
@@ -78,7 +78,11 @@ export default async function MisTrabajosPage() {
                 },
                 {
                   label: "Camión",
-                  value: row.truckPlate ?? "Sin asignar",
+                  value: row.truckPlate ?? "Por aceptar",
+                },
+                {
+                  label: "Conductor",
+                  value: row.crewDriverName ?? "Por aceptar",
                 },
               ],
             }))}

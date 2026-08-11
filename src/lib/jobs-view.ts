@@ -1,4 +1,5 @@
 import { and, desc, eq } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import {
   budgets,
@@ -9,6 +10,8 @@ import {
   quoteRequests,
   trucks,
 } from "@/db/schema";
+
+const crewDrivers = alias(drivers, "crew_drivers");
 
 export async function getDriverAssignedJobs(driverId: string) {
   return db
@@ -23,13 +26,16 @@ export async function getDriverAssignedJobs(driverId: string) {
       clientName: clients.name,
       clientPhone: clients.phone,
       truckPlate: trucks.plate,
+      crewDriverName: crewDrivers.name,
       assignmentNotes: jobAssignments.notes,
       assignedAt: jobAssignments.assignedAt,
+      salvoConductoCompletedAt: jobAssignments.salvoConductoCompletedAt,
     })
     .from(jobAssignments)
     .innerJoin(jobs, eq(jobAssignments.jobId, jobs.id))
     .innerJoin(clients, eq(jobs.clientId, clients.id))
     .leftJoin(trucks, eq(jobAssignments.truckId, trucks.id))
+    .leftJoin(crewDrivers, eq(jobAssignments.crewDriverId, crewDrivers.id))
     .where(eq(jobAssignments.driverId, driverId))
     .orderBy(desc(jobAssignments.assignedAt));
 }
@@ -88,7 +94,9 @@ export async function getJobOperationalDetail(jobId: string) {
       notes: jobAssignments.notes,
       driverId: jobAssignments.driverId,
       truckId: jobAssignments.truckId,
+      crewDriverId: jobAssignments.crewDriverId,
       driverName: drivers.name,
+      crewDriverName: crewDrivers.name,
       truckPlate: trucks.plate,
       truckLabel: trucks.label,
       assignedAt: jobAssignments.assignedAt,
@@ -103,6 +111,7 @@ export async function getJobOperationalDetail(jobId: string) {
     .from(jobAssignments)
     .innerJoin(drivers, eq(jobAssignments.driverId, drivers.id))
     .leftJoin(trucks, eq(jobAssignments.truckId, trucks.id))
+    .leftJoin(crewDrivers, eq(jobAssignments.crewDriverId, crewDrivers.id))
     .where(eq(jobAssignments.jobId, jobId))
     .orderBy(desc(jobAssignments.assignedAt))
     .limit(1);
@@ -118,10 +127,13 @@ export async function getJobOperationalDetail(jobId: string) {
 
 export function isReadyForEnCamino(assignment: {
   truckId: string | null;
+  crewDriverId: string | null;
   salvoConductoCompletedAt: Date | null;
 } | null) {
   return Boolean(
-    assignment?.truckId && assignment?.salvoConductoCompletedAt,
+    assignment?.truckId &&
+      assignment?.crewDriverId &&
+      assignment?.salvoConductoCompletedAt,
   );
 }
 

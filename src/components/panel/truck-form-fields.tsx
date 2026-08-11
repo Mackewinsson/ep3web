@@ -8,6 +8,7 @@ export type TruckFormValues = {
   plate?: string | null;
   label?: string | null;
   capacityNotes?: string | null;
+  operatorId?: string | null;
   defaultDriverId?: string | null;
   permisoCirculacionNumber?: string | null;
   permisoCirculacionExpiresAt?: string | null;
@@ -21,11 +22,18 @@ export type TruckFormValues = {
 
 export function TruckFormFields({
   values,
-  driverOptions,
+  operatorOptions,
+  crewOptions,
 }: {
   values?: TruckFormValues;
-  driverOptions: { id: string; name: string }[];
+  operatorOptions: { id: string; name: string }[];
+  crewOptions: { id: string; name: string; operatorId: string | null }[];
 }) {
+  const selectedOperatorId = values?.operatorId ?? undefined;
+  const habitualOptions = selectedOperatorId
+    ? crewOptions.filter((c) => c.operatorId === selectedOperatorId)
+    : crewOptions;
+
   return (
     <>
       <Field
@@ -47,22 +55,32 @@ export function TruckFormFields({
         defaultValue={values?.capacityNotes}
       />
       <SelectField
-        label="Conductor habitual"
+        label="Operador dueño"
+        name="operatorId"
+        required
+        defaultValue={values?.operatorId}
+        options={operatorOptions.map((o) => ({
+          value: o.id,
+          label: o.name,
+        }))}
+      />
+      <p className="text-xs text-ep3-navy/55">
+        Solo administración asigna camiones a un operador. El operador elige
+        cuál usar al aceptar cada servicio.
+      </p>
+      <SelectField
+        label="Conductor habitual (opcional)"
         name="defaultDriverId"
         required
         defaultValue={values?.defaultDriverId ?? "none"}
         options={[
           { value: "none", label: "Sin conductor habitual" },
-          ...driverOptions.map((d) => ({
+          ...habitualOptions.map((d) => ({
             value: d.id,
             label: d.name,
           })),
         ]}
       />
-      <p className="text-xs text-ep3-navy/55">
-        El admin asigna el camión al trabajo; el conductor habitual sirve de
-        referencia al asignar.
-      </p>
 
       <div className="space-y-3 border-t border-ep3-navy/10 pt-4">
         <h3 className="text-sm font-semibold text-ep3-navy">

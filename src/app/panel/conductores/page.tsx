@@ -1,4 +1,5 @@
 import { and, desc, eq, isNotNull } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import {
   EmptyState,
   PageHeader,
@@ -8,9 +9,26 @@ import {
 import { RecordList } from "@/components/panel/record-list";
 import { db } from "@/db";
 import { drivers, staffUsers } from "@/db/schema";
+import { requireAdmin } from "@/lib/auth";
+
+const operators = alias(drivers, "operators");
 
 export default async function ConductoresPage() {
-  const rows = await db.select().from(drivers).orderBy(desc(drivers.createdAt));
+  await requireAdmin();
+
+  const rows = await db
+    .select({
+      id: drivers.id,
+      name: drivers.name,
+      email: drivers.email,
+      phone: drivers.phone,
+      active: drivers.active,
+      operatorId: drivers.operatorId,
+      operatorName: operators.name,
+    })
+    .from(drivers)
+    .leftJoin(operators, eq(drivers.operatorId, operators.id))
+    .orderBy(desc(drivers.createdAt));
 
   const logins = await db
     .select({
@@ -22,48 +40,59 @@ export default async function ConductoresPage() {
 
   const loginByDriver = new Map(
     logins
-      .filter((l): l is { driverId: string; active: boolean } => Boolean(l.driverId))
+      .filter((l): l is { driverId: string; active: boolean } =>
+        Boolean(l.driverId),
+      )
       .map((l) => [l.driverId, l.active]),
   );
 
   return (
     <div>
       <PageHeader
-        title="Conductores"
-        description="Equipo de manejo para mudanzas"
+        title="Conductores y operadores"
+        description="Operadores con acceso y conductores de cada flota"
         actionHref="/panel/conductores/nuevo"
-        actionLabel="Nuevo conductor"
+        actionLabel="Nuevo"
       />
       <PanelCard>
         {rows.length === 0 ? (
-          <EmptyState message="No hay conductores registrados." />
+          <EmptyState message="No hay registros." />
         ) : (
           <RecordList
-            emptyMessage="No hay conductores registrados."
+            emptyMessage="No hay registros."
             items={rows.map((row) => {
+              const isOperator = !row.operatorId;
               const appActive = loginByDriver.get(row.id) === true;
               return {
                 id: row.id,
                 href: `/panel/conductores/${row.id}`,
                 title: row.name,
                 badge: (
-                  <StatusBadge
-                    label={row.active ? "Activo" : "Inactivo"}
-                    tone={row.active ? "success" : "muted"}
-                  />
+                  <div className="flex flex-wrap gap-1">
+                    <StatusBadge
+                      label={isOperator ? "Operador" : "Flota"}
+                      tone={isOperator ? "info" : "default"}
+                    />
+                    <StatusBadge
+                      label={row.active ? "Activo" : "Inactivo"}
+                      tone={row.active ? "success" : "muted"}
+                    />
+                  </div>
                 ),
                 fields: [
                   { label: "Correo", value: row.email },
-                  { label: "Teléfono", value: row.phone ?? "—" },
                   {
-                    label: "Acceso",
-                    value: (
+                    label: isOperator ? "Acceso" : "Operador",
+                    value: isOperator ? (
                       <StatusBadge
                         label={appActive ? "Con acceso" : "Sin acceso"}
                         tone={appActive ? "success" : "muted"}
                       />
+                    ) : (
+                      (row.operatorName ?? "—")
                     ),
                   },
+                  { label: "Teléfono", value: row.phone ?? "—" },
                 ],
               };
             })}

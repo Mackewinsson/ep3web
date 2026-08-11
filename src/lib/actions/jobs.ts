@@ -1,6 +1,6 @@
 "use server";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -16,7 +16,6 @@ import { requireAdmin, requireDriver } from "@/lib/auth";
 
 const assignSchema = z.object({
   driverId: z.string().uuid(),
-  truckId: z.string().uuid(),
   notes: z.string().optional(),
   scheduledTime: z
     .string()
@@ -35,7 +34,9 @@ const scheduleSchema = z.object({
   notes: z.string().optional(),
 });
 
-const salvoConductoSchema = z.object({
+const acceptSchema = z.object({
+  truckId: z.string().uuid(),
+  crewDriverId: z.string().uuid(),
   folio: z.string().trim().min(1).max(80),
   issuedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   originCommune: z.string().trim().min(1).max(120),
@@ -95,7 +96,6 @@ export async function assignJob(jobId: string, formData: FormData) {
   await requireAdmin();
   const parsed = assignSchema.parse({
     driverId: formData.get("driverId"),
-    truckId: formData.get("truckId"),
     notes: formData.get("notes") || undefined,
     scheduledTime: formData.get("scheduledTime") || "",
   });
@@ -105,15 +105,16 @@ export async function assignJob(jobId: string, formData: FormData) {
     throw new Error("Trabajo no encontrado");
   }
 
-  const [driver] = await db
+  const [operator] = await db
     .select()
     .from(drivers)
-    .where(eq(drivers.id, parsed.driverId))
-    .limit(1);
-  const [truck] = await db
-    .select()
-    .from(trucks)
-    .where(eq(trucks.id, parsed.truckId))
+    .where(
+      and(
+        eq(drivers.id, parsed.driverId),
+        isNull(drivers.operatorId),
+        eq(drivers.active, true),
+      ),
+    )
     .limit(1);
   const [client] = await db
     .select()
@@ -121,14 +122,15 @@ export async function assignJob(jobId: string, formData: FormData) {
     .where(eq(clients.id, job.clientId))
     .limit(1);
 
-  if (!driver || !truck || !client) {
-    throw new Error("Datos de asignación incompletos");
+  if (!operator || !client) {
+    throw new Error("Debes asignar un operador activo válido");
   }
 
   await db.insert(jobAssignments).values({
     jobId,
     driverId: parsed.driverId,
-    truckId: parsed.truckId,
+    truckId: null,
+    crewDriverId: null,
     notes: parsed.notes,
     emailSentAt: null,
   });
@@ -154,9 +156,9 @@ export async function assignJob(jobId: string, formData: FormData) {
   if (!notified) {
     await notifyAdmins({
       type: "driver_no_app_access",
-      title: "Asignación sin acceso de camionero",
-      body: `${driver.name} no tiene usuario de panel vinculado. Activa “Acceso de camionero” en Conductores para que reciba notificaciones y vea Mis trabajos.`,
-      href: `/panel/conductores/${driver.id}`,
+      title: "Asignación sin acceso de operador",
+      body: `${operator.name} no tiene usuario de panel vinculado. Activa “Acceso de operador” en Operadores para que reciba notificaciones y vea Mis trabajos.`,
+      href: `/panel/conductores/${operator.id}`,
     });
   }
 
@@ -164,32 +166,35 @@ export async function assignJob(jobId: string, formData: FormData) {
   redirect(`/panel/trabajos/${jobId}`);
 }
 
-async function getLatestDriverAssignment(jobId: string, driverId: string) {
+async function getLatestOperatorAssignment(jobId: string, operatorId: string) {
   const [latest] = await db
     .select({
       assignmentId: jobAssignments.id,
       driverId: jobAssignments.driverId,
       truckId: jobAssignments.truckId,
+      crewDriverId: jobAssignments.crewDriverId,
       salvoConductoCompletedAt: jobAssignments.salvoConductoCompletedAt,
       status: jobs.status,
     })
     .from(jobAssignments)
     .innerJoin(jobs, eq(jobAssignments.jobId, jobs.id))
     .where(
-      and(eq(jobAssignments.jobId, jobId), eq(jobAssignments.driverId, driverId)),
+      and(
+        eq(jobAssignments.jobId, jobId),
+        eq(jobAssignments.driverId, operatorId),
+      ),
     )
     .orderBy(desc(jobAssignments.assignedAt))
     .limit(1);
   return latest ?? null;
 }
 
-export async function driverSaveSalvoConducto(
-  jobId: string,
-  formData: FormData,
-) {
+export async function operatorAcceptJob(jobId: string, formData: FormData) {
   const session = await requireDriver();
-  const driverId = session.driverId!;
-  const parsed = salvoConductoSchema.parse({
+  const operatorId = session.driverId!;
+  const parsed = acceptSchema.parse({
+    truckId: formData.get("truckId"),
+    crewDriverId: formData.get("crewDriverId"),
     folio: formData.get("folio"),
     issuedAt: formData.get("issuedAt"),
     originCommune: formData.get("originCommune"),
@@ -197,22 +202,49 @@ export async function driverSaveSalvoConducto(
     notes: formData.get("notes") || undefined,
   });
 
-  const latest = await getLatestDriverAssignment(jobId, driverId);
+  const latest = await getLatestOperatorAssignment(jobId, operatorId);
   if (!latest) {
-    throw new Error("Trabajo no asignado a este conductor");
+    throw new Error("Trabajo no asignado a este operador");
   }
   if (latest.status !== "assigned") {
-    throw new Error("Solo puedes registrar el salvo conducto antes de salir");
+    throw new Error("Solo puedes aceptar un trabajo por iniciar");
   }
-  if (!latest.truckId) {
-    throw new Error(
-      "Este trabajo no tiene camión asignado. Avisa a administración.",
-    );
+
+  const [truck] = await db
+    .select()
+    .from(trucks)
+    .where(
+      and(
+        eq(trucks.id, parsed.truckId),
+        eq(trucks.operatorId, operatorId),
+        eq(trucks.active, true),
+      ),
+    )
+    .limit(1);
+  if (!truck) {
+    throw new Error("Camión no pertenece a tu flota");
+  }
+
+  const [crew] = await db
+    .select()
+    .from(drivers)
+    .where(
+      and(
+        eq(drivers.id, parsed.crewDriverId),
+        eq(drivers.operatorId, operatorId),
+        eq(drivers.active, true),
+      ),
+    )
+    .limit(1);
+  if (!crew) {
+    throw new Error("Conductor no pertenece a tu flota");
   }
 
   await db
     .update(jobAssignments)
     .set({
+      truckId: parsed.truckId,
+      crewDriverId: parsed.crewDriverId,
       salvoConductoFolio: parsed.folio,
       salvoConductoIssuedAt: parsed.issuedAt,
       salvoConductoOriginCommune: parsed.originCommune,
@@ -231,11 +263,11 @@ export async function driverAdvanceJob(
   nextStatus: "in_progress" | "completed",
 ) {
   const session = await requireDriver();
-  const driverId = session.driverId!;
+  const operatorId = session.driverId!;
 
-  const latest = await getLatestDriverAssignment(jobId, driverId);
+  const latest = await getLatestOperatorAssignment(jobId, operatorId);
   if (!latest) {
-    throw new Error("Trabajo no asignado a este conductor");
+    throw new Error("Trabajo no asignado a este operador");
   }
 
   if (nextStatus === "in_progress" && latest.status !== "assigned") {
@@ -246,10 +278,8 @@ export async function driverAdvanceJob(
   }
 
   if (nextStatus === "in_progress") {
-    if (!latest.truckId) {
-      throw new Error(
-        "Este trabajo no tiene camión. Avisa a administración para asignarlo.",
-      );
+    if (!latest.truckId || !latest.crewDriverId) {
+      throw new Error("Debes aceptar el servicio (camión y conductor) primero");
     }
     if (!latest.salvoConductoCompletedAt) {
       throw new Error(

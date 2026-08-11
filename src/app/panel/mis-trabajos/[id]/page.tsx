@@ -1,17 +1,15 @@
+import { and, asc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import { AcceptServiceModal } from "@/components/panel/accept-service-modal";
 import {
   BackLink,
-  Field,
   PageHeader,
   PanelCard,
   StatusBadge,
-  SubmitButton,
-  TextArea,
 } from "@/components/panel/ui";
-import {
-  driverAdvanceJob,
-  driverSaveSalvoConducto,
-} from "@/lib/actions/jobs";
+import { db } from "@/db";
+import { drivers, trucks } from "@/db/schema";
+import { driverAdvanceJob } from "@/lib/actions/jobs";
 import { requireDriver } from "@/lib/auth";
 import {
   DRIVER_JOB_STATUS_LABELS,
@@ -31,8 +29,9 @@ type Props = { params: Promise<{ id: string }> };
 export default async function MisTrabajoDetailPage({ params }: Props) {
   const session = await requireDriver();
   const { id } = await params;
+  const operatorId = session.driverId!;
 
-  const owns = await assertDriverOwnsJob(id, session.driverId!);
+  const owns = await assertDriverOwnsJob(id, operatorId);
   if (!owns) notFound();
 
   const job = await getJobOperationalDetail(id);
@@ -43,12 +42,24 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
     .filter(Boolean)
     .join(" · ");
 
-  const canPrep = job.status === "assigned";
-  const hasTruck = Boolean(job.assignment?.truckId);
-  const hasSalvo = Boolean(job.assignment?.salvoConductoCompletedAt);
-  const ready = isReadyForEnCamino(job.assignment);
+  const accepted = isReadyForEnCamino(job.assignment);
+  const canAccept = job.status === "assigned" && !accepted;
 
-  const saveSalvoAction = driverSaveSalvoConducto.bind(null, id);
+  const fleetTrucks = await db
+    .select({
+      id: trucks.id,
+      plate: trucks.plate,
+      label: trucks.label,
+    })
+    .from(trucks)
+    .where(and(eq(trucks.operatorId, operatorId), eq(trucks.active, true)))
+    .orderBy(asc(trucks.plate));
+
+  const fleetCrew = await db
+    .select({ id: drivers.id, name: drivers.name })
+    .from(drivers)
+    .where(and(eq(drivers.operatorId, operatorId), eq(drivers.active, true)))
+    .orderBy(asc(drivers.name));
 
   return (
     <div className="mx-auto max-w-lg space-y-4">
@@ -114,19 +125,30 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
           </div>
 
           <dl className="space-y-3 rounded-lg border border-ep3-navy/10 bg-white/70 p-4 text-sm">
-            {job.assignment ? (
-              <div className="flex justify-between gap-3">
-                <dt className="text-ep3-navy/55">Camión asignado</dt>
-                <dd className="text-right font-medium text-ep3-navy">
-                  {job.assignment.truckPlate
-                    ? `${job.assignment.truckPlate}${
-                        job.assignment.truckLabel
-                          ? ` · ${job.assignment.truckLabel}`
-                          : ""
-                      }`
-                    : "Sin camión (avisa a admin)"}
-                </dd>
-              </div>
+            {accepted ? (
+              <>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-ep3-navy/55">Camión</dt>
+                  <dd className="text-right font-medium text-ep3-navy">
+                    {job.assignment?.truckPlate}
+                    {job.assignment?.truckLabel
+                      ? ` · ${job.assignment.truckLabel}`
+                      : ""}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-ep3-navy/55">Conductor</dt>
+                  <dd className="text-right font-medium text-ep3-navy">
+                    {job.assignment?.crewDriverName}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-ep3-navy/55">Salvoconducto</dt>
+                  <dd className="text-right font-medium text-ep3-navy">
+                    {job.assignment?.salvoConductoFolio}
+                  </dd>
+                </div>
+              </>
             ) : null}
             {volume ? (
               <div className="flex justify-between gap-3">
@@ -156,130 +178,33 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
         </div>
       </PanelCard>
 
-      {canPrep || hasSalvo ? (
-        <PanelCard>
-          <h2 className="font-semibold text-ep3-navy">Antes de salir</h2>
-          <p className="mt-1 text-sm text-ep3-navy/60">
-            Registra el salvo conducto para poder marcar En camino. El camión lo
-            asigna administración.
-          </p>
-
-          <div className="mt-4 space-y-3">
-            <h3 className="text-sm font-semibold text-ep3-navy">
-              Salvo conducto
-            </h3>
-            {hasSalvo ? (
-              <dl className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-ep3-navy">
-                <div className="flex justify-between gap-3">
-                  <dt className="text-ep3-navy/55">Folio</dt>
-                  <dd className="font-medium">
-                    {job.assignment?.salvoConductoFolio}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-ep3-navy/55">Fecha</dt>
-                  <dd className="font-medium">
-                    {formatDate(job.assignment?.salvoConductoIssuedAt)}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-ep3-navy/55">Comuna origen</dt>
-                  <dd className="font-medium">
-                    {job.assignment?.salvoConductoOriginCommune}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-ep3-navy/55">Comuna destino</dt>
-                  <dd className="font-medium">
-                    {job.assignment?.salvoConductoDestinationCommune}
-                  </dd>
-                </div>
-                {job.assignment?.salvoConductoNotes ? (
-                  <div>
-                    <dt className="text-ep3-navy/55">Notas</dt>
-                    <dd className="mt-1">{job.assignment.salvoConductoNotes}</dd>
-                  </div>
-                ) : null}
-              </dl>
-            ) : null}
-            {canPrep && hasTruck ? (
-              <form action={saveSalvoAction} className="space-y-3">
-                <Field
-                  label="Número / folio"
-                  name="folio"
-                  required
-                  defaultValue={job.assignment?.salvoConductoFolio}
-                  placeholder="Ej. SC-12345"
-                />
-                <Field
-                  label="Fecha del documento"
-                  name="issuedAt"
-                  type="date"
-                  required
-                  defaultValue={
-                    job.assignment?.salvoConductoIssuedAt ?? undefined
-                  }
-                />
-                <Field
-                  label="Comuna origen"
-                  name="originCommune"
-                  required
-                  defaultValue={
-                    job.assignment?.salvoConductoOriginCommune ?? undefined
-                  }
-                />
-                <Field
-                  label="Comuna destino"
-                  name="destinationCommune"
-                  required
-                  defaultValue={
-                    job.assignment?.salvoConductoDestinationCommune ?? undefined
-                  }
-                />
-                <TextArea
-                  label="Notas (opcional)"
-                  name="notes"
-                  defaultValue={job.assignment?.salvoConductoNotes}
-                />
-                <SubmitButton
-                  label={
-                    hasSalvo
-                      ? "Actualizar salvo conducto"
-                      : "Guardar salvo conducto"
-                  }
-                />
-              </form>
-            ) : null}
-            {canPrep && !hasTruck ? (
-              <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
-                Falta el camión en este trabajo. Avisa a administración para
-                asignarlo.
-              </p>
-            ) : null}
-          </div>
-        </PanelCard>
-      ) : null}
-
       <PanelCard>
         <div className="space-y-2">
-          {job.status === "assigned" ? (
-            ready ? (
-              <form action={driverAdvanceJob.bind(null, id, "in_progress")}>
-                <button
-                  type="submit"
-                  className="flex min-h-14 w-full items-center justify-center rounded-lg bg-ep3-yellow text-base font-bold text-ep3-navy"
-                >
-                  En camino
-                </button>
-              </form>
-            ) : (
-              <p className="rounded-lg bg-amber-50 px-4 py-3 text-center text-sm font-medium text-amber-900">
-                {!hasTruck
-                  ? "Espera a que administración asigne el camión."
-                  : "Completa el salvo conducto para marcar En camino."}
-              </p>
-            )
+          {canAccept ? (
+            <AcceptServiceModal
+              jobId={id}
+              trucks={fleetTrucks.map((t) => ({
+                id: t.id,
+                label: t.label ? `${t.plate} — ${t.label}` : t.plate,
+              }))}
+              crew={fleetCrew.map((c) => ({
+                id: c.id,
+                label: c.name,
+              }))}
+            />
           ) : null}
+
+          {job.status === "assigned" && accepted ? (
+            <form action={driverAdvanceJob.bind(null, id, "in_progress")}>
+              <button
+                type="submit"
+                className="flex min-h-14 w-full items-center justify-center rounded-lg bg-ep3-yellow text-base font-bold text-ep3-navy"
+              >
+                En camino
+              </button>
+            </form>
+          ) : null}
+
           {job.status === "in_progress" ? (
             <form action={driverAdvanceJob.bind(null, id, "completed")}>
               <button
@@ -290,6 +215,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
               </button>
             </form>
           ) : null}
+
           {job.status === "completed" ? (
             <p className="rounded-lg bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-800">
               Trabajo finalizado

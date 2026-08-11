@@ -1,4 +1,5 @@
-import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { notFound } from "next/navigation";
 import {
   BackLink,
@@ -26,6 +27,8 @@ import {
 
 type Props = { params: Promise<{ id: string }> };
 
+const crewDrivers = alias(drivers, "crew_drivers");
+
 export default async function TrabajoDetailPage({ params }: Props) {
   const { id } = await params;
   const job = await getJobOperationalDetail(id);
@@ -43,30 +46,31 @@ export default async function TrabajoDetailPage({ params }: Props) {
       driverEmail: drivers.email,
       truckPlate: trucks.plate,
       truckLabel: trucks.label,
+      crewDriverName: crewDrivers.name,
       salvoConductoFolio: jobAssignments.salvoConductoFolio,
       salvoConductoCompletedAt: jobAssignments.salvoConductoCompletedAt,
     })
     .from(jobAssignments)
     .innerJoin(drivers, eq(jobAssignments.driverId, drivers.id))
     .leftJoin(trucks, eq(jobAssignments.truckId, trucks.id))
+    .leftJoin(crewDrivers, eq(jobAssignments.crewDriverId, crewDrivers.id))
     .where(eq(jobAssignments.jobId, id))
     .orderBy(desc(jobAssignments.assignedAt));
 
   const latestAssignment = assignments[0] ?? null;
 
-  const activeDrivers = await db
+  const activeOperators = await db
     .select({ id: drivers.id, name: drivers.name, email: drivers.email })
     .from(drivers)
-    .where(eq(drivers.active, true))
+    .where(and(eq(drivers.active, true), isNull(drivers.operatorId)))
     .orderBy(asc(drivers.name));
 
-  // Keep current assignee selectable even if marked inactive
-  const driverOptions = [...activeDrivers];
+  const operatorOptions = [...activeOperators];
   if (
     latestAssignment &&
-    !driverOptions.some((d) => d.id === latestAssignment.driverId)
+    !operatorOptions.some((d) => d.id === latestAssignment.driverId)
   ) {
-    driverOptions.unshift({
+    operatorOptions.unshift({
       id: latestAssignment.driverId,
       name: latestAssignment.driverName,
       email: latestAssignment.driverEmail,
@@ -83,49 +87,11 @@ export default async function TrabajoDetailPage({ params }: Props) {
         isNotNull(staffUsers.driverId),
       ),
     );
-  const driversWithAppAccess = new Set(
+  const operatorsWithAppAccess = new Set(
     driverLogins
       .map((l) => l.driverId)
-      .filter((id): id is string => Boolean(id)),
+      .filter((oid): oid is string => Boolean(oid)),
   );
-
-  const activeTrucks = await db
-    .select({
-      id: trucks.id,
-      plate: trucks.plate,
-      label: trucks.label,
-      defaultDriverId: trucks.defaultDriverId,
-    })
-    .from(trucks)
-    .where(eq(trucks.active, true))
-    .orderBy(asc(trucks.plate));
-
-  const truckOptions = activeTrucks.map((t) => ({
-    id: t.id,
-    plate: t.plate,
-    label: t.label,
-    defaultDriverId: t.defaultDriverId,
-  }));
-  if (
-    latestAssignment?.truckId &&
-    !truckOptions.some((t) => t.id === latestAssignment.truckId)
-  ) {
-    truckOptions.unshift({
-      id: latestAssignment.truckId,
-      plate: latestAssignment.truckPlate ?? "—",
-      label: latestAssignment.truckLabel,
-      defaultDriverId: null,
-    });
-  }
-
-  const preferredTruckId =
-    latestAssignment?.truckId ??
-    (latestAssignment?.driverId
-      ? (truckOptions.find((t) => t.defaultDriverId === latestAssignment.driverId)
-          ?.id ?? undefined)
-      : undefined) ??
-    truckOptions.find((t) => t.defaultDriverId)?.id ??
-    truckOptions[0]?.id;
 
   const assignAction = assignJob.bind(null, id);
   const scheduleAction = updateJobSchedule.bind(null, id);
@@ -157,35 +123,42 @@ export default async function TrabajoDetailPage({ params }: Props) {
             <dd className="font-medium text-ep3-navy">{job.clientName}</dd>
           </div>
           <div>
-            <dt className="text-ep3-navy/60">Conductor</dt>
+            <dt className="text-ep3-navy/60">Operador</dt>
             <dd className="font-medium text-ep3-navy">
-              {latestAssignment?.driverName ?? "Sin asignar"}
+              {job.assignment?.driverName ?? "Sin asignar"}
             </dd>
           </div>
           <div>
             <dt className="text-ep3-navy/60">Camión</dt>
             <dd className="font-medium text-ep3-navy">
-              {latestAssignment?.truckPlate
-                ? `${latestAssignment.truckPlate}${
-                    latestAssignment.truckLabel
-                      ? ` · ${latestAssignment.truckLabel}`
+              {job.assignment?.truckPlate
+                ? `${job.assignment.truckPlate}${
+                    job.assignment.truckLabel
+                      ? ` · ${job.assignment.truckLabel}`
                       : ""
                   }`
-                : latestAssignment
-                  ? "Sin camión"
+                : job.assignment
+                  ? "Pendiente (aceptación)"
                   : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-ep3-navy/60">Conductor (flota)</dt>
+            <dd className="font-medium text-ep3-navy">
+              {job.assignment?.crewDriverName ??
+                (job.assignment ? "Pendiente (aceptación)" : "—")}
             </dd>
           </div>
           <div>
             <dt className="text-ep3-navy/60">Salvo conducto</dt>
             <dd className="font-medium text-ep3-navy">
-              {latestAssignment?.salvoConductoCompletedAt
+              {job.assignment?.salvoConductoCompletedAt
                 ? `Registrado${
-                    latestAssignment.salvoConductoFolio
-                      ? ` · ${latestAssignment.salvoConductoFolio}`
+                    job.assignment.salvoConductoFolio
+                      ? ` · ${job.assignment.salvoConductoFolio}`
                       : ""
                   }`
-                : latestAssignment
+                : job.assignment
                   ? "Pendiente"
                   : "—"}
             </dd>
@@ -320,7 +293,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
         <h2 className="mb-3 font-semibold text-ep3-navy">Asignaciones</h2>
         {assignments.length === 0 ? (
           <p className="mb-4 text-sm text-ep3-navy/60">
-            Todavía sin conductor asignado.
+            Todavía sin operador asignado.
           </p>
         ) : (
           <ul className="mb-4 space-y-3">
@@ -330,10 +303,11 @@ export default async function TrabajoDetailPage({ params }: Props) {
                 className="rounded-md border border-ep3-navy/10 p-3 text-sm"
               >
                 <p className="font-medium text-ep3-navy">
-                  {a.driverName}
+                  Operador: {a.driverName}
                   {a.truckPlate
                     ? ` · ${a.truckPlate}${a.truckLabel ? ` (${a.truckLabel})` : ""}`
                     : " · Camión pendiente"}
+                  {a.crewDriverName ? ` · Conductor: ${a.crewDriverName}` : ""}
                 </p>
                 <p className="text-ep3-navy/70">{a.driverEmail}</p>
                 {a.notes ? (
@@ -346,7 +320,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
                     : " · Correo pendiente"}
                   {a.salvoConductoCompletedAt
                     ? ` · Salvo conducto ${a.salvoConductoFolio ?? "OK"}`
-                    : " · Sin salvo conducto"}
+                    : " · Sin aceptar aún"}
                 </p>
               </li>
             ))}
@@ -354,9 +328,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
         )}
 
         {job.status === "pending_assignment" || job.status === "assigned" ? (
-          driverOptions.length === 0 || truckOptions.length === 0 ? (
+          operatorOptions.length === 0 ? (
             <p className="text-sm text-amber-800">
-              Necesitas al menos un conductor y un camión activos para asignar.
+              Necesitas al menos un operador activo para asignar.
             </p>
           ) : (
             <form
@@ -364,47 +338,24 @@ export default async function TrabajoDetailPage({ params }: Props) {
               className="space-y-4 border-t border-ep3-navy/10 pt-4"
             >
               <h3 className="font-medium text-ep3-navy">
-                {latestAssignment
-                  ? "Reasignar conductor y camión"
-                  : "Asignar conductor y camión"}
+                {latestAssignment ? "Reasignar operador" : "Asignar operador"}
               </h3>
               <SelectField
-                label="Conductor"
+                label="Operador"
                 name="driverId"
                 required
                 defaultValue={latestAssignment?.driverId}
-                options={driverOptions.map((d) => ({
+                options={operatorOptions.map((d) => ({
                   value: d.id,
-                  label: driversWithAppAccess.has(d.id)
+                  label: operatorsWithAppAccess.has(d.id)
                     ? `${d.name} (${d.email})`
                     : `${d.name} (${d.email}) — sin acceso app`,
                 }))}
               />
               <p className="text-xs text-ep3-navy/55">
-                Si el conductor aparece “sin acceso app”, actívalo en Conductores
-                o no recibirá notificaciones ni verá Mis trabajos.
-              </p>
-              <SelectField
-                label="Camión"
-                name="truckId"
-                required
-                defaultValue={preferredTruckId}
-                options={truckOptions.map((t) => {
-                  const habitual = t.defaultDriverId
-                    ? driverOptions.find((d) => d.id === t.defaultDriverId)
-                    : null;
-                  const base = t.label ? `${t.plate} — ${t.label}` : t.plate;
-                  return {
-                    value: t.id,
-                    label: habitual
-                      ? `${base} (habitual: ${habitual.name})`
-                      : base,
-                  };
-                })}
-              />
-              <p className="text-xs text-ep3-navy/55">
-                Solo administración asigna el camión. El conductor debe registrar
-                el salvo conducto antes de marcar En camino.
+                El operador aceptará el servicio eligiendo camión, conductor de
+                flota y salvoconducto. Si aparece “sin acceso app”, actívalo en
+                Operadores.
               </p>
               <Field
                 label="Hora llegada (opcional)"
@@ -413,15 +364,13 @@ export default async function TrabajoDetailPage({ params }: Props) {
                 defaultValue={job.scheduledTime ?? undefined}
               />
               <TextArea
-                label="Notas para el conductor"
+                label="Notas para el operador"
                 name="notes"
                 defaultValue={latestAssignment?.notes}
               />
               <SubmitButton
                 label={
-                  latestAssignment
-                    ? "Actualizar asignación"
-                    : "Asignar conductor y camión"
+                  latestAssignment ? "Actualizar asignación" : "Asignar operador"
                 }
               />
             </form>

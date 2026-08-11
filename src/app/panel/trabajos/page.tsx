@@ -137,7 +137,7 @@ export default async function TrabajosPage({ searchParams }: Props) {
                   },
                   { label: "Fecha", value: formatDate(row.scheduledDate) },
                   {
-                    label: "Conductor",
+                    label: "Operador",
                     value: assignedDriver ?? "Sin asignar",
                   },
                   { label: "Teléfono", value: row.clientPhone ?? "—" },

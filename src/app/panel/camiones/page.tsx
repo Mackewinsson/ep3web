@@ -26,20 +26,20 @@ export default async function CamionesPage() {
       label: trucks.label,
       capacityNotes: trucks.capacityNotes,
       active: trucks.active,
-      defaultDriverName: drivers.name,
+      operatorName: drivers.name,
       permisoCirculacionExpiresAt: trucks.permisoCirculacionExpiresAt,
       soapExpiresAt: trucks.soapExpiresAt,
       revisionTecnicaExpiresAt: trucks.revisionTecnicaExpiresAt,
     })
     .from(trucks)
-    .leftJoin(drivers, eq(trucks.defaultDriverId, drivers.id))
+    .leftJoin(drivers, eq(trucks.operatorId, drivers.id))
     .orderBy(desc(trucks.createdAt));
 
   return (
     <div>
       <PageHeader
         title="Camiones"
-        description="Flota, documentos vigentes y conductor habitual"
+        description="Flota por operador, documentos vigentes"
         actionHref="/panel/camiones/nuevo"
         actionLabel="Nuevo camión"
       />
@@ -70,8 +70,8 @@ export default async function CamionesPage() {
                 fields: [
                   { label: "Nombre", value: row.label ?? "—" },
                   {
-                    label: "Conductor",
-                    value: row.defaultDriverName ?? "Sin habitual",
+                    label: "Operador",
+                    value: row.operatorName ?? "Sin operador",
                   },
                   {
                     label: "Permiso",
