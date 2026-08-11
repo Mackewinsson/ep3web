@@ -1,21 +1,31 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import {
   BackLink,
-  Field,
   PageHeader,
   PanelCard,
+  StatusBadge,
   SubmitButton,
-  TextArea,
 } from "@/components/panel/ui";
+import { TruckFormFields } from "@/components/panel/truck-form-fields";
 import { db } from "@/db";
-import { trucks } from "@/db/schema";
+import { drivers, trucks } from "@/db/schema";
 import { updateTruck } from "@/lib/actions/trucks";
+import { requireAdmin } from "@/lib/auth";
+import { formatDate } from "@/lib/format";
+import {
+  docExpiryLabel,
+  docExpiryStatus,
+  expiryToneToBadge,
+  worstTruckDocTone,
+} from "@/lib/truck-docs";
 
 type Props = { params: Promise<{ id: string }> };
 
 export default async function CamionDetailPage({ params }: Props) {
+  await requireAdmin();
   const { id } = await params;
+
   const [truck] = await db
     .select()
     .from(trucks)
@@ -23,30 +33,107 @@ export default async function CamionDetailPage({ params }: Props) {
     .limit(1);
   if (!truck) notFound();
 
+  const driverOptions = await db
+    .select({ id: drivers.id, name: drivers.name })
+    .from(drivers)
+    .where(eq(drivers.active, true))
+    .orderBy(asc(drivers.name));
+
+  if (
+    truck.defaultDriverId &&
+    !driverOptions.some((d) => d.id === truck.defaultDriverId)
+  ) {
+    const [inactive] = await db
+      .select({ id: drivers.id, name: drivers.name })
+      .from(drivers)
+      .where(eq(drivers.id, truck.defaultDriverId))
+      .limit(1);
+    if (inactive) driverOptions.unshift(inactive);
+  }
+
   const action = updateTruck.bind(null, id);
+  const overall = worstTruckDocTone(truck);
+
+  const docs = [
+    {
+      label: "Permiso circulación",
+      expires: truck.permisoCirculacionExpiresAt,
+      detail: truck.permisoCirculacionNumber,
+    },
+    {
+      label: "SOAP",
+      expires: truck.soapExpiresAt,
+      detail: [truck.soapPolicyNumber, truck.soapInsurer]
+        .filter(Boolean)
+        .join(" · "),
+    },
+    {
+      label: "Revisión técnica",
+      expires: truck.revisionTecnicaExpiresAt,
+      detail: truck.revisionTecnicaFolio,
+    },
+  ] as const;
 
   return (
-    <div className="mx-auto max-w-xl">
-      <BackLink href="/panel/camiones" label="Volver a camiones" />
-      <PageHeader title={truck.plate} description="Editar camión" />
+    <div className="mx-auto max-w-xl space-y-6">
+      <div>
+        <BackLink href="/panel/camiones" label="Volver a camiones" />
+        <PageHeader
+          title={truck.plate}
+          description={truck.label ?? "Editar camión"}
+        />
+      </div>
+
+      <PanelCard>
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <StatusBadge
+            label={docExpiryLabel(overall)}
+            tone={expiryToneToBadge(overall)}
+          />
+        </div>
+        <ul className="space-y-2 text-sm">
+          {docs.map((doc) => {
+            const tone = docExpiryStatus(doc.expires);
+            return (
+              <li
+                key={doc.label}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-ep3-navy/10 px-3 py-2"
+              >
+                <div>
+                  <p className="font-medium text-ep3-navy">{doc.label}</p>
+                  <p className="text-ep3-navy/60">
+                    {doc.detail || "—"} · vence {formatDate(doc.expires)}
+                  </p>
+                </div>
+                <StatusBadge
+                  label={docExpiryLabel(tone)}
+                  tone={expiryToneToBadge(tone)}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      </PanelCard>
+
       <PanelCard>
         <form action={action} className="space-y-4">
-          <Field
-            label="Patente"
-            name="plate"
-            required
-            defaultValue={truck.plate}
+          <TruckFormFields
+            driverOptions={driverOptions}
+            values={{
+              plate: truck.plate,
+              label: truck.label,
+              capacityNotes: truck.capacityNotes,
+              defaultDriverId: truck.defaultDriverId,
+              permisoCirculacionNumber: truck.permisoCirculacionNumber,
+              permisoCirculacionExpiresAt: truck.permisoCirculacionExpiresAt,
+              soapPolicyNumber: truck.soapPolicyNumber,
+              soapInsurer: truck.soapInsurer,
+              soapExpiresAt: truck.soapExpiresAt,
+              revisionTecnicaFolio: truck.revisionTecnicaFolio,
+              revisionTecnicaExpiresAt: truck.revisionTecnicaExpiresAt,
+              active: truck.active,
+            }}
           />
-          <Field label="Nombre / alias" name="label" defaultValue={truck.label} />
-          <TextArea
-            label="Capacidad / notas"
-            name="capacityNotes"
-            defaultValue={truck.capacityNotes}
-          />
-          <label className="flex items-center gap-2 text-sm text-ep3-navy">
-            <input type="checkbox" name="active" defaultChecked={truck.active} />
-            Activo
-          </label>
           <SubmitButton label="Guardar cambios" />
         </form>
       </PanelCard>

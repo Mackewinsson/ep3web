@@ -14,15 +14,9 @@ import {
 } from "@/db/schema";
 import { requireAdmin, requireDriver } from "@/lib/auth";
 
-const DRIVER_PICKS_TRUCK = "none";
-
 const assignSchema = z.object({
   driverId: z.string().uuid(),
-  truckId: z.union([
-    z.literal(DRIVER_PICKS_TRUCK),
-    z.literal(""),
-    z.string().uuid(),
-  ]),
+  truckId: z.string().uuid(),
   notes: z.string().optional(),
   scheduledTime: z
     .string()
@@ -39,10 +33,6 @@ const scheduleSchema = z.object({
     .optional()
     .or(z.literal("")),
   notes: z.string().optional(),
-});
-
-const selectTruckSchema = z.object({
-  truckId: z.string().uuid(),
 });
 
 const salvoConductoSchema = z.object({
@@ -105,15 +95,10 @@ export async function assignJob(jobId: string, formData: FormData) {
   await requireAdmin();
   const parsed = assignSchema.parse({
     driverId: formData.get("driverId"),
-    truckId: formData.get("truckId") || DRIVER_PICKS_TRUCK,
+    truckId: formData.get("truckId"),
     notes: formData.get("notes") || undefined,
     scheduledTime: formData.get("scheduledTime") || "",
   });
-
-  const truckId =
-    !parsed.truckId || parsed.truckId === DRIVER_PICKS_TRUCK
-      ? null
-      : parsed.truckId;
 
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
   if (!job) {
@@ -125,31 +110,25 @@ export async function assignJob(jobId: string, formData: FormData) {
     .from(drivers)
     .where(eq(drivers.id, parsed.driverId))
     .limit(1);
+  const [truck] = await db
+    .select()
+    .from(trucks)
+    .where(eq(trucks.id, parsed.truckId))
+    .limit(1);
   const [client] = await db
     .select()
     .from(clients)
     .where(eq(clients.id, job.clientId))
     .limit(1);
 
-  if (!driver || !client) {
+  if (!driver || !truck || !client) {
     throw new Error("Datos de asignación incompletos");
-  }
-
-  if (truckId) {
-    const [truck] = await db
-      .select()
-      .from(trucks)
-      .where(eq(trucks.id, truckId))
-      .limit(1);
-    if (!truck) {
-      throw new Error("Camión no encontrado");
-    }
   }
 
   await db.insert(jobAssignments).values({
     jobId,
     driverId: parsed.driverId,
-    truckId,
+    truckId: parsed.truckId,
     notes: parsed.notes,
     emailSentAt: null,
   });
@@ -204,39 +183,6 @@ async function getLatestDriverAssignment(jobId: string, driverId: string) {
   return latest ?? null;
 }
 
-export async function driverSelectTruck(jobId: string, formData: FormData) {
-  const session = await requireDriver();
-  const driverId = session.driverId!;
-  const parsed = selectTruckSchema.parse({
-    truckId: formData.get("truckId"),
-  });
-
-  const latest = await getLatestDriverAssignment(jobId, driverId);
-  if (!latest) {
-    throw new Error("Trabajo no asignado a este conductor");
-  }
-  if (latest.status !== "assigned") {
-    throw new Error("Solo puedes elegir camión antes de salir en camino");
-  }
-
-  const [truck] = await db
-    .select()
-    .from(trucks)
-    .where(and(eq(trucks.id, parsed.truckId), eq(trucks.active, true)))
-    .limit(1);
-  if (!truck) {
-    throw new Error("Camión no disponible");
-  }
-
-  await db
-    .update(jobAssignments)
-    .set({ truckId: parsed.truckId })
-    .where(eq(jobAssignments.id, latest.assignmentId));
-
-  revalidateJobPaths(jobId);
-  redirect(`/panel/mis-trabajos/${jobId}`);
-}
-
 export async function driverSaveSalvoConducto(
   jobId: string,
   formData: FormData,
@@ -259,7 +205,9 @@ export async function driverSaveSalvoConducto(
     throw new Error("Solo puedes registrar el salvo conducto antes de salir");
   }
   if (!latest.truckId) {
-    throw new Error("Primero elige el camión que vas a usar");
+    throw new Error(
+      "Este trabajo no tiene camión asignado. Avisa a administración.",
+    );
   }
 
   await db
@@ -299,7 +247,9 @@ export async function driverAdvanceJob(
 
   if (nextStatus === "in_progress") {
     if (!latest.truckId) {
-      throw new Error("Debes elegir el camión antes de salir en camino");
+      throw new Error(
+        "Este trabajo no tiene camión. Avisa a administración para asignarlo.",
+      );
     }
     if (!latest.salvoConductoCompletedAt) {
       throw new Error(

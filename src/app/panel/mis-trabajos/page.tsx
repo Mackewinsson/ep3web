@@ -78,7 +78,7 @@ export default async function MisTrabajosPage() {
                 },
                 {
                   label: "Camión",
-                  value: row.truckPlate ?? "Por elegir",
+                  value: row.truckPlate ?? "Sin asignar",
                 },
               ],
             }))}

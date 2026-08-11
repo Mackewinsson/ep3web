@@ -1,25 +1,33 @@
+import { asc, eq } from "drizzle-orm";
 import {
-  Field,
   PageHeader,
   PanelCard,
   SubmitButton,
-  TextArea,
 } from "@/components/panel/ui";
+import { TruckFormFields } from "@/components/panel/truck-form-fields";
+import { db } from "@/db";
+import { drivers } from "@/db/schema";
 import { createTruck } from "@/lib/actions/trucks";
+import { requireAdmin } from "@/lib/auth";
 
-export default function NuevoCamionPage() {
+export default async function NuevoCamionPage() {
+  await requireAdmin();
+
+  const driverOptions = await db
+    .select({ id: drivers.id, name: drivers.name })
+    .from(drivers)
+    .where(eq(drivers.active, true))
+    .orderBy(asc(drivers.name));
+
   return (
     <div className="mx-auto max-w-xl">
-      <PageHeader title="Nuevo camión" />
+      <PageHeader
+        title="Nuevo camión"
+        description="Patente, conductor habitual y documentos vigentes (sin adjuntos)"
+      />
       <PanelCard>
         <form action={createTruck} className="space-y-4">
-          <Field label="Patente" name="plate" required placeholder="ABCD12" />
-          <Field label="Nombre / alias" name="label" placeholder="Camión 1" />
-          <TextArea label="Capacidad / notas" name="capacityNotes" />
-          <label className="flex items-center gap-2 text-sm text-ep3-navy">
-            <input type="checkbox" name="active" defaultChecked />
-            Activo
-          </label>
+          <TruckFormFields driverOptions={driverOptions} />
           <SubmitButton label="Guardar camión" />
         </form>
       </PanelCard>

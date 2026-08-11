@@ -90,12 +90,22 @@ export default async function TrabajoDetailPage({ params }: Props) {
   );
 
   const activeTrucks = await db
-    .select({ id: trucks.id, plate: trucks.plate, label: trucks.label })
+    .select({
+      id: trucks.id,
+      plate: trucks.plate,
+      label: trucks.label,
+      defaultDriverId: trucks.defaultDriverId,
+    })
     .from(trucks)
     .where(eq(trucks.active, true))
     .orderBy(asc(trucks.plate));
 
-  const truckOptions = [...activeTrucks];
+  const truckOptions = activeTrucks.map((t) => ({
+    id: t.id,
+    plate: t.plate,
+    label: t.label,
+    defaultDriverId: t.defaultDriverId,
+  }));
   if (
     latestAssignment?.truckId &&
     !truckOptions.some((t) => t.id === latestAssignment.truckId)
@@ -104,8 +114,18 @@ export default async function TrabajoDetailPage({ params }: Props) {
       id: latestAssignment.truckId,
       plate: latestAssignment.truckPlate ?? "—",
       label: latestAssignment.truckLabel,
+      defaultDriverId: null,
     });
   }
+
+  const preferredTruckId =
+    latestAssignment?.truckId ??
+    (latestAssignment?.driverId
+      ? (truckOptions.find((t) => t.defaultDriverId === latestAssignment.driverId)
+          ?.id ?? undefined)
+      : undefined) ??
+    truckOptions.find((t) => t.defaultDriverId)?.id ??
+    truckOptions[0]?.id;
 
   const assignAction = assignJob.bind(null, id);
   const scheduleAction = updateJobSchedule.bind(null, id);
@@ -152,7 +172,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
                       : ""
                   }`
                 : latestAssignment
-                  ? "Pendiente (elige el conductor)"
+                  ? "Sin camión"
                   : "—"}
             </dd>
           </div>
@@ -334,9 +354,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
         )}
 
         {job.status === "pending_assignment" || job.status === "assigned" ? (
-          driverOptions.length === 0 ? (
+          driverOptions.length === 0 || truckOptions.length === 0 ? (
             <p className="text-sm text-amber-800">
-              Necesitas al menos un conductor activo para asignar.
+              Necesitas al menos un conductor y un camión activos para asignar.
             </p>
           ) : (
             <form
@@ -345,8 +365,8 @@ export default async function TrabajoDetailPage({ params }: Props) {
             >
               <h3 className="font-medium text-ep3-navy">
                 {latestAssignment
-                  ? "Reasignar conductor"
-                  : "Asignar conductor"}
+                  ? "Reasignar conductor y camión"
+                  : "Asignar conductor y camión"}
               </h3>
               <SelectField
                 label="Conductor"
@@ -365,24 +385,26 @@ export default async function TrabajoDetailPage({ params }: Props) {
                 o no recibirá notificaciones ni verá Mis trabajos.
               </p>
               <SelectField
-                label="Camión (opcional)"
+                label="Camión"
                 name="truckId"
                 required
-                defaultValue={latestAssignment?.truckId ?? "none"}
-                options={[
-                  {
-                    value: "none",
-                    label: "Lo elige el conductor",
-                  },
-                  ...truckOptions.map((t) => ({
+                defaultValue={preferredTruckId}
+                options={truckOptions.map((t) => {
+                  const habitual = t.defaultDriverId
+                    ? driverOptions.find((d) => d.id === t.defaultDriverId)
+                    : null;
+                  const base = t.label ? `${t.plate} — ${t.label}` : t.plate;
+                  return {
                     value: t.id,
-                    label: t.label ? `${t.plate} — ${t.label}` : t.plate,
-                  })),
-                ]}
+                    label: habitual
+                      ? `${base} (habitual: ${habitual.name})`
+                      : base,
+                  };
+                })}
               />
               <p className="text-xs text-ep3-navy/55">
-                Si dejas “Lo elige el conductor”, el camionero debe elegir el
-                camión y registrar el salvo conducto antes de marcar En camino.
+                Solo administración asigna el camión. El conductor debe registrar
+                el salvo conducto antes de marcar En camino.
               </p>
               <Field
                 label="Hora llegada (opcional)"
@@ -397,7 +419,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
               />
               <SubmitButton
                 label={
-                  latestAssignment ? "Actualizar asignación" : "Asignar conductor"
+                  latestAssignment
+                    ? "Actualizar asignación"
+                    : "Asignar conductor y camión"
                 }
               />
             </form>

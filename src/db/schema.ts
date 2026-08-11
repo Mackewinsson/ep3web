@@ -98,6 +98,22 @@ export const trucks = pgTable("trucks", {
   plate: varchar("plate", { length: 20 }).notNull(),
   label: varchar("label", { length: 120 }),
   capacityNotes: text("capacity_notes"),
+  /** Conductor habitual asignado por admin */
+  defaultDriverId: uuid("default_driver_id").references(() => drivers.id, {
+    onDelete: "set null",
+  }),
+  /** Permiso de circulación — solo datos, sin adjuntos */
+  permisoCirculacionNumber: varchar("permiso_circulacion_number", {
+    length: 80,
+  }),
+  permisoCirculacionExpiresAt: date("permiso_circulacion_expires_at"),
+  /** SOAP */
+  soapPolicyNumber: varchar("soap_policy_number", { length: 80 }),
+  soapInsurer: varchar("soap_insurer", { length: 120 }),
+  soapExpiresAt: date("soap_expires_at"),
+  /** Revisión técnica */
+  revisionTecnicaFolio: varchar("revision_tecnica_folio", { length: 80 }),
+  revisionTecnicaExpiresAt: date("revision_tecnica_expires_at"),
   active: boolean("active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
