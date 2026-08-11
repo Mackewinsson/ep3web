@@ -11,11 +11,19 @@ export type AddressBlock = {
   hasElevator: boolean | null;
 };
 
+export type CustomInventoryItem = {
+  id: string;
+  name: string;
+  quantity: number;
+};
+
 export type QuoteWizardState = {
   origin: AddressBlock;
   destination: AddressBlock;
   /** itemId -> quantity */
   quantities: Record<string, number>;
+  /** Extra items the client typed that are not in the catalog */
+  customItems: CustomInventoryItem[];
   packingBoxes: number;
   boxesPromptSeen: boolean;
   hasFragile: boolean | null;
@@ -27,6 +35,7 @@ export type QuoteWizardState = {
     phone: string;
     email: string;
     preferredDate: string;
+    preferredTime: string;
     notes: string;
   };
 };
@@ -58,6 +67,7 @@ export function createInitialQuoteState(): QuoteWizardState {
       hasElevator: null,
     },
     quantities: {},
+    customItems: [],
     packingBoxes: 0,
     boxesPromptSeen: false,
     hasFragile: null,
@@ -69,6 +79,7 @@ export function createInitialQuoteState(): QuoteWizardState {
       phone: "",
       email: "",
       preferredDate: "",
+      preferredTime: "",
       notes: "",
     },
   };

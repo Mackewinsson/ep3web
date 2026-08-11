@@ -29,6 +29,15 @@ const wizardSchema = z.object({
   origin: addressSchema,
   destination: addressSchema,
   quantities: z.record(z.string(), z.number().int().positive()),
+  customItems: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        name: z.string().min(2).max(120),
+        quantity: z.number().int().positive(),
+      }),
+    )
+    .default([]),
   packingBoxes: z.number().int().min(0),
   hasFragile: z.boolean(),
   fragileNotes: z.string(),
@@ -38,10 +47,20 @@ const wizardSchema = z.object({
     name: z.string().min(2).max(200),
     phone: z.string().min(8).max(40),
     email: z.string().email(),
-    preferredDate: z.string().optional(),
-    notes: z.string().optional(),
+    preferredDate: z.string().optional().or(z.literal("")),
+    preferredTime: z
+      .string()
+      .refine((value) => value === "" || /^\d{2}:\d{2}$/.test(value), {
+        message: "Hora inválida",
+      })
+      .optional()
+      .default(""),
+    notes: z.string().optional().or(z.literal("")),
   }),
 });
+
+/** Fallback volume for client-typed items until ops adjusts the budget */
+const CUSTOM_ITEM_VOLUME_M3 = 0.1;
 
 export type SubmitWizardState = {
   ok?: boolean;
@@ -95,16 +114,30 @@ export async function submitWizardQuote(
   }
 
   const { catalog, pricing } = await getMovingCatalogForWizard();
-  const volumeItems = catalog.categories.flatMap((c) =>
-    c.items.map((i) => ({
-      id: i.id,
-      name: i.name,
-      volumeM3: i.volumeM3,
+  const volumeItems = [
+    ...catalog.categories.flatMap((c) =>
+      c.items.map((i) => ({
+        id: i.id,
+        name: i.name,
+        volumeM3: i.volumeM3,
+      })),
+    ),
+    ...data.customItems.map((item) => ({
+      id: item.id,
+      name: item.name,
+      volumeM3: CUSTOM_ITEM_VOLUME_M3,
     })),
-  );
+  ];
+
+  const quantitiesWithCustom = {
+    ...data.quantities,
+    ...Object.fromEntries(
+      data.customItems.map((item) => [item.id, item.quantity]),
+    ),
+  };
 
   const estimate = buildQuoteEstimate({
-    quantities: data.quantities,
+    quantities: quantitiesWithCustom,
     items: volumeItems,
     packingBoxes: data.packingBoxes,
     config: pricing satisfies PricingConfig,
@@ -112,7 +145,11 @@ export async function submitWizardQuote(
     destination: data.destination,
   });
 
-  if (estimate.furnitureM3 <= 0 && estimate.packingBoxes <= 0) {
+  if (
+    estimate.furnitureM3 <= 0 &&
+    estimate.packingBoxes <= 0 &&
+    data.customItems.length === 0
+  ) {
     return { error: "Agrega al menos un ítem al inventario." };
   }
 
@@ -126,6 +163,9 @@ export async function submitWizardQuote(
     `Delicados: ${data.hasFragile ? `Sí${data.fragileNotes ? ` — ${data.fragileNotes}` : ""}` : "No"}`,
     `Inventario: ${inventorySummary || "—"}`,
     data.packingBoxes > 0 ? `Cajas: ${data.packingBoxes}` : null,
+    data.contact.preferredTime
+      ? `Hora preferida: ${data.contact.preferredTime}`
+      : null,
     data.contact.notes ? `Notas cliente: ${data.contact.notes}` : null,
     `Estimación auto: ${formatM3(estimate.totalM3)} m³ · $${Math.round(estimate.totalAmount).toLocaleString("es-CL")} CLP`,
   ]

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BoxesSuggestModal } from "@/components/cotizar/BoxesSuggestModal";
 import {
   AddressStep,
   isAddressValid,
@@ -23,11 +22,7 @@ import {
   ParkingStep,
 } from "@/components/cotizar/steps/ParkingStep";
 import { ThankYouStep } from "@/components/cotizar/steps/ThankYouStep";
-import {
-  suggestBoxes,
-  sumQuantities,
-  type MovingCatalog,
-} from "@/lib/moving-catalog";
+import { type MovingCatalog } from "@/lib/moving-catalog";
 import type { PricingConfig } from "@/lib/quote-pricing";
 import {
   createInitialQuoteState,
@@ -55,6 +50,16 @@ function normalizeState(raw: Partial<QuoteWizardState>): QuoteWizardState {
     origin: normalizeAddress(raw.origin),
     destination: normalizeAddress(raw.destination),
     quantities: raw.quantities ?? {},
+    customItems: Array.isArray(raw.customItems)
+      ? raw.customItems.filter(
+          (item) =>
+            item &&
+            typeof item.id === "string" &&
+            typeof item.name === "string" &&
+            typeof item.quantity === "number" &&
+            item.quantity > 0,
+        )
+      : [],
     contact: { ...base.contact, ...raw.contact },
   };
 }
@@ -72,7 +77,7 @@ const STEPS = [
 
 export function QuoteWizard({
   catalog,
-  pricing,
+  pricing: _pricing,
 }: {
   catalog: MovingCatalog;
   pricing: PricingConfig;
@@ -80,7 +85,6 @@ export function QuoteWizard({
   const [state, setState] = useState<QuoteWizardState>(createInitialQuoteState);
   const [stepIndex, setStepIndex] = useState(0);
   const [hydrated, setHydrated] = useState(false);
-  const [showBoxesModal, setShowBoxesModal] = useState(false);
   const [done, setDone] = useState(false);
 
   const step = STEPS[stepIndex];
@@ -125,7 +129,11 @@ export function QuoteWizard({
       case "destination":
         return isAddressValid(state.destination);
       case "inventory":
-        return isInventoryValid(state.quantities, catalog);
+        return isInventoryValid(
+          state.quantities,
+          catalog,
+          state.customItems,
+        );
       case "fragile":
         return isFragileValid(state.hasFragile);
       case "parkingOrigin":
@@ -141,11 +149,6 @@ export function QuoteWizard({
     }
   }, [state, step, catalog]);
 
-  const suggestedBoxes = useMemo(
-    () => suggestBoxes(sumQuantities(state.quantities, catalog).totalM3, pricing),
-    [state.quantities, catalog, pricing],
-  );
-
   const setQuantity = useCallback((itemId: string, qty: number) => {
     setState((prev) => {
       const next = { ...prev.quantities };
@@ -155,26 +158,62 @@ export function QuoteWizard({
     });
   }, []);
 
+  const addCustomItem = useCallback((name: string) => {
+    const trimmed = name.trim();
+    if (trimmed.length < 2) return;
+    setState((prev) => {
+      const existing = prev.customItems.find(
+        (item) => item.name.toLowerCase() === trimmed.toLowerCase(),
+      );
+      if (existing) {
+        return {
+          ...prev,
+          customItems: prev.customItems.map((item) =>
+            item.id === existing.id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item,
+          ),
+        };
+      }
+      return {
+        ...prev,
+        customItems: [
+          ...prev.customItems,
+          {
+            id: `custom-${crypto.randomUUID()}`,
+            name: trimmed,
+            quantity: 1,
+          },
+        ],
+      };
+    });
+  }, []);
+
+  const setCustomQuantity = useCallback((id: string, qty: number) => {
+    setState((prev) => ({
+      ...prev,
+      customItems:
+        qty <= 0
+          ? prev.customItems.filter((item) => item.id !== id)
+          : prev.customItems.map((item) =>
+              item.id === id ? { ...item, quantity: qty } : item,
+            ),
+    }));
+  }, []);
+
+  const removeCustomItem = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      customItems: prev.customItems.filter((item) => item.id !== id),
+    }));
+  }, []);
+
   const goNext = () => {
-    if (step === "inventory" && !state.boxesPromptSeen) {
-      setShowBoxesModal(true);
-      return;
-    }
     if (stepIndex < STEPS.length - 1) setStepIndex((i) => i + 1);
   };
 
   const goPrev = () => {
     if (stepIndex > 0) setStepIndex((i) => i - 1);
-  };
-
-  const confirmBoxes = (boxes: number) => {
-    setState((prev) => ({
-      ...prev,
-      packingBoxes: Math.max(0, Math.floor(boxes)),
-      boxesPromptSeen: true,
-    }));
-    setShowBoxesModal(false);
-    setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
   };
 
   const progress =
@@ -249,13 +288,12 @@ export function QuoteWizard({
             {step === "inventory" ? (
               <InventoryStep
                 catalog={catalog}
-                pricing={pricing}
                 quantities={state.quantities}
-                packingBoxes={state.packingBoxes}
+                customItems={state.customItems}
                 onQuantityChange={setQuantity}
-                onPackingBoxesChange={(packingBoxes) =>
-                  setState((s) => ({ ...s, packingBoxes }))
-                }
+                onAddCustomItem={addCustomItem}
+                onCustomQuantityChange={setCustomQuantity}
+                onRemoveCustomItem={removeCustomItem}
               />
             ) : null}
 
@@ -342,13 +380,6 @@ export function QuoteWizard({
             </button>
           </div>
         </div>
-      ) : null}
-
-      {showBoxesModal ? (
-        <BoxesSuggestModal
-          suggested={suggestedBoxes}
-          onConfirm={confirmBoxes}
-        />
       ) : null}
     </div>
   );

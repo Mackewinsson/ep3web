@@ -24,6 +24,7 @@ export function ThankYouStep({ state, onDone }: Props) {
         origin: state.origin,
         destination: state.destination,
         quantities: state.quantities,
+        customItems: state.customItems,
         packingBoxes: state.packingBoxes,
         hasFragile: state.hasFragile === true,
         fragileNotes: state.fragileNotes,

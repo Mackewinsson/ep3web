@@ -48,7 +48,7 @@ export function ContactStep({ value, onChange }: Props) {
             placeholder="Para enviarte la cotización"
           />
         </label>
-        <label className="block text-sm sm:col-span-2">
+        <label className="block text-sm">
           <span className="mb-1 block font-medium text-slate-800">
             Fecha preferida
           </span>
@@ -61,6 +61,19 @@ export function ContactStep({ value, onChange }: Props) {
             }
           />
         </label>
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-slate-800">
+            Hora preferida
+          </span>
+          <input
+            type="time"
+            className={fieldClass}
+            value={value.preferredTime}
+            onChange={(e) =>
+              onChange({ ...value, preferredTime: e.target.value })
+            }
+          />
+        </label>
         <label className="block text-sm sm:col-span-2">
           <span className="mb-1 block font-medium text-slate-800">
             Notas (opcional)
@@ -70,7 +83,7 @@ export function ContactStep({ value, onChange }: Props) {
             rows={3}
             value={value.notes}
             onChange={(e) => onChange({ ...value, notes: e.target.value })}
-            placeholder="Pisos, ascensor, horarios, etc."
+            placeholder="Pisos, ascensor, acceso, etc."
           />
         </label>
       </div>

@@ -1,43 +1,89 @@
 {
   "categories": [
     {
+      "id": "cajas-embalaje",
+      "name": "Cajas de embalaje",
+      "items": [
+        {
+          "id": "caja-60-40-40",
+          "name": "Caja 60×40×40",
+          "volumeM3": 0.096
+        },
+        {
+          "id": "bolsas-plasticas-grandes",
+          "name": "Bolsas plásticas grandes",
+          "volumeM3": 0.05
+        },
+        {
+          "id": "cajas-plasticas-55-litros",
+          "name": "Cajas plásticas 55 litros",
+          "volumeM3": 0.055
+        },
+        {
+          "id": "maletas",
+          "name": "Maletas",
+          "volumeM3": 0.1
+        }
+      ]
+    },
+    {
       "id": "camas",
-      "name": "Camas",
+      "name": "Cama y colchón",
       "items": [
         {
           "id": "cama-king-incluye-colchon",
-          "name": "Cama King (incluye Colchón)",
+          "name": "Cama King y colchón",
           "volumeM3": 1.2
         },
         {
           "id": "cama-2-plazas-incluye-colchon",
-          "name": "Cama 2 Plazas (incluye Colchón)",
+          "name": "Cama 2 plazas y colchón",
           "volumeM3": 1
         },
         {
           "id": "cama-1-1-2-plaza-incluye-colchon",
-          "name": "Cama 1 1/2 Plaza (incluye Colchón)",
+          "name": "Cama 1 1/2 plaza y colchón",
           "volumeM3": 0.8
         },
         {
           "id": "cama-1-plaza-incluye-colchon",
-          "name": "Cama 1 Plaza (incluye Colchón)",
+          "name": "Cama 1 plaza y colchón",
           "volumeM3": 0.6
         },
         {
           "id": "cama-nido-incluye-colchon",
-          "name": "Cama Nido (incluye Colchón)",
+          "name": "Cama nido y colchón",
           "volumeM3": 0.7
         },
         {
           "id": "camarote-incluye-colchon",
-          "name": "Camarote (incluye Colchón)",
+          "name": "Camarote y colchón",
           "volumeM3": 1.1
         },
         {
-          "id": "respaldo-de-cama-pequeno",
-          "name": "Respaldo de Cama pequeño",
+          "id": "respaldo-1-plaza",
+          "name": "Respaldo 1 plaza",
           "volumeM3": 0.15
+        },
+        {
+          "id": "respaldo-plaza-y-media",
+          "name": "Respaldo plaza y media",
+          "volumeM3": 0.2
+        },
+        {
+          "id": "respaldo-2-plazas",
+          "name": "Respaldo 2 plazas",
+          "volumeM3": 0.25
+        },
+        {
+          "id": "respaldo-queen",
+          "name": "Respaldo queen",
+          "volumeM3": 0.3
+        },
+        {
+          "id": "respaldo-king",
+          "name": "Respaldo king",
+          "volumeM3": 0.35
         },
         {
           "id": "cuna-desarmable",
@@ -65,19 +111,24 @@
           "volumeM3": 1.3
         },
         {
-          "id": "respaldo-de-cama-mediano",
-          "name": "Respaldo de Cama mediano",
-          "volumeM3": 0.25
-        },
-        {
-          "id": "respaldo-de-cama-grande",
-          "name": "Respaldo de Cama grande",
+          "id": "base-1-plaza",
+          "name": "Base 1 plaza",
           "volumeM3": 0.35
         },
         {
-          "id": "base-cama-1-plaza",
-          "name": "Base cama 1 plaza",
-          "volumeM3": 0.35
+          "id": "base-2-plazas",
+          "name": "Base 2 plazas",
+          "volumeM3": 0.45
+        },
+        {
+          "id": "base-queen",
+          "name": "Base queen",
+          "volumeM3": 0.5
+        },
+        {
+          "id": "base-king",
+          "name": "Base king",
+          "volumeM3": 0.55
         }
       ]
     },
@@ -367,7 +418,7 @@
     },
     {
       "id": "cocina",
-      "name": "Cocina",
+      "name": "Electrodomésticos",
       "items": [
         {
           "id": "refrigerador-1-puerta",
@@ -515,7 +566,7 @@
     },
     {
       "id": "miscelaneos",
-      "name": "Misceláneos",
+      "name": "Otros",
       "items": [
         {
           "id": "alfombra-pequena",
@@ -736,8 +787,8 @@
     }
   ],
   "packingBox": {
-    "id": "caja-de-mudanza",
-    "name": "Caja de mudanza",
-    "volumeM3": 0.08
+    "id": "caja-60-40-40",
+    "name": "Caja 60×40×40",
+    "volumeM3": 0.096
   }
 }

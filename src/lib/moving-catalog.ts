@@ -7,6 +7,8 @@ import {
 } from "@/lib/quote-pricing";
 import type { MovingCatalogDto } from "@/lib/moving-catalog-db";
 
+export const SUGGESTED_PACKING_BOX_ITEM_ID = "caja-60-40-40";
+
 export type CatalogItem = {
   id: string;
   name: string;
