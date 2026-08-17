@@ -51,11 +51,17 @@ export async function selectByName(
   } else if (option.index !== undefined) {
     await select.selectOption({ index: option.index });
   } else if (option.label instanceof RegExp) {
-    const value = await select.locator("option").evaluateAll((opts, patternSource) => {
-      const re = new RegExp(patternSource);
-      const match = opts.find((o) => re.test(o.textContent ?? ""));
-      return match?.value ?? null;
-    }, option.label.source);
+    const value = await select.locator("option").evaluateAll(
+      (opts, patternSource) => {
+        const re = new RegExp(patternSource);
+        const match = opts.find(
+          (o): o is HTMLOptionElement =>
+            o instanceof HTMLOptionElement && re.test(o.textContent ?? ""),
+        );
+        return match?.value ?? null;
+      },
+      option.label.source,
+    );
     if (!value) {
       throw new Error(`No option matching ${option.label} in select[name=${name}]`);
     }
