@@ -28,6 +28,7 @@ async function main() {
       boxVolumeM3: String(DEFAULT_PRICING_CONFIG.boxVolumeM3),
       pricePerM3: String(DEFAULT_PRICING_CONFIG.pricePerM3),
       noElevatorPerFloor: String(DEFAULT_PRICING_CONFIG.noElevatorPerFloor),
+      operatorMarginPercent: String(DEFAULT_PRICING_CONFIG.operatorMarginPercent),
     });
     console.log("Seeded quote_pricing_settings");
   } else {

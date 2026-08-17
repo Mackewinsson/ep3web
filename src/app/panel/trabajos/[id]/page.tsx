@@ -18,11 +18,12 @@ import {
   updateJobSchedule,
   updateJobStatus,
 } from "@/lib/actions/jobs";
-import { formatDate, JOB_STATUS_LABELS, jobStatusTone } from "@/lib/format";
+import { formatClp, formatDate, JOB_STATUS_LABELS, jobStatusTone } from "@/lib/format";
 import {
   formatVolume,
   getJobOperationalDetail,
   mapsUrl,
+  operatorFacingAmounts,
 } from "@/lib/jobs-view";
 
 type Props = { params: Promise<{ id: string }> };
@@ -33,6 +34,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
   const { id } = await params;
   const job = await getJobOperationalDetail(id);
   if (!job) notFound();
+  const { operatorPayout, marginPercent } = await operatorFacingAmounts(
+    job.clientTotalAmount,
+  );
 
   const assignments = await db
     .select({
@@ -128,6 +132,20 @@ export default async function TrabajoDetailPage({ params }: Props) {
           <div>
             <dt className="text-ep3-navy/60">Cliente</dt>
             <dd className="font-medium text-ep3-navy">{job.clientName}</dd>
+          </div>
+          <div>
+            <dt className="text-ep3-navy/60">Presupuesto cliente</dt>
+            <dd className="font-medium text-ep3-navy">
+              {job.clientTotalAmount ? formatClp(job.clientTotalAmount) : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-ep3-navy/60">
+              Pago operador (−{marginPercent}%)
+            </dt>
+            <dd className="font-medium text-ep3-navy">
+              {operatorPayout != null ? formatClp(operatorPayout) : "—"}
+            </dd>
           </div>
           <div>
             <dt className="text-ep3-navy/60">Operador</dt>

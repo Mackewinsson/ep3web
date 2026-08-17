@@ -13,6 +13,7 @@ import { driverAdvanceJob } from "@/lib/actions/jobs";
 import { requireDriver } from "@/lib/auth";
 import {
   DRIVER_JOB_STATUS_LABELS,
+  formatClp,
   formatDate,
   jobStatusTone,
 } from "@/lib/format";
@@ -22,6 +23,8 @@ import {
   getJobOperationalDetail,
   isReadyForEnCamino,
   mapsUrl,
+  operatorFacingAmounts,
+  operatorSafeNotes,
 } from "@/lib/jobs-view";
 
 type Props = { params: Promise<{ id: string }> };
@@ -36,6 +39,10 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
 
   const job = await getJobOperationalDetail(id);
   if (!job) notFound();
+
+  const { operatorPayout } = await operatorFacingAmounts(job.clientTotalAmount);
+  const volumeNotes = operatorSafeNotes(job.volumeNotes);
+  const jobNotes = operatorSafeNotes(job.notes);
 
   const volume = formatVolume(job.estimatedM3, job.estimatedItems);
   const when = [formatDate(job.scheduledDate), job.scheduledTime]
@@ -154,16 +161,26 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 </div>
               </>
             ) : null}
+            {operatorPayout != null ? (
+              <div className="flex justify-between gap-3">
+                <dt className="text-ep3-navy/55">Tu pago</dt>
+                <dd className="text-right text-base font-semibold text-ep3-navy">
+                  {formatClp(operatorPayout)}
+                </dd>
+              </div>
+            ) : null}
             {volume ? (
               <div className="flex justify-between gap-3">
                 <dt className="text-ep3-navy/55">Carga</dt>
                 <dd className="text-right font-medium text-ep3-navy">{volume}</dd>
               </div>
             ) : null}
-            {job.volumeNotes ? (
+            {volumeNotes ? (
               <div>
                 <dt className="text-ep3-navy/55">Detalle volumen</dt>
-                <dd className="mt-1 text-ep3-navy">{job.volumeNotes}</dd>
+                <dd className="mt-1 whitespace-pre-line text-ep3-navy">
+                  {volumeNotes}
+                </dd>
               </div>
             ) : null}
             {job.assignment?.notes ? (
@@ -172,10 +189,12 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 <dd className="mt-1 text-ep3-navy">{job.assignment.notes}</dd>
               </div>
             ) : null}
-            {job.notes ? (
+            {jobNotes ? (
               <div>
                 <dt className="text-ep3-navy/55">Notas del trabajo</dt>
-                <dd className="mt-1 text-ep3-navy">{job.notes}</dd>
+                <dd className="mt-1 whitespace-pre-line text-ep3-navy">
+                  {jobNotes}
+                </dd>
               </div>
             ) : null}
           </dl>

@@ -23,8 +23,15 @@ export type PricingConfig = {
   pricePerM3: number;
   /** Extra CLP per floor when apartment has no elevator */
   noElevatorPerFloor: number;
+  /**
+   * Percent of the client budget kept by admin.
+   * Operator UI shows the remainder (e.g. 20 → operator sees 80%).
+   */
+  operatorMarginPercent: number;
   currency: "CLP";
 };
+
+export const DEFAULT_OPERATOR_MARGIN_PERCENT = 20;
 
 export const DEFAULT_PRICING_CONFIG: PricingConfig = {
   boxesPerM3: 0.7,
@@ -32,8 +39,39 @@ export const DEFAULT_PRICING_CONFIG: PricingConfig = {
   boxVolumeM3: 0.08,
   pricePerM3: 25000,
   noElevatorPerFloor: 15000,
+  operatorMarginPercent: DEFAULT_OPERATOR_MARGIN_PERCENT,
   currency: "CLP",
 };
+
+export function clampOperatorMarginPercent(value: number): number {
+  if (!Number.isFinite(value)) return DEFAULT_OPERATOR_MARGIN_PERCENT;
+  return Math.min(90, Math.max(0, value));
+}
+
+/** Amount the operator may see: client total minus admin margin. */
+export function operatorPayoutFromClientTotal(
+  clientTotal: number,
+  marginPercent: number = DEFAULT_OPERATOR_MARGIN_PERCENT,
+): number {
+  const amount = Number(clientTotal);
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  const margin = clampOperatorMarginPercent(marginPercent);
+  return Math.round(amount * (1 - margin / 100));
+}
+
+/** Drop quote-estimate price lines so operators never see the client total. */
+export function stripClientPriceLines(
+  notes: string | null | undefined,
+): string | null {
+  if (!notes) return null;
+  const cleaned = notes
+    .split("\n")
+    .filter((line) => !/estimaci[oó]n auto:/i.test(line))
+    .filter((line) => !/\$[\d.]+\s*CLP/i.test(line))
+    .join("\n")
+    .trim();
+  return cleaned || null;
+}
 
 export type VolumeItem = {
   id: string;

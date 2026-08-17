@@ -41,6 +41,11 @@ export default async function CotizadorAdminPage() {
         boxVolumeM3: Number(settings.boxVolumeM3),
         pricePerM3: Number(settings.pricePerM3),
         noElevatorPerFloor: Number(settings.noElevatorPerFloor),
+        operatorMarginPercent: Number.isFinite(
+          Number(settings.operatorMarginPercent),
+        )
+          ? Number(settings.operatorMarginPercent)
+          : DEFAULT_PRICING_CONFIG.operatorMarginPercent,
       }
     : DEFAULT_PRICING_CONFIG;
 
@@ -121,6 +126,30 @@ export default async function CotizadorAdminPage() {
               className={fieldClass}
               required
             />
+          </label>
+          <label className="block sm:col-span-2">
+            <span className={labelClass}>
+              Margen admin para operadores (%)
+            </span>
+            <input
+              name="operatorMarginPercent"
+              type="number"
+              min="0"
+              max="90"
+              step="1"
+              defaultValue={cfg.operatorMarginPercent}
+              className={fieldClass}
+              required
+            />
+            <span className="mt-1 block text-xs text-ep3-navy/55">
+              El operador no ve el precio al cliente. Con {cfg.operatorMarginPercent}%
+              ve el {100 - cfg.operatorMarginPercent}% del presupuesto (ej. $100.000
+              → $
+              {Math.round(
+                (100000 * (100 - cfg.operatorMarginPercent)) / 100,
+              ).toLocaleString("es-CL")}
+              ).
+            </span>
           </label>
           <div className="flex items-end">
             <button

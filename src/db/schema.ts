@@ -306,6 +306,13 @@ export const quotePricingSettings = pgTable("quote_pricing_settings", {
   })
     .default("15000")
     .notNull(),
+  /** Admin keep %; operator UI shows (100 − this) of the client budget. */
+  operatorMarginPercent: numeric("operator_margin_percent", {
+    precision: 5,
+    scale: 2,
+  })
+    .default("20")
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

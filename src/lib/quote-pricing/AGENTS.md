@@ -11,6 +11,8 @@ Do **not** duplicate box/volume/price formulas in React components. Import from 
 | `sumInventory(quantities, items)` | Furniture m³ + lines from catalog quantities |
 | `suggestBoxes(furnitureM3, config)` | Packing box count |
 | `buildQuoteEstimate({...})` | Totals + budget line drafts (CLP) |
+| `operatorPayoutFromClientTotal(total, margin%)` | Amount shown to operators (client total minus admin margin) |
+| `stripClientPriceLines(notes)` | Remove estimate/$ CLP lines from operator-facing notes |
 | `DEFAULT_PRICING_CONFIG` | Fallback when DB settings missing |
 
 ## Config (admin)
@@ -18,7 +20,7 @@ Do **not** duplicate box/volume/price formulas in React components. Import from 
 Table `quote_pricing_settings` edited at `/panel/cotizador` (admin only):
 
 - `boxesPerM3`, `minBoxes`, `boxVolumeM3`
-- `pricePerM3`, `noElevatorPerFloor`
+- `pricePerM3`, `noElevatorPerFloor`, `operatorMarginPercent` (default 20; operator sees the rest)
 
 Catalog categories/items: tables `moving_categories` / `moving_catalog_items`, same admin page.
 

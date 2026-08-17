@@ -31,12 +31,16 @@ export type MovingCatalogDto = {
 export async function getPricingConfig(): Promise<PricingConfig> {
   const [row] = await db.select().from(quotePricingSettings).limit(1);
   if (!row) return DEFAULT_PRICING_CONFIG;
+  const margin = Number(row.operatorMarginPercent);
   return {
     boxesPerM3: Number(row.boxesPerM3),
     minBoxes: row.minBoxes,
     boxVolumeM3: Number(row.boxVolumeM3),
     pricePerM3: Number(row.pricePerM3),
     noElevatorPerFloor: Number(row.noElevatorPerFloor),
+    operatorMarginPercent: Number.isFinite(margin)
+      ? margin
+      : DEFAULT_PRICING_CONFIG.operatorMarginPercent,
     currency: "CLP",
   };
 }

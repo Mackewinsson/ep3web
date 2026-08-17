@@ -1,7 +1,11 @@
 export {
+  DEFAULT_OPERATOR_MARGIN_PERCENT,
   DEFAULT_PRICING_CONFIG,
   buildQuoteEstimate,
+  clampOperatorMarginPercent,
   formatM3,
+  operatorPayoutFromClientTotal,
+  stripClientPriceLines,
   suggestBoxes,
   sumInventory,
   type AccessSurchargeInput,

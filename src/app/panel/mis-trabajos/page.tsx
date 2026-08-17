@@ -8,14 +8,20 @@ import { RecordList } from "@/components/panel/record-list";
 import { requireDriver } from "@/lib/auth";
 import {
   DRIVER_JOB_STATUS_LABELS,
+  formatClp,
   formatDate,
   jobStatusTone,
 } from "@/lib/format";
-import { getDriverAssignedJobs } from "@/lib/jobs-view";
+import {
+  getDriverAssignedJobs,
+  getOperatorMarginPercent,
+} from "@/lib/jobs-view";
+import { operatorPayoutFromClientTotal } from "@/lib/quote-pricing";
 
 export default async function MisTrabajosPage() {
   const session = await requireDriver();
   const rows = await getDriverAssignedJobs(session.driverId!);
+  const marginPercent = await getOperatorMarginPercent();
 
   // Deduplicate by job id keeping latest assignment
   const seen = new Set<string>();
@@ -83,6 +89,17 @@ export default async function MisTrabajosPage() {
                 {
                   label: "Conductor",
                   value: row.crewDriverName ?? "Por aceptar",
+                },
+                {
+                  label: "Tu pago",
+                  value: row.clientTotalAmount
+                    ? formatClp(
+                        operatorPayoutFromClientTotal(
+                          Number(row.clientTotalAmount),
+                          marginPercent,
+                        ),
+                      )
+                    : "—",
                 },
               ],
             }))}

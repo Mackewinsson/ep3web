@@ -10,6 +10,11 @@ import {
   quoteRequests,
   trucks,
 } from "@/db/schema";
+import { getPricingConfig } from "@/lib/moving-catalog-db";
+import {
+  operatorPayoutFromClientTotal,
+  stripClientPriceLines,
+} from "@/lib/quote-pricing";
 
 const crewDrivers = alias(drivers, "crew_drivers");
 
@@ -25,6 +30,7 @@ export async function getDriverAssignedJobs(driverId: string) {
       notes: jobs.notes,
       clientName: clients.name,
       clientPhone: clients.phone,
+      clientTotalAmount: budgets.totalAmount,
       truckPlate: trucks.plate,
       crewDriverName: crewDrivers.name,
       assignmentNotes: jobAssignments.notes,
@@ -34,6 +40,7 @@ export async function getDriverAssignedJobs(driverId: string) {
     .from(jobAssignments)
     .innerJoin(jobs, eq(jobAssignments.jobId, jobs.id))
     .innerJoin(clients, eq(jobs.clientId, clients.id))
+    .leftJoin(budgets, eq(jobs.budgetId, budgets.id))
     .leftJoin(trucks, eq(jobAssignments.truckId, trucks.id))
     .leftJoin(crewDrivers, eq(jobAssignments.crewDriverId, crewDrivers.id))
     .where(eq(jobAssignments.driverId, driverId))
@@ -65,6 +72,7 @@ export async function getJobOperationalDetail(jobId: string) {
   let estimatedM3: string | null = null;
   let estimatedItems: number | null = null;
   let volumeNotes: string | null = null;
+  let clientTotalAmount: string | null = null;
 
   if (job.budgetId) {
     const [quote] = await db
@@ -72,6 +80,7 @@ export async function getJobOperationalDetail(jobId: string) {
         estimatedM3: quoteRequests.estimatedM3,
         estimatedItems: quoteRequests.estimatedItems,
         volumeNotes: quoteRequests.volumeNotes,
+        totalAmount: budgets.totalAmount,
       })
       .from(budgets)
       .leftJoin(
@@ -85,6 +94,7 @@ export async function getJobOperationalDetail(jobId: string) {
       estimatedM3 = quote.estimatedM3;
       estimatedItems = quote.estimatedItems;
       volumeNotes = quote.volumeNotes;
+      clientTotalAmount = quote.totalAmount;
     }
   }
 
@@ -121,8 +131,31 @@ export async function getJobOperationalDetail(jobId: string) {
     estimatedM3,
     estimatedItems,
     volumeNotes,
+    clientTotalAmount,
     assignment: assignment ?? null,
   };
+}
+
+export async function getOperatorMarginPercent() {
+  const cfg = await getPricingConfig();
+  return cfg.operatorMarginPercent;
+}
+
+export async function operatorFacingAmounts(clientTotalAmount: string | null) {
+  const marginPercent = await getOperatorMarginPercent();
+  const clientTotal = Number(clientTotalAmount);
+  const payout =
+    clientTotalAmount != null && Number.isFinite(clientTotal) && clientTotal > 0
+      ? operatorPayoutFromClientTotal(clientTotal, marginPercent)
+      : null;
+  return {
+    operatorPayout: payout,
+    marginPercent,
+  };
+}
+
+export function operatorSafeNotes(notes: string | null | undefined) {
+  return stripClientPriceLines(notes);
 }
 
 export function isReadyForEnCamino(assignment: {

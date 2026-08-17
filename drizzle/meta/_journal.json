@@ -50,6 +50,13 @@
       "when": 1786502000000,
       "tag": "0006_operator_fleet",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786503000000,
+      "tag": "0007_operator_margin",
+      "breakpoints": true
     }
   ]
 }

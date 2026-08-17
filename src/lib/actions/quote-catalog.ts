@@ -30,6 +30,7 @@ export async function updateQuotePricingSettings(formData: FormData) {
       boxVolumeM3: z.coerce.number().positive().max(2),
       pricePerM3: z.coerce.number().min(0),
       noElevatorPerFloor: z.coerce.number().min(0),
+      operatorMarginPercent: z.coerce.number().min(0).max(90),
     })
     .parse({
       boxesPerM3: formData.get("boxesPerM3"),
@@ -37,6 +38,7 @@ export async function updateQuotePricingSettings(formData: FormData) {
       boxVolumeM3: formData.get("boxVolumeM3"),
       pricePerM3: formData.get("pricePerM3"),
       noElevatorPerFloor: formData.get("noElevatorPerFloor"),
+      operatorMarginPercent: formData.get("operatorMarginPercent"),
     });
 
   const [existing] = await db.select().from(quotePricingSettings).limit(1);
@@ -49,6 +51,7 @@ export async function updateQuotePricingSettings(formData: FormData) {
         boxVolumeM3: String(parsed.boxVolumeM3),
         pricePerM3: String(parsed.pricePerM3),
         noElevatorPerFloor: String(parsed.noElevatorPerFloor),
+        operatorMarginPercent: String(parsed.operatorMarginPercent),
         updatedAt: new Date(),
       })
       .where(eq(quotePricingSettings.id, existing.id));
@@ -59,11 +62,14 @@ export async function updateQuotePricingSettings(formData: FormData) {
       boxVolumeM3: String(parsed.boxVolumeM3),
       pricePerM3: String(parsed.pricePerM3),
       noElevatorPerFloor: String(parsed.noElevatorPerFloor),
+      operatorMarginPercent: String(parsed.operatorMarginPercent),
     });
   }
 
   revalidatePath("/panel/cotizador");
   revalidatePath("/cotizar");
+  revalidatePath("/panel/mis-trabajos");
+  revalidatePath("/panel/trabajos");
 }
 
 export async function createMovingCategory(formData: FormData) {
