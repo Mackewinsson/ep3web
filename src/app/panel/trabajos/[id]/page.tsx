@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { notFound } from "next/navigation";
+import { ConfirmActionForm } from "@/components/panel/confirm-action-form";
 import {
   BackLink,
   Field,
@@ -18,7 +19,14 @@ import {
   updateJobSchedule,
   updateJobStatus,
 } from "@/lib/actions/jobs";
-import { formatClp, formatDate, JOB_STATUS_LABELS, jobStatusTone } from "@/lib/format";
+import {
+  ASSIGNMENT_END_REASON_LABELS,
+  formatClp,
+  formatDate,
+  JOB_STATUS_LABELS,
+  jobStatusTone,
+} from "@/lib/format";
+import { isReadyForEnCamino, jobIsLocked } from "@/lib/job-lifecycle";
 import {
   formatVolume,
   getJobOperationalDetail,
@@ -46,6 +54,8 @@ export default async function TrabajoDetailPage({ params }: Props) {
       notes: jobAssignments.notes,
       driverId: jobAssignments.driverId,
       truckId: jobAssignments.truckId,
+      endedAt: jobAssignments.endedAt,
+      endReason: jobAssignments.endReason,
       driverName: drivers.name,
       driverEmail: drivers.email,
       truckPlate: trucks.plate,
@@ -61,7 +71,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
     .where(eq(jobAssignments.jobId, id))
     .orderBy(desc(jobAssignments.assignedAt));
 
-  const latestAssignment = assignments[0] ?? null;
+  const openAssignment = assignments.find((a) => !a.endedAt) ?? null;
+  const locked = jobIsLocked(job.status);
+  const readyForEnCamino = isReadyForEnCamino(job.assignment);
 
   const activeOperators = await db
     .select({ id: drivers.id, name: drivers.name, email: drivers.email })
@@ -71,13 +83,13 @@ export default async function TrabajoDetailPage({ params }: Props) {
 
   const operatorOptions = [...activeOperators];
   if (
-    latestAssignment &&
-    !operatorOptions.some((d) => d.id === latestAssignment.driverId)
+    openAssignment &&
+    !operatorOptions.some((d) => d.id === openAssignment.driverId)
   ) {
     operatorOptions.unshift({
-      id: latestAssignment.driverId,
-      name: latestAssignment.driverName,
-      email: latestAssignment.driverEmail,
+      id: openAssignment.driverId,
+      name: openAssignment.driverName,
+      email: openAssignment.driverEmail,
     });
   }
 
@@ -253,7 +265,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
         </dl>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          {job.status === "assigned" ? (
+          {job.status === "assigned" && readyForEnCamino ? (
             <form action={updateJobStatus.bind(null, id, "in_progress")}>
               <button
                 type="submit"
@@ -262,6 +274,11 @@ export default async function TrabajoDetailPage({ params }: Props) {
                 Marcar en camino
               </button>
             </form>
+          ) : null}
+          {job.status === "assigned" && !readyForEnCamino ? (
+            <p className="w-full text-sm text-ep3-navy/60">
+              El operador aún no registró camión, conductor y salvoconducto.
+            </p>
           ) : null}
           {job.status === "in_progress" ? (
             <form action={updateJobStatus.bind(null, id, "completed")}>
@@ -273,45 +290,69 @@ export default async function TrabajoDetailPage({ params }: Props) {
               </button>
             </form>
           ) : null}
-          {job.status !== "completed" && job.status !== "cancelled" ? (
-            <form action={updateJobStatus.bind(null, id, "cancelled")}>
-              <button
-                type="submit"
-                className="min-h-11 rounded-md border border-red-300 px-3 py-2 text-sm text-red-700"
-              >
-                Cancelar
-              </button>
-            </form>
+          {!locked ? (
+            <ConfirmActionForm
+              action={updateJobStatus.bind(null, id, "cancelled")}
+              triggerLabel="Cancelar"
+              title="Cancelar trabajo"
+              description="El operador será notificado y el trabajo quedará cerrado."
+              confirmLabel="Confirmar cancelación"
+              triggerClassName="min-h-11 rounded-md border border-red-300 px-3 py-2 text-sm text-red-700"
+              confirmClassName="min-h-11 w-full rounded-md bg-red-700 px-3 py-2 text-sm font-semibold text-white"
+            />
           ) : null}
         </div>
       </PanelCard>
 
       <PanelCard>
         <h2 className="mb-3 font-semibold text-ep3-navy">Fecha y hora</h2>
-        <form action={scheduleAction} className="grid gap-3 sm:grid-cols-2">
-          <Field
-            label="Fecha"
-            name="scheduledDate"
-            type="date"
-            defaultValue={job.scheduledDate ?? undefined}
-          />
-          <Field
-            label="Hora"
-            name="scheduledTime"
-            type="time"
-            defaultValue={job.scheduledTime ?? undefined}
-          />
-          <div className="sm:col-span-2">
-            <TextArea
-              label="Notas del trabajo"
-              name="notes"
-              defaultValue={job.notes}
+        {locked ? (
+          <dl className="grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-ep3-navy/60">Fecha</dt>
+              <dd className="font-medium text-ep3-navy">
+                {formatDate(job.scheduledDate)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-ep3-navy/60">Hora</dt>
+              <dd className="font-medium text-ep3-navy">
+                {job.scheduledTime || "—"}
+              </dd>
+            </div>
+            {job.notes ? (
+              <div className="sm:col-span-2">
+                <dt className="text-ep3-navy/60">Notas</dt>
+                <dd className="text-ep3-navy">{job.notes}</dd>
+              </div>
+            ) : null}
+          </dl>
+        ) : (
+          <form action={scheduleAction} className="grid gap-3 sm:grid-cols-2">
+            <Field
+              label="Fecha"
+              name="scheduledDate"
+              type="date"
+              defaultValue={job.scheduledDate ?? undefined}
             />
-          </div>
-          <div className="sm:col-span-2">
-            <SubmitButton label="Guardar programación" />
-          </div>
-        </form>
+            <Field
+              label="Hora"
+              name="scheduledTime"
+              type="time"
+              defaultValue={job.scheduledTime ?? undefined}
+            />
+            <div className="sm:col-span-2">
+              <TextArea
+                label="Notas del trabajo"
+                name="notes"
+                defaultValue={job.notes}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <SubmitButton label="Guardar programación" />
+            </div>
+          </form>
+        )}
       </PanelCard>
 
       <PanelCard>
@@ -339,6 +380,11 @@ export default async function TrabajoDetailPage({ params }: Props) {
                   <p className="mt-1 text-ep3-navy/80">Notas: {a.notes}</p>
                 ) : null}
                 <p className="mt-1 text-xs text-ep3-navy/60">
+                  {a.endedAt
+                    ? ASSIGNMENT_END_REASON_LABELS[a.endReason ?? ""] ??
+                      "Cerrado"
+                    : "Actual"}
+                  {" · "}
                   Asignado {formatDate(a.assignedAt)}
                   {a.emailSentAt
                     ? " · Correo enviado"
@@ -352,7 +398,8 @@ export default async function TrabajoDetailPage({ params }: Props) {
           </ul>
         )}
 
-        {job.status === "pending_assignment" || job.status === "assigned" ? (
+        {!locked &&
+        (job.status === "pending_assignment" || job.status === "assigned") ? (
           operatorOptions.length === 0 ? (
             <p className="text-sm text-amber-800">
               Necesitas al menos un operador activo para asignar.
@@ -363,13 +410,13 @@ export default async function TrabajoDetailPage({ params }: Props) {
               className="space-y-4 border-t border-ep3-navy/10 pt-4"
             >
               <h3 className="font-medium text-ep3-navy">
-                {latestAssignment ? "Reasignar operador" : "Asignar operador"}
+                {openAssignment ? "Reasignar operador" : "Asignar operador"}
               </h3>
               <SelectField
                 label="Operador"
                 name="driverId"
                 required
-                defaultValue={latestAssignment?.driverId}
+                defaultValue={openAssignment?.driverId}
                 options={operatorOptions.map((d) => ({
                   value: d.id,
                   label: operatorsWithAppAccess.has(d.id)
@@ -391,11 +438,11 @@ export default async function TrabajoDetailPage({ params }: Props) {
               <TextArea
                 label="Notas para el operador"
                 name="notes"
-                defaultValue={latestAssignment?.notes}
+                defaultValue={openAssignment?.notes}
               />
               <SubmitButton
                 label={
-                  latestAssignment ? "Actualizar asignación" : "Asignar operador"
+                  openAssignment ? "Actualizar asignación" : "Asignar operador"
                 }
               />
             </form>

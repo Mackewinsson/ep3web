@@ -1,6 +1,7 @@
 import { and, asc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { AcceptServiceModal } from "@/components/panel/accept-service-modal";
+import { ConfirmActionForm } from "@/components/panel/confirm-action-form";
 import {
   BackLink,
   PageHeader,
@@ -9,7 +10,7 @@ import {
 } from "@/components/panel/ui";
 import { db } from "@/db";
 import { drivers, trucks } from "@/db/schema";
-import { driverAdvanceJob } from "@/lib/actions/jobs";
+import { driverAdvanceJob, operatorDeclineJob } from "@/lib/actions/jobs";
 import { requireDriver } from "@/lib/auth";
 import {
   DRIVER_JOB_STATUS_LABELS,
@@ -229,6 +230,18 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 Al confirmar se avisa al cliente por correo (simulado).
               </p>
             </form>
+          ) : null}
+
+          {job.status === "assigned" ? (
+            <ConfirmActionForm
+              action={operatorDeclineJob.bind(null, id)}
+              triggerLabel="Rechazar trabajo"
+              title="Rechazar trabajo"
+              description="El trabajo vuelve a administración para asignarlo a otro operador."
+              confirmLabel="Confirmar rechazo"
+              triggerClassName="flex min-h-14 w-full items-center justify-center rounded-lg border border-red-300 text-base font-semibold text-red-700"
+              confirmClassName="min-h-12 w-full rounded-lg bg-red-700 text-base font-semibold text-white"
+            />
           ) : null}
 
           {job.status === "in_progress" ? (

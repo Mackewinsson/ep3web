@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import {
@@ -10,6 +10,7 @@ import {
   quoteRequests,
   trucks,
 } from "@/db/schema";
+import { getOpenAssignment, jobIsLocked } from "@/lib/job-lifecycle";
 import { getPricingConfig } from "@/lib/moving-catalog-db";
 import {
   operatorPayoutFromClientTotal,
@@ -43,7 +44,18 @@ export async function getDriverAssignedJobs(driverId: string) {
     .leftJoin(budgets, eq(jobs.budgetId, budgets.id))
     .leftJoin(trucks, eq(jobAssignments.truckId, trucks.id))
     .leftJoin(crewDrivers, eq(jobAssignments.crewDriverId, crewDrivers.id))
-    .where(eq(jobAssignments.driverId, driverId))
+    .where(
+      and(
+        eq(jobAssignments.driverId, driverId),
+        or(
+          and(
+            isNull(jobAssignments.endedAt),
+            inArray(jobs.status, ["assigned", "in_progress"]),
+          ),
+          inArray(jobs.status, ["completed", "cancelled"]),
+        ),
+      ),
+    )
     .orderBy(desc(jobAssignments.assignedAt));
 }
 
@@ -122,7 +134,9 @@ export async function getJobOperationalDetail(jobId: string) {
     .innerJoin(drivers, eq(jobAssignments.driverId, drivers.id))
     .leftJoin(trucks, eq(jobAssignments.truckId, trucks.id))
     .leftJoin(crewDrivers, eq(jobAssignments.crewDriverId, crewDrivers.id))
-    .where(eq(jobAssignments.jobId, jobId))
+    .where(
+      and(eq(jobAssignments.jobId, jobId), isNull(jobAssignments.endedAt)),
+    )
     .orderBy(desc(jobAssignments.assignedAt))
     .limit(1);
 
@@ -158,19 +172,19 @@ export function operatorSafeNotes(notes: string | null | undefined) {
   return stripClientPriceLines(notes);
 }
 
-export function isReadyForEnCamino(assignment: {
-  truckId: string | null;
-  crewDriverId: string | null;
-  salvoConductoCompletedAt: Date | null;
-} | null) {
-  return Boolean(
-    assignment?.truckId &&
-      assignment?.crewDriverId &&
-      assignment?.salvoConductoCompletedAt,
-  );
-}
+export { isReadyForEnCamino } from "@/lib/job-lifecycle";
 
 export async function assertDriverOwnsJob(jobId: string, driverId: string) {
+  const open = await getOpenAssignment(jobId);
+  if (open?.driverId === driverId) return true;
+
+  const [job] = await db
+    .select({ status: jobs.status })
+    .from(jobs)
+    .where(eq(jobs.id, jobId))
+    .limit(1);
+  if (!job || !jobIsLocked(job.status)) return false;
+
   const [row] = await db
     .select({ id: jobAssignments.id })
     .from(jobAssignments)

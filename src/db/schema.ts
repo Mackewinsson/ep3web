@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -8,6 +8,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
   type AnyPgColumn,
@@ -285,7 +286,14 @@ export const jobAssignments = pgTable("job_assignments", {
   salvoConductoCompletedAt: timestamp("salvo_conducto_completed_at", {
     withTimezone: true,
   }),
-});
+  endedAt: timestamp("ended_at", { withTimezone: true }),
+  /** declined | reassigned | cancelled */
+  endReason: varchar("end_reason", { length: 40 }),
+}, (table) => [
+  uniqueIndex("job_assignments_one_open")
+    .on(table.jobId)
+    .where(sql`${table.endedAt} is null`),
+]);
 
 /** Singleton-ish pricing knobs for /cotizar (admin editable) */
 export const quotePricingSettings = pgTable("quote_pricing_settings", {

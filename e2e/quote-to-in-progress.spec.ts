@@ -1,8 +1,9 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
   buildTestFleet,
   createOperatorFleet,
   createOperatorWithAccess,
+  completePublicQuote,
   login,
   logout,
   openRecordByTitle,
@@ -10,72 +11,6 @@ import {
   selectByName,
   uniqueSuffix,
 } from "./helpers";
-
-const WIZARD_STORAGE_KEY = "ep3-quote-wizard-v2";
-
-async function fillAddressStep(page: Page, address: string) {
-  await page.getByLabel("Tipo").selectOption("casa");
-  await page.getByPlaceholder("Ej: Morandé 707, Santiago").fill(address);
-  await page.getByRole("button", { name: "Siguiente" }).click();
-}
-
-async function completePublicQuote(page: Page, clientName: string) {
-  await page.goto("/cotizar");
-  await page.evaluate((key) => localStorage.removeItem(key), WIZARD_STORAGE_KEY);
-  await page.reload();
-  await expect(
-    page.getByRole("heading", { name: /dirección de origen/i }),
-  ).toBeVisible();
-
-  await fillAddressStep(page, "Av Providencia 1200, Providencia");
-  await expect(
-    page.getByRole("heading", { name: /dirección de destino/i }),
-  ).toBeVisible();
-  await fillAddressStep(page, "Av Apoquindo 3000, Las Condes");
-
-  await expect(page.getByRole("heading", { name: /Qué llevamos/i })).toBeVisible();
-  await page
-    .getByPlaceholder("Ej: piano vertical, pecera…")
-    .fill("Caja E2E");
-  await page.getByRole("button", { name: "Agregar", exact: true }).click();
-  await expect(page.getByText("Caja E2E")).toBeVisible();
-  await page.getByRole("button", { name: "Siguiente" }).click();
-
-  await expect(page.getByRole("heading", { name: /delicado/i })).toBeVisible();
-  await page.getByRole("button", { name: "No", exact: true }).click();
-  await page.getByRole("button", { name: "Siguiente" }).click();
-
-  const parkingNear = "Sí, a menos de 40 metros";
-  await expect(page.getByRole("button", { name: parkingNear })).toBeVisible();
-  await page.getByRole("button", { name: parkingNear }).click();
-  await page.getByRole("button", { name: "Siguiente" }).click();
-  await page.getByRole("button", { name: parkingNear }).click();
-  await page.getByRole("button", { name: "Siguiente" }).click();
-
-  await expect(
-    page.getByRole("heading", { name: /Cómo te contactamos/i }),
-  ).toBeVisible();
-  await page
-    .locator("label")
-    .filter({ hasText: /^Nombre$/ })
-    .locator("input")
-    .fill(clientName);
-  await page
-    .locator("label")
-    .filter({ hasText: /^Teléfono$/ })
-    .locator("input")
-    .fill("+56912345678");
-  await page
-    .locator("label")
-    .filter({ hasText: /^Correo$/ })
-    .locator("input")
-    .fill(`cliente.${uniqueSuffix()}@example.com`);
-  await page.getByRole("button", { name: "Enviar solicitud" }).click();
-
-  await expect(page.getByRole("heading", { name: "¡Gracias!" })).toBeVisible({
-    timeout: 60_000,
-  });
-}
 
 test("cotización web → aprobar → operador → salvoconducto → En camino", async ({
   page,

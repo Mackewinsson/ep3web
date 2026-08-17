@@ -49,6 +49,12 @@ export const DRIVER_JOB_STATUS_LABELS: Record<string, string> = {
   cancelled: "Cancelado",
 };
 
+export const ASSIGNMENT_END_REASON_LABELS: Record<string, string> = {
+  declined: "Rechazado",
+  reassigned: "Reasignado",
+  cancelled: "Cancelado",
+};
+
 export type StatusTone =
   | "default"
   | "info"

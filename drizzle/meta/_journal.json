@@ -57,6 +57,13 @@
       "when": 1786503000000,
       "tag": "0007_operator_margin",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786504000000,
+      "tag": "0008_assignment_ended",
+      "breakpoints": true
     }
   ]
 }

@@ -89,7 +89,10 @@ export type FleetMember = {
 export function buildTestFleet(suffix: string, size = 5): FleetMember[] {
   return Array.from({ length: size }, (_, i) => {
     const n = i + 1;
-    const plate = `EP${n}${suffix}`.replace(/[^A-Z0-9]/gi, "").slice(0, 10).toUpperCase();
+    const plate = `E${n}${suffix}`
+      .replace(/[^A-Z0-9]/gi, "")
+      .toUpperCase()
+      .slice(0, 12);
     return {
       crewName: `E2E Chofer ${n} ${suffix}`,
       crewEmail: `e2e.crew${n}.${suffix}@example.com`,
@@ -144,7 +147,120 @@ export async function createOperatorFleet(
     await page.getByRole("button", { name: "Guardar camión" }).click();
     await page.waitForURL(/\/panel\/camiones$/, { timeout: 30_000 });
     await expect(
-      page.getByRole("link", { name: `Abrir ${member.plate}` }),
+      page.getByRole("link", { name: `Abrir ${member.plate}` }).first(),
     ).toBeVisible();
   }
+}
+
+const WIZARD_STORAGE_KEY = "ep3-quote-wizard-v2";
+
+async function fillAddressStep(page: Page, address: string) {
+  await page.getByLabel("Tipo").selectOption("casa");
+  await page.getByPlaceholder("Ej: Morandé 707, Santiago").fill(address);
+  await page.getByRole("button", { name: "Siguiente" }).click();
+}
+
+export async function completePublicQuote(page: Page, clientName: string) {
+  await page.goto("/cotizar");
+  await page.evaluate((key) => localStorage.removeItem(key), WIZARD_STORAGE_KEY);
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: /dirección de origen/i }),
+  ).toBeVisible();
+
+  await fillAddressStep(page, "Av Providencia 1200, Providencia");
+  await expect(
+    page.getByRole("heading", { name: /dirección de destino/i }),
+  ).toBeVisible();
+  await fillAddressStep(page, "Av Apoquindo 3000, Las Condes");
+
+  await expect(page.getByRole("heading", { name: /Qué llevamos/i })).toBeVisible();
+  await page.getByPlaceholder("Ej: piano vertical, pecera…").fill("Caja E2E");
+  await page.getByRole("button", { name: "Agregar", exact: true }).click();
+  await expect(page.getByText("Caja E2E")).toBeVisible();
+  await page.getByRole("button", { name: "Siguiente" }).click();
+
+  await expect(page.getByRole("heading", { name: /delicado/i })).toBeVisible();
+  await page.getByRole("button", { name: "No", exact: true }).click();
+  await page.getByRole("button", { name: "Siguiente" }).click();
+
+  const parkingNear = "Sí, a menos de 40 metros";
+  await expect(page.getByRole("button", { name: parkingNear })).toBeVisible();
+  await page.getByRole("button", { name: parkingNear }).click();
+  await page.getByRole("button", { name: "Siguiente" }).click();
+  await page.getByRole("button", { name: parkingNear }).click();
+  await page.getByRole("button", { name: "Siguiente" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: /Cómo te contactamos/i }),
+  ).toBeVisible();
+  await page
+    .locator("label")
+    .filter({ hasText: /^Nombre$/ })
+    .locator("input")
+    .fill(clientName);
+  await page
+    .locator("label")
+    .filter({ hasText: /^Teléfono$/ })
+    .locator("input")
+    .fill("+56912345678");
+  await page
+    .locator("label")
+    .filter({ hasText: /^Correo$/ })
+    .locator("input")
+    .fill(`cliente.${uniqueSuffix()}@example.com`);
+  await page.getByRole("button", { name: "Enviar solicitud" }).click();
+
+  await expect(page.getByRole("heading", { name: "¡Gracias!" })).toBeVisible({
+    timeout: 60_000,
+  });
+}
+
+export async function approveBudgetCreateJob(page: Page, clientName: string) {
+  const budgetTitle = `Cotización web — ${clientName}`;
+  await page.goto("/panel/presupuestos");
+  await openRecordByTitle(page, budgetTitle);
+  await expect(page.getByRole("heading", { name: budgetTitle })).toBeVisible();
+  await page.getByRole("button", { name: "Aprobar y crear trabajo" }).click();
+  await page.waitForURL(/\/panel\/trabajos\/[^/]+$/, { timeout: 30_000 });
+}
+
+export async function assignOperatorOnJob(page: Page, operatorName: string) {
+  await selectByName(page, "driverId", { label: new RegExp(operatorName) });
+  const submit = page.getByRole("button", {
+    name: /Asignar operador|Actualizar asignación/,
+  });
+  await submit.click();
+  await page.waitForURL(/\/panel\/trabajos\/[^/]+$/, { timeout: 30_000 });
+  await expect(
+    page.getByText(new RegExp(`Operador:\\s*${operatorName}`)),
+  ).toBeVisible({ timeout: 30_000 });
+}
+
+export async function fillAcceptSalvo(
+  page: Page,
+  input: {
+    plate: string;
+    truckLabel: string;
+    crewName: string;
+    folio: string;
+  },
+) {
+  await page.getByRole("button", { name: "Aceptar servicio" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.locator('select[name="truckId"]').selectOption({
+    label: `${input.plate} — ${input.truckLabel}`,
+  });
+  await dialog.locator('select[name="crewDriverId"]').selectOption({
+    label: input.crewName,
+  });
+  await dialog.locator('input[name="folio"]').fill(input.folio);
+  await dialog.locator('input[name="issuedAt"]').fill("2026-08-16");
+  await dialog.locator('input[name="originCommune"]').fill("Providencia");
+  await dialog
+    .locator('input[name="destinationCommune"]')
+    .fill("Las Condes");
+  await dialog.getByRole("button", { name: "Confirmar aceptación" }).click();
+  await expect(page.getByText(input.folio)).toBeVisible({ timeout: 30_000 });
 }

@@ -13,6 +13,13 @@ import {
   trucks,
 } from "@/db/schema";
 import { requireAdmin, requireDriver } from "@/lib/auth";
+import {
+  assertJobStatus,
+  endOpenAssignment,
+  getOpenAssignment,
+  isReadyForEnCamino,
+  jobIsLocked,
+} from "@/lib/job-lifecycle";
 
 const assignSchema = z.object({
   driverId: z.string().uuid(),
@@ -52,16 +59,71 @@ function revalidateJobPaths(jobId: string) {
   revalidatePath("/panel");
 }
 
+async function requireJob(jobId: string) {
+  const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
+  if (!job) {
+    throw new Error("Trabajo no encontrado");
+  }
+  return job;
+}
+
 export async function updateJobStatus(
   jobId: string,
-  status:
-    | "pending_assignment"
-    | "assigned"
-    | "in_progress"
-    | "completed"
-    | "cancelled",
+  status: "in_progress" | "completed" | "cancelled",
 ) {
   await requireAdmin();
+  const job = await requireJob(jobId);
+  if (jobIsLocked(job.status)) {
+    throw new Error("Este trabajo ya está cerrado");
+  }
+
+  if (status === "cancelled") {
+    assertJobStatus(
+      job.status,
+      ["pending_assignment", "assigned", "in_progress"],
+      "No se puede cancelar este trabajo",
+    );
+    const previous = await endOpenAssignment(jobId, "cancelled");
+    await db
+      .update(jobs)
+      .set({ status: "cancelled", updatedAt: new Date() })
+      .where(eq(jobs.id, jobId));
+    if (previous) {
+      const { notifyDriver } = await import("@/lib/notifications");
+      await notifyDriver({
+        driverId: previous.driverId,
+        type: "job_cancelled",
+        title: "Trabajo cancelado",
+        body: `${job.originAddress} → ${job.destinationAddress}`,
+        href: `/panel/mis-trabajos/${jobId}`,
+      });
+    }
+    revalidateJobPaths(jobId);
+    redirect(`/panel/trabajos/${jobId}`);
+  }
+
+  if (status === "in_progress") {
+    assertJobStatus(
+      job.status,
+      ["assigned"],
+      "Solo puedes marcar En camino un trabajo asignado",
+    );
+    const open = await getOpenAssignment(jobId);
+    if (!isReadyForEnCamino(open)) {
+      throw new Error(
+        "El operador debe registrar camión, conductor y salvoconducto primero",
+      );
+    }
+  }
+
+  if (status === "completed") {
+    assertJobStatus(
+      job.status,
+      ["in_progress"],
+      "Solo puedes finalizar un trabajo en camino",
+    );
+  }
+
   await db
     .update(jobs)
     .set({ status, updatedAt: new Date() })
@@ -72,6 +134,10 @@ export async function updateJobStatus(
 
 export async function updateJobSchedule(jobId: string, formData: FormData) {
   await requireAdmin();
+  const job = await requireJob(jobId);
+  if (jobIsLocked(job.status)) {
+    throw new Error("No se puede editar un trabajo finalizado o cancelado");
+  }
   const parsed = scheduleSchema.parse({
     scheduledDate: formData.get("scheduledDate") || "",
     scheduledTime: formData.get("scheduledTime") || "",
@@ -100,10 +166,15 @@ export async function assignJob(jobId: string, formData: FormData) {
     scheduledTime: formData.get("scheduledTime") || "",
   });
 
-  const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
-  if (!job) {
-    throw new Error("Trabajo no encontrado");
+  const job = await requireJob(jobId);
+  if (jobIsLocked(job.status)) {
+    throw new Error("No se puede asignar un trabajo cerrado");
   }
+  assertJobStatus(
+    job.status,
+    ["pending_assignment", "assigned"],
+    "Solo puedes asignar un trabajo pendiente o asignado",
+  );
 
   const [operator] = await db
     .select()
@@ -126,6 +197,8 @@ export async function assignJob(jobId: string, formData: FormData) {
     throw new Error("Debes asignar un operador activo válido");
   }
 
+  const previous = await endOpenAssignment(jobId, "reassigned");
+
   await db.insert(jobAssignments).values({
     jobId,
     driverId: parsed.driverId,
@@ -145,6 +218,16 @@ export async function assignJob(jobId: string, formData: FormData) {
     .where(eq(jobs.id, jobId));
 
   const { notifyAdmins, notifyDriver } = await import("@/lib/notifications");
+  if (previous && previous.driverId !== parsed.driverId) {
+    await notifyDriver({
+      driverId: previous.driverId,
+      type: "job_unassigned",
+      title: "Trabajo reasignado",
+      body: "Este trabajo fue reasignado a otro operador.",
+      href: "/panel/mis-trabajos",
+    });
+  }
+
   const notified = await notifyDriver({
     driverId: parsed.driverId,
     type: "job_assigned",
@@ -166,7 +249,7 @@ export async function assignJob(jobId: string, formData: FormData) {
   redirect(`/panel/trabajos/${jobId}`);
 }
 
-async function getLatestOperatorAssignment(jobId: string, operatorId: string) {
+async function getOpenOperatorAssignment(jobId: string, operatorId: string) {
   const [latest] = await db
     .select({
       assignmentId: jobAssignments.id,
@@ -182,11 +265,45 @@ async function getLatestOperatorAssignment(jobId: string, operatorId: string) {
       and(
         eq(jobAssignments.jobId, jobId),
         eq(jobAssignments.driverId, operatorId),
+        isNull(jobAssignments.endedAt),
       ),
     )
     .orderBy(desc(jobAssignments.assignedAt))
     .limit(1);
   return latest ?? null;
+}
+
+export async function operatorDeclineJob(jobId: string) {
+  const session = await requireDriver();
+  const operatorId = session.driverId!;
+  const job = await requireJob(jobId);
+  assertJobStatus(
+    job.status,
+    ["assigned"],
+    "Solo puedes rechazar un trabajo por iniciar",
+  );
+
+  const latest = await getOpenOperatorAssignment(jobId, operatorId);
+  if (!latest) {
+    throw new Error("Trabajo no asignado a este operador");
+  }
+
+  await endOpenAssignment(jobId, "declined");
+  await db
+    .update(jobs)
+    .set({ status: "pending_assignment", updatedAt: new Date() })
+    .where(eq(jobs.id, jobId));
+
+  const { notifyAdmins } = await import("@/lib/notifications");
+  await notifyAdmins({
+    type: "job_declined",
+    title: "Operador rechazó un trabajo",
+    body: `${job.originAddress} → ${job.destinationAddress}`,
+    href: `/panel/trabajos/${jobId}`,
+  });
+
+  revalidateJobPaths(jobId);
+  redirect("/panel/mis-trabajos");
 }
 
 export async function operatorAcceptJob(jobId: string, formData: FormData) {
@@ -202,11 +319,11 @@ export async function operatorAcceptJob(jobId: string, formData: FormData) {
     notes: formData.get("notes") || undefined,
   });
 
-  const latest = await getLatestOperatorAssignment(jobId, operatorId);
+  const latest = await getOpenOperatorAssignment(jobId, operatorId);
   if (!latest) {
     throw new Error("Trabajo no asignado a este operador");
   }
-  if (latest.status !== "assigned") {
+  if (jobIsLocked(latest.status) || latest.status !== "assigned") {
     throw new Error("Solo puedes aceptar un trabajo por iniciar");
   }
 
@@ -265,9 +382,12 @@ export async function driverAdvanceJob(
   const session = await requireDriver();
   const operatorId = session.driverId!;
 
-  const latest = await getLatestOperatorAssignment(jobId, operatorId);
+  const latest = await getOpenOperatorAssignment(jobId, operatorId);
   if (!latest) {
     throw new Error("Trabajo no asignado a este operador");
+  }
+  if (jobIsLocked(latest.status)) {
+    throw new Error("Este trabajo ya está cerrado");
   }
 
   if (nextStatus === "in_progress" && latest.status !== "assigned") {

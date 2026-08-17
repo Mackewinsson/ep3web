@@ -196,6 +196,14 @@ export async function setBudgetStatus(
     throw new Error("Presupuesto no encontrado");
   }
 
+  if (status === "approved" || status === "rejected") {
+    if (budget.status !== "draft" && budget.status !== "sent") {
+      throw new Error(
+        "Solo puedes aprobar o rechazar un presupuesto en borrador o enviado",
+      );
+    }
+  }
+
   await db
     .update(budgets)
     .set({ status, updatedAt: new Date() })
