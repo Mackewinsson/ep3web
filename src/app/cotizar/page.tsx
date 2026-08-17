@@ -6,9 +6,12 @@ import { catalogDtoToMovingCatalog } from "@/lib/moving-catalog";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Cotizar mudanza | Transportes EP3",
+  title: "Cotizar mudanza",
   description:
-    "Cotiza tu mudanza paso a paso: direcciones, inventario, acceso y contacto.",
+    "Cotiza tu mudanza en Santiago y Chile: direcciones, inventario, acceso y contacto. Respuesta por correo.",
+  alternates: {
+    canonical: "/cotizar",
+  },
 };
 
 export default async function CotizarPage() {

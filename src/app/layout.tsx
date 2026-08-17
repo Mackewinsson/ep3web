@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { SITE_NAME, absoluteUrl, getSiteUrl } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,10 +14,45 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = getSiteUrl();
+const defaultTitle = `${SITE_NAME} | Transporte y Mudanzas`;
+const defaultDescription =
+  "Servicio de mudanzas, fletes y transporte de carga en Santiago y todo Chile.";
+
 export const metadata: Metadata = {
-  title: "Transportes EP3 | Transporte y Mudanzas",
-  description:
-    "Servicio de mudanzas, fletes y transporte de carga en Santiago y todo Chile.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: defaultTitle,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: defaultDescription,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_CL",
+    url: siteUrl,
+    siteName: SITE_NAME,
+    title: defaultTitle,
+    description: defaultDescription,
+    images: [
+      {
+        url: absoluteUrl("/logo.png"),
+        alt: SITE_NAME,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: defaultTitle,
+    description: defaultDescription,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
 };
 
 export default function RootLayout({

@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import { SignInForm } from "@/components/panel/sign-in-form";
+
+export const metadata: Metadata = {
+  title: "Acceso al panel",
+  robots: { index: false, follow: false },
+};
 
 export default function SignInPage() {
   return (

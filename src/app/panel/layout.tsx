@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { PanelShell } from "@/components/panel/panel-sidebar";
 import { getSession } from "@/lib/auth";
 import { logoutAction } from "@/lib/actions/auth";
@@ -7,6 +8,10 @@ import {
 } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function PanelLayout({
   children,
