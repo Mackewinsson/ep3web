@@ -117,6 +117,13 @@ export default async function TrabajoDetailPage({ params }: Props) {
             tone={jobStatusTone(job.status)}
           />
         </div>
+        {job.status === "in_progress" ? (
+          <p className="mb-4 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-950">
+            Aviso al cliente (simulado): se envió correo de que su mudanza va en
+            camino
+            {job.clientEmail ? ` a ${job.clientEmail}` : " (sin correo)"}.
+          </p>
+        ) : null}
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-ep3-navy/60">Cliente</dt>

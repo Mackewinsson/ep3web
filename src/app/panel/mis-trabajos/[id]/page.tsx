@@ -44,6 +44,10 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
 
   const accepted = isReadyForEnCamino(job.assignment);
   const canAccept = job.status === "assigned" && !accepted;
+  const statusLabel =
+    job.status === "assigned" && accepted
+      ? "Listo para salir"
+      : (DRIVER_JOB_STATUS_LABELS[job.status] ?? job.status);
 
   const fleetTrucks = await db
     .select({
@@ -73,7 +77,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
 
       <PanelCard>
         <StatusBadge
-          label={DRIVER_JOB_STATUS_LABELS[job.status] ?? job.status}
+          label={statusLabel}
           tone={jobStatusTone(job.status)}
         />
 
@@ -202,18 +206,28 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
               >
                 En camino
               </button>
+              <p className="mt-2 text-center text-xs text-ep3-navy/55">
+                Al confirmar se avisa al cliente por correo (simulado).
+              </p>
             </form>
           ) : null}
 
           {job.status === "in_progress" ? (
-            <form action={driverAdvanceJob.bind(null, id, "completed")}>
-              <button
-                type="submit"
-                className="flex min-h-14 w-full items-center justify-center rounded-lg bg-emerald-700 text-base font-bold text-white"
-              >
-                Finalizar
-              </button>
-            </form>
+            <>
+              <p className="rounded-lg bg-sky-50 px-4 py-3 text-center text-sm font-medium text-sky-950">
+                Aviso al cliente (simulado): se envió correo de que su mudanza
+                va en camino
+                {job.clientEmail ? ` a ${job.clientEmail}` : " (sin correo)"}.
+              </p>
+              <form action={driverAdvanceJob.bind(null, id, "completed")}>
+                <button
+                  type="submit"
+                  className="flex min-h-14 w-full items-center justify-center rounded-lg bg-emerald-700 text-base font-bold text-white"
+                >
+                  Finalizar
+                </button>
+              </form>
+            </>
           ) : null}
 
           {job.status === "completed" ? (

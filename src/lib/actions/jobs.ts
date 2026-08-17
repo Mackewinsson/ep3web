@@ -293,6 +293,14 @@ export async function driverAdvanceJob(
     .set({ status: nextStatus, updatedAt: new Date() })
     .where(eq(jobs.id, jobId));
 
+  if (nextStatus === "in_progress") {
+    await notifyClientEnCaminoForJob(
+      jobId,
+      latest.crewDriverId,
+      latest.truckId,
+    );
+  }
+
   if (nextStatus === "completed") {
     const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
     const { notifyAdmins } = await import("@/lib/notifications");
@@ -308,4 +316,66 @@ export async function driverAdvanceJob(
 
   revalidateJobPaths(jobId);
   redirect(`/panel/mis-trabajos/${jobId}`);
+}
+
+async function notifyClientEnCaminoForJob(
+  jobId: string,
+  crewDriverId: string | null,
+  truckId: string | null,
+) {
+  const [job] = await db
+    .select({
+      originAddress: jobs.originAddress,
+      destinationAddress: jobs.destinationAddress,
+      clientName: clients.name,
+      clientEmail: clients.email,
+    })
+    .from(jobs)
+    .innerJoin(clients, eq(jobs.clientId, clients.id))
+    .where(eq(jobs.id, jobId))
+    .limit(1);
+
+  if (!job) return;
+
+  let crewDriverName: string | null = null;
+  if (crewDriverId) {
+    const [crew] = await db
+      .select({ name: drivers.name })
+      .from(drivers)
+      .where(eq(drivers.id, crewDriverId))
+      .limit(1);
+    crewDriverName = crew?.name ?? null;
+  }
+
+  let truckPlate: string | null = null;
+  if (truckId) {
+    const [truck] = await db
+      .select({ plate: trucks.plate })
+      .from(trucks)
+      .where(eq(trucks.id, truckId))
+      .limit(1);
+    truckPlate = truck?.plate ?? null;
+  }
+
+  const { notifyClientEnCamino } = await import("@/lib/email/client-en-camino");
+  const result = await notifyClientEnCamino({
+    clientName: job.clientName,
+    clientEmail: job.clientEmail,
+    originAddress: job.originAddress,
+    destinationAddress: job.destinationAddress,
+    crewDriverName,
+    truckPlate,
+  });
+
+  const { notifyAdmins } = await import("@/lib/notifications");
+  await notifyAdmins({
+    type: "client_en_camino_email",
+    title: result.skipped
+      ? "En camino — cliente sin correo (aviso no enviado)"
+      : "En camino — aviso al cliente (simulado)",
+    body: result.skipped
+      ? `${job.clientName}: ${job.originAddress} → ${job.destinationAddress}`
+      : `Mock a ${result.to}: ${job.clientName} · ${job.originAddress} → ${job.destinationAddress}`,
+    href: `/panel/trabajos/${jobId}`,
+  });
 }
