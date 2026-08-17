@@ -137,11 +137,12 @@ export function TruckFormFields({
         />
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-ep3-navy">
+      <label className="flex min-h-11 items-center gap-3 text-sm text-ep3-navy">
         <input
           type="checkbox"
           name="active"
           defaultChecked={values?.active ?? true}
+          className="h-5 w-5 rounded border-ep3-navy/30"
         />
         Activo
       </label>

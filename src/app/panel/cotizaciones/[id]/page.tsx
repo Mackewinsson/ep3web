@@ -96,31 +96,40 @@ export default async function CotizacionDetailPage({ params }: Props) {
             tone={quoteStatusTone(quote.status)}
           />
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           {quote.status !== "converted" && quote.status !== "closed" ? (
             <>
               {quote.status === "new" ? (
-                <form action={setQuoteStatus.bind(null, id, "in_progress")}>
+                <form
+                  action={setQuoteStatus.bind(null, id, "in_progress")}
+                  className="w-full sm:w-auto"
+                >
                   <button
                     type="submit"
-                    className="min-h-11 rounded-md bg-ep3-navy px-3 py-2 text-sm text-white"
+                    className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-ep3-navy px-3 py-2 text-sm text-white sm:w-auto"
                   >
                     Marcar en gestión
                   </button>
                 </form>
               ) : null}
-              <form action={setQuoteStatus.bind(null, id, "closed")}>
+              <form
+                action={setQuoteStatus.bind(null, id, "closed")}
+                className="w-full sm:w-auto"
+              >
                 <button
                   type="submit"
-                  className="min-h-11 rounded-md border border-ep3-navy/20 px-3 py-2 text-sm text-ep3-navy"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-ep3-navy/20 px-3 py-2 text-sm text-ep3-navy sm:w-auto"
                 >
                   Cerrar
                 </button>
               </form>
-              <form action={convertQuoteToBudget.bind(null, id)}>
+              <form
+                action={convertQuoteToBudget.bind(null, id)}
+                className="w-full sm:w-auto"
+              >
                 <button
                   type="submit"
-                  className="min-h-11 rounded-md bg-ep3-yellow px-3 py-2 text-sm font-semibold text-ep3-navy"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-ep3-yellow px-3 py-2 text-sm font-semibold text-ep3-navy sm:w-auto"
                 >
                   Crear presupuesto
                 </button>
@@ -139,10 +148,13 @@ export default async function CotizacionDetailPage({ params }: Props) {
             </p>
           ) : null}
           {quote.status === "closed" ? (
-            <form action={setQuoteStatus.bind(null, id, "in_progress")}>
+            <form
+              action={setQuoteStatus.bind(null, id, "in_progress")}
+              className="w-full sm:w-auto"
+            >
               <button
                 type="submit"
-                className="min-h-11 rounded-md border border-ep3-navy/20 px-3 py-2 text-sm text-ep3-navy"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-ep3-navy/20 px-3 py-2 text-sm text-ep3-navy sm:w-auto"
               >
                 Reabrir
               </button>

@@ -30,7 +30,7 @@ export function PageHeader({
       {actionHref && actionLabel ? (
         <Link
           href={actionHref}
-          className="inline-flex w-full items-center justify-center rounded-md bg-ep3-navy px-4 py-2.5 text-sm font-medium text-white hover:bg-ep3-navy/90 sm:w-auto"
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-ep3-navy px-4 py-2.5 text-sm font-medium text-white hover:bg-ep3-navy/90 sm:w-auto"
         >
           {actionLabel}
         </Link>
@@ -205,7 +205,7 @@ export function SubmitButton({ label }: { label: string }) {
   return (
     <button
       type="submit"
-      className="w-full rounded-md bg-ep3-yellow px-4 py-2.5 text-sm font-semibold text-ep3-navy hover:brightness-95 sm:w-auto"
+      className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-ep3-yellow px-4 py-2.5 text-sm font-semibold text-ep3-navy hover:brightness-95 sm:w-auto"
     >
       {label}
     </button>

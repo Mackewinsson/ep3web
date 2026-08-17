@@ -204,7 +204,10 @@ export default async function TrabajoDetailPage({ params }: Props) {
             <dt className="text-ep3-navy/60">Teléfono</dt>
             <dd className="font-medium text-ep3-navy">
               {job.clientPhone ? (
-                <a href={`tel:${job.clientPhone}`} className="underline">
+                <a
+                  href={`tel:${job.clientPhone}`}
+                  className="inline-flex min-h-11 items-center underline"
+                >
                   {job.clientPhone}
                 </a>
               ) : (
@@ -264,12 +267,15 @@ export default async function TrabajoDetailPage({ params }: Props) {
           ) : null}
         </dl>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           {job.status === "assigned" && readyForEnCamino ? (
-            <form action={updateJobStatus.bind(null, id, "in_progress")}>
+            <form
+              action={updateJobStatus.bind(null, id, "in_progress")}
+              className="w-full sm:w-auto"
+            >
               <button
                 type="submit"
-                className="min-h-11 rounded-md bg-ep3-navy px-3 py-2 text-sm text-white"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-ep3-navy px-3 py-2 text-sm text-white sm:w-auto"
               >
                 Marcar en camino
               </button>
@@ -281,10 +287,13 @@ export default async function TrabajoDetailPage({ params }: Props) {
             </p>
           ) : null}
           {job.status === "in_progress" ? (
-            <form action={updateJobStatus.bind(null, id, "completed")}>
+            <form
+              action={updateJobStatus.bind(null, id, "completed")}
+              className="w-full sm:w-auto"
+            >
               <button
                 type="submit"
-                className="min-h-11 rounded-md bg-emerald-700 px-3 py-2 text-sm text-white"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-emerald-700 px-3 py-2 text-sm text-white sm:w-auto"
               >
                 Finalizar
               </button>
@@ -297,7 +306,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
               title="Cancelar trabajo"
               description="El operador será notificado y el trabajo quedará cerrado."
               confirmLabel="Confirmar cancelación"
-              triggerClassName="min-h-11 rounded-md border border-red-300 px-3 py-2 text-sm text-red-700"
+              triggerClassName="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-red-300 px-3 py-2 text-sm text-red-700 sm:w-auto"
               confirmClassName="min-h-11 w-full rounded-md bg-red-700 px-3 py-2 text-sm font-semibold text-white"
             />
           ) : null}
@@ -370,29 +379,34 @@ export default async function TrabajoDetailPage({ params }: Props) {
               >
                 <p className="font-medium text-ep3-navy">
                   Operador: {a.driverName}
+                </p>
+                <p className="mt-1 text-ep3-navy/80">
                   {a.truckPlate
-                    ? ` · ${a.truckPlate}${a.truckLabel ? ` (${a.truckLabel})` : ""}`
-                    : " · Camión pendiente"}
+                    ? `${a.truckPlate}${a.truckLabel ? ` (${a.truckLabel})` : ""}`
+                    : "Camión pendiente"}
                   {a.crewDriverName ? ` · Conductor: ${a.crewDriverName}` : ""}
                 </p>
                 <p className="text-ep3-navy/70">{a.driverEmail}</p>
                 {a.notes ? (
                   <p className="mt-1 text-ep3-navy/80">Notas: {a.notes}</p>
                 ) : null}
-                <p className="mt-1 text-xs text-ep3-navy/60">
-                  {a.endedAt
-                    ? ASSIGNMENT_END_REASON_LABELS[a.endReason ?? ""] ??
-                      "Cerrado"
-                    : "Actual"}
-                  {" · "}
-                  Asignado {formatDate(a.assignedAt)}
-                  {a.emailSentAt
-                    ? " · Correo enviado"
-                    : " · Correo pendiente"}
-                  {a.salvoConductoCompletedAt
-                    ? ` · Salvo conducto ${a.salvoConductoFolio ?? "OK"}`
-                    : " · Sin aceptar aún"}
-                </p>
+                <div className="mt-2 space-y-0.5 text-xs text-ep3-navy/60">
+                  <p>
+                    {a.endedAt
+                      ? ASSIGNMENT_END_REASON_LABELS[a.endReason ?? ""] ??
+                        "Cerrado"
+                      : "Actual"}
+                    {" · "}
+                    Asignado {formatDate(a.assignedAt)}
+                  </p>
+                  <p>
+                    {a.emailSentAt ? "Correo enviado" : "Correo pendiente"}
+                    {" · "}
+                    {a.salvoConductoCompletedAt
+                      ? `Salvo conducto ${a.salvoConductoFolio ?? "OK"}`
+                      : "Sin aceptar aún"}
+                  </p>
+                </div>
               </li>
             ))}
           </ul>

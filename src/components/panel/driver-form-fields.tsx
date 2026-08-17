@@ -78,21 +78,23 @@ export function DriverFormFields({
         name="licenseNotes"
         defaultValue={values?.licenseNotes}
       />
-      <label className="flex items-center gap-2 text-sm text-ep3-navy">
+      <label className="flex min-h-11 items-center gap-3 text-sm text-ep3-navy">
         <input
           type="checkbox"
           name="active"
           defaultChecked={values?.active ?? true}
+          className="h-5 w-5 rounded border-ep3-navy/30"
         />
         Activo
       </label>
 
       <div className="space-y-3 rounded-md border border-dashed border-ep3-navy/20 p-3">
-        <label className="flex items-center gap-2 text-sm font-medium text-ep3-navy">
+        <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-ep3-navy">
           <input
             type="checkbox"
             name="enableAppAccess"
             defaultChecked={values?.enableAppAccess ?? hasAppAccess}
+            className="h-5 w-5 rounded border-ep3-navy/30"
           />
           Acceso de operador (panel)
         </label>

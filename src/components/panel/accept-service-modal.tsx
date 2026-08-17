@@ -1,6 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import {
+  useBodyScrollLock,
+  useEscapeKey,
+} from "@/components/panel/use-overlay";
 import { operatorAcceptJob } from "@/lib/actions/jobs";
 
 type Option = { id: string; label: string };
@@ -16,6 +20,10 @@ export function AcceptServiceModal({
 }) {
   const [open, setOpen] = useState(false);
   const action = operatorAcceptJob.bind(null, jobId);
+  const close = useCallback(() => setOpen(false), []);
+
+  useBodyScrollLock(open);
+  useEscapeKey(open, close);
 
   if (trucks.length === 0 || crew.length === 0) {
     return (
@@ -41,17 +49,17 @@ export function AcceptServiceModal({
 
       {open ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="accept-service-title"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setOpen(false);
+            if (e.target === e.currentTarget) close();
           }}
         >
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-5 shadow-xl">
+          <div className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl">
             <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
+              <div className="min-w-0">
                 <h2
                   id="accept-service-title"
                   className="text-lg font-semibold text-ep3-navy"
@@ -64,10 +72,13 @@ export function AcceptServiceModal({
               </div>
               <button
                 type="button"
-                onClick={() => setOpen(false)}
-                className="rounded-md px-2 py-1 text-sm text-ep3-navy/70 hover:bg-ep3-navy/5"
+                onClick={close}
+                aria-label="Cerrar"
+                className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md text-ep3-navy/70 hover:bg-ep3-navy/5"
               >
-                Cerrar
+                <span className="text-2xl leading-none" aria-hidden>
+                  ×
+                </span>
               </button>
             </div>
 

@@ -154,7 +154,7 @@ export default async function CotizadorAdminPage() {
           <div className="flex items-end">
             <button
               type="submit"
-              className="rounded-full bg-ep3-navy px-5 py-2.5 text-sm font-bold text-ep3-yellow"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-ep3-navy px-5 py-2.5 text-sm font-bold text-ep3-yellow sm:w-auto"
             >
               Guardar parámetros
             </button>
@@ -168,18 +168,18 @@ export default async function CotizadorAdminPage() {
         </h2>
         <form
           action={createMovingCategory}
-          className="mt-3 flex flex-wrap gap-3"
+          className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
         >
           <input
             name="name"
             placeholder="Nombre categoría"
             required
             aria-label="Nombre categoría"
-            className={`min-w-[220px] flex-1 ${fieldClass}`}
+            className={`min-w-0 flex-1 ${fieldClass}`}
           />
           <button
             type="submit"
-            className="rounded-full border border-ep3-navy px-4 py-2 text-sm font-semibold text-ep3-navy"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-ep3-navy px-4 text-sm font-semibold text-ep3-navy sm:w-auto"
           >
             Agregar categoría
           </button>
@@ -227,7 +227,7 @@ export default async function CotizadorAdminPage() {
           />
           <button
             type="submit"
-            className="rounded-full bg-ep3-yellow px-4 py-2 text-sm font-bold text-ep3-navy sm:col-span-4 sm:w-fit"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-ep3-yellow px-4 text-sm font-bold text-ep3-navy sm:col-span-4 sm:w-fit"
           >
             Agregar ítem
           </button>
@@ -263,7 +263,7 @@ export default async function CotizadorAdminPage() {
                         name="name"
                         defaultValue={item.name}
                         aria-label="Nombre del ítem"
-                        className={`min-w-[160px] flex-1 ${fieldClass}`}
+                        className={`min-w-0 flex-1 basis-full sm:basis-auto ${fieldClass}`}
                       />
                       <input
                         name="volumeM3"
@@ -272,11 +272,11 @@ export default async function CotizadorAdminPage() {
                         min="0.01"
                         defaultValue={Number(item.volumeM3)}
                         aria-label="Volumen m³"
-                        className={`w-24 ${fieldClass}`}
+                        className={`w-full sm:w-24 ${fieldClass}`}
                       />
                       <button
                         type="submit"
-                        className="rounded-md border border-ep3-navy/20 px-3 py-1.5 text-xs font-semibold text-ep3-navy"
+                        className="inline-flex min-h-11 items-center rounded-md border border-ep3-navy/20 px-3 text-sm font-semibold text-ep3-navy"
                       >
                         Guardar
                       </button>
@@ -290,7 +290,7 @@ export default async function CotizadorAdminPage() {
                     >
                       <button
                         type="submit"
-                        className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
+                        className={`inline-flex min-h-11 w-full items-center justify-center rounded-md px-3 text-sm font-semibold sm:w-auto ${
                           item.active
                             ? "bg-emerald-50 text-emerald-800"
                             : "bg-slate-100 text-ep3-navy/55"

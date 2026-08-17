@@ -59,17 +59,17 @@ export default async function PaquetesPage() {
                 },
               ],
               action: (
-                <div className="flex flex-wrap items-center justify-end gap-3">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                   <Link
                     href={`/panel/paquetes/${row.id}`}
-                    className="text-sm font-medium text-ep3-navy underline"
+                    className="inline-flex min-h-11 items-center justify-center rounded-md border border-ep3-navy/15 px-3 text-sm font-medium text-ep3-navy hover:bg-ep3-navy/5"
                   >
                     Ver
                   </Link>
                   <form action={togglePackageActive.bind(null, row.id)}>
                     <button
                       type="submit"
-                      className="min-h-11 rounded-md border border-ep3-navy/15 px-3 py-2 text-sm font-medium text-ep3-navy hover:bg-ep3-navy/5"
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-ep3-navy/15 px-3 text-sm font-medium text-ep3-navy hover:bg-ep3-navy/5 sm:w-auto"
                     >
                       {row.active ? "Desactivar" : "Activar"}
                     </button>

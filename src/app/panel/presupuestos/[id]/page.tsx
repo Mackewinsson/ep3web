@@ -83,12 +83,15 @@ export default async function PresupuestoDetailPage({ params }: Props) {
             Total: {formatClp(budget.totalAmount)}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           {budget.status === "draft" ? (
-            <form action={setBudgetStatus.bind(null, id, "sent")}>
+            <form
+              action={setBudgetStatus.bind(null, id, "sent")}
+              className="w-full sm:w-auto"
+            >
               <button
                 type="submit"
-                className="min-h-11 rounded-md bg-ep3-navy px-3 py-2 text-sm text-white"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-ep3-navy px-3 py-2 text-sm text-white sm:w-auto"
               >
                 Marcar enviado
               </button>
@@ -96,18 +99,24 @@ export default async function PresupuestoDetailPage({ params }: Props) {
           ) : null}
           {budget.status === "sent" || budget.status === "draft" ? (
             <>
-              <form action={setBudgetStatus.bind(null, id, "approved")}>
+              <form
+                action={setBudgetStatus.bind(null, id, "approved")}
+                className="w-full sm:w-auto"
+              >
                 <button
                   type="submit"
-                  className="min-h-11 rounded-md bg-emerald-700 px-3 py-2 text-sm text-white"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-emerald-700 px-3 py-2 text-sm text-white sm:w-auto"
                 >
                   Aprobar y crear trabajo
                 </button>
               </form>
-              <form action={setBudgetStatus.bind(null, id, "rejected")}>
+              <form
+                action={setBudgetStatus.bind(null, id, "rejected")}
+                className="w-full sm:w-auto"
+              >
                 <button
                   type="submit"
-                  className="min-h-11 rounded-md border border-red-300 px-3 py-2 text-sm text-red-700"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-red-300 px-3 py-2 text-sm text-red-700 sm:w-auto"
                 >
                   Rechazar
                 </button>
@@ -301,17 +310,17 @@ function BudgetItemCard({
           </label>
         </div>
 
-        <div className="flex flex-wrap gap-2 border-t border-ep3-navy/10 pt-3">
+        <div className="flex flex-col gap-2 border-t border-ep3-navy/10 pt-3 sm:flex-row sm:flex-wrap">
           <button
             type="submit"
-            className="min-h-11 rounded-md bg-ep3-navy px-3 py-2 text-sm text-white"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-ep3-navy px-3 py-2 text-sm text-white sm:w-auto"
           >
             Guardar
           </button>
           <button
             formAction={deleteBudgetItem.bind(null, item.id)}
             type="submit"
-            className="min-h-11 rounded-md border border-red-300 px-3 py-2 text-sm text-red-700"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-red-300 px-3 py-2 text-sm text-red-700 sm:w-auto"
           >
             Quitar
           </button>

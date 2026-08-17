@@ -32,11 +32,15 @@ export function NotificationBell({
   const [unread, setUnread] = useState(unreadCount);
   const [pending, startTransition] = useTransition();
   const rootRef = useRef<HTMLDivElement>(null);
+  const [syncedItems, setSyncedItems] = useState(initialItems);
+  const [syncedUnread, setSyncedUnread] = useState(unreadCount);
 
-  useEffect(() => {
+  if (syncedItems !== initialItems || syncedUnread !== unreadCount) {
+    setSyncedItems(initialItems);
+    setSyncedUnread(unreadCount);
     setItems(initialItems);
     setUnread(unreadCount);
-  }, [initialItems, unreadCount]);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -104,21 +108,21 @@ export function NotificationBell({
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-50 mt-2 w-[min(100vw-2rem,22rem)] overflow-hidden rounded-xl border border-ep3-navy/15 bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2.5">
+        <div className="fixed inset-x-3 top-[4.75rem] z-50 max-h-[min(24rem,70dvh)] overflow-hidden rounded-xl border border-ep3-navy/15 bg-white shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[min(100vw-2rem,22rem)] sm:max-h-96">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-2.5">
             <p className="text-sm font-semibold text-ep3-navy">Notificaciones</p>
             {unread > 0 ? (
               <button
                 type="button"
                 disabled={pending}
                 onClick={onMarkAll}
-                className="text-xs font-medium text-ep3-navy/70 underline hover:text-ep3-navy disabled:opacity-50"
+                className="min-h-11 shrink-0 px-1 text-xs font-medium text-ep3-navy/70 underline hover:text-ep3-navy disabled:opacity-50"
               >
                 Marcar todas leídas
               </button>
             ) : null}
           </div>
-          <ul className="max-h-80 overflow-y-auto">
+          <ul className="max-h-[min(20rem,calc(70dvh-3rem))] overflow-y-auto sm:max-h-80">
             {items.length === 0 ? (
               <li className="px-3 py-6 text-center text-sm text-slate-400">
                 No hay notificaciones
@@ -168,7 +172,7 @@ export function NotificationBell({
                       <Link
                         href={n.href}
                         onClick={() => onItemClick(n)}
-                        className="block px-3 py-3 hover:bg-slate-50"
+                        className="block min-h-11 px-3 py-3 hover:bg-slate-50"
                       >
                         {content}
                       </Link>
@@ -176,7 +180,7 @@ export function NotificationBell({
                       <button
                         type="button"
                         onClick={() => onItemClick(n)}
-                        className="w-full px-3 py-3 text-left hover:bg-slate-50"
+                        className="min-h-11 w-full px-3 py-3 text-left hover:bg-slate-50"
                       >
                         {content}
                       </button>

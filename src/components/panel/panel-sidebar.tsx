@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { NotificationBell } from "@/components/panel/notification-bell";
+import {
+  useBodyScrollLock,
+  useEscapeKey,
+} from "@/components/panel/use-overlay";
 import type { StaffRole } from "@/lib/auth/constants";
 import type { NotificationDto } from "@/lib/notifications";
 
@@ -89,19 +93,16 @@ export function PanelShell({
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const [menuPath, setMenuPath] = useState(pathname);
+  const closeMenu = useCallback(() => setOpen(false), []);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
+    if (open) setOpen(false);
+  }
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  useBodyScrollLock(open);
+  useEscapeKey(open, closeMenu);
 
   const firstName = userName?.split(" ")[0];
   const subtitle =
@@ -110,7 +111,7 @@ export function PanelShell({
       : "Operaciones · mudanzas y fletes";
 
   return (
-    <div className="panel-surface flex min-h-screen">
+    <div className="panel-surface flex min-h-dvh min-h-screen">
       <aside className="hidden w-56 shrink-0 flex-col border-r border-ep3-navy/20 bg-ep3-navy text-white shadow-[8px_0_28px_-12px_rgb(0_31_84_/_0.45)] md:flex">
         <SidebarBrand role={role} />
         <nav className="flex flex-1 flex-col gap-1 p-3">
@@ -132,10 +133,10 @@ export function PanelShell({
             type="button"
             aria-label="Cerrar menú"
             className="absolute inset-0 bg-ep3-navy/40"
-            onClick={() => setOpen(false)}
+            onClick={closeMenu}
           />
-          <aside className="relative flex h-full w-64 max-w-[85vw] flex-col bg-ep3-navy text-white shadow-xl">
-            <div className="relative border-b border-white/10 px-5 py-5 pr-12">
+          <aside className="relative flex h-full w-64 max-w-[85vw] flex-col bg-ep3-navy text-white shadow-xl pb-[env(safe-area-inset-bottom)]">
+            <div className="relative border-b border-white/10 px-5 py-5 pr-14 pt-[max(1.25rem,env(safe-area-inset-top))]">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-ep3-yellow">
                 Transportes EP3
               </p>
@@ -145,19 +146,21 @@ export function PanelShell({
               <button
                 type="button"
                 aria-label="Cerrar"
-                onClick={() => setOpen(false)}
-                className="absolute right-3 top-3 rounded-md p-2 text-white/80 hover:bg-white/10"
+                onClick={closeMenu}
+                className="absolute right-3 top-[max(0.75rem,env(safe-area-inset-top))] inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-white/80 hover:bg-white/10"
               >
-                <span className="block text-xl leading-none">×</span>
+                <span className="block text-2xl leading-none" aria-hidden>
+                  ×
+                </span>
               </button>
             </div>
-            <nav className="flex flex-1 flex-col gap-1 p-3">
-              <NavLinks role={role} onNavigate={() => setOpen(false)} />
+            <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
+              <NavLinks role={role} onNavigate={closeMenu} />
             </nav>
             <div className="border-t border-white/10 p-3">
               <Link
                 href="/"
-                onClick={() => setOpen(false)}
+                onClick={closeMenu}
                 className="flex min-h-11 items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10"
               >
                 Ver sitio público
@@ -168,13 +171,13 @@ export function PanelShell({
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-ep3-navy/10 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-sm md:px-6">
-          <div className="flex items-center gap-2">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-ep3-navy/10 bg-white/95 px-3 py-2.5 shadow-sm backdrop-blur-sm pt-[max(0.625rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] md:gap-3 md:px-6 md:py-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             <button
               type="button"
               aria-label="Abrir menú"
               onClick={() => setOpen(true)}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-ep3-navy/15 text-ep3-navy md:hidden"
+              className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md border border-ep3-navy/15 text-ep3-navy md:hidden"
             >
               <span className="flex flex-col gap-1.5" aria-hidden>
                 <span className="block h-0.5 w-5 bg-ep3-navy" />
@@ -182,27 +185,33 @@ export function PanelShell({
                 <span className="block h-0.5 w-5 bg-ep3-navy" />
               </span>
             </button>
-            <p className="text-sm text-ep3-navy/70">{subtitle}</p>
+            <p className="hidden truncate text-sm text-ep3-navy/70 sm:block">
+              {subtitle}
+            </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <NotificationBell
               initialItems={notifications}
               unreadCount={unreadCount}
             />
             {firstName ? (
-              <span className="text-sm text-ep3-navy/80">{firstName}</span>
+              <span className="hidden max-w-[7rem] truncate text-sm text-ep3-navy/80 sm:inline">
+                {firstName}
+              </span>
             ) : null}
             <form action={logoutAction}>
               <button
                 type="submit"
-                className="rounded-md border border-ep3-navy/15 px-3 py-2 text-sm font-medium text-ep3-navy hover:bg-ep3-navy/5"
+                className="inline-flex min-h-11 items-center rounded-md border border-ep3-navy/15 px-3 text-sm font-medium text-ep3-navy hover:bg-ep3-navy/5"
               >
                 Salir
               </button>
             </form>
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-8">{children}</main>
+        <main className="flex-1 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:p-8">
+          {children}
+        </main>
       </div>
     </div>
   );
