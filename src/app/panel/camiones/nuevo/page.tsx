@@ -45,7 +45,6 @@ export default async function NuevoCamionPage() {
             <TruckFormFields
               operatorOptions={operatorOptions}
               crewOptions={crewOptions}
-              values={{ operatorId: operatorOptions[0]?.id }}
             />
             <SubmitButton label="Guardar camión" />
           </form>

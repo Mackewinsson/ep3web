@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
-  fillByName,
+  buildTestFleet,
+  createOperatorFleet,
+  createOperatorWithAccess,
   login,
   logout,
   openRecordByTitle,
@@ -78,59 +80,28 @@ async function completePublicQuote(page: Page, clientName: string) {
 test("cotización web → aprobar → operador → salvoconducto → En camino", async ({
   page,
 }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(360_000);
 
   const admin = requireAdminCreds();
   const suffix = uniqueSuffix();
   const operatorName = `E2E Operador ${suffix}`;
   const operatorEmail = `e2e.op.${suffix}@example.com`;
   const operatorPassword = "e2eop123456";
-  const crewName = `E2E Chofer ${suffix}`;
-  const crewEmail = `e2e.crew.${suffix}@example.com`;
-  const plate = `E${suffix}`.slice(0, 12).toUpperCase();
-  const truckLabel = `Camión E2E ${suffix}`;
+  const fleet = buildTestFleet(suffix, 5);
+  const pickTruck = fleet[2];
+  const pickCrew = fleet[1];
   const clientName = `E2E Cliente ${suffix}`;
   const budgetTitle = `Cotización web — ${clientName}`;
   const folio = `SC-E2E-${suffix}`;
 
-  // --- 0. Admin: flota (operador + chofer + camión) ---
+  // --- 0. Admin: operador + 5 choferes + 5 camiones ---
   await login(page, admin.email, admin.password);
-
-  await page.goto("/panel/conductores/nuevo");
-  await selectByName(page, "kind", { label: "Operador (cuenta flota)" });
-  await fillByName(page, "name", operatorName);
-  await fillByName(page, "email", operatorEmail);
-  await fillByName(page, "phone", "+56911111111");
-  await page.locator('input[name="enableAppAccess"]').check();
-  await fillByName(page, "appPassword", operatorPassword);
-  await page.getByRole("button", { name: "Guardar" }).click();
-  await page.waitForURL(/\/panel\/conductores$/, { timeout: 30_000 });
-  await expect(
-    page.getByRole("link", { name: `Abrir ${operatorName}` }),
-  ).toBeVisible();
-
-  await page.goto("/panel/conductores/nuevo");
-  await selectByName(page, "kind", { label: "Conductor de flota" });
-  await selectByName(page, "operatorId", { label: operatorName });
-  await fillByName(page, "name", crewName);
-  await fillByName(page, "email", crewEmail);
-  await fillByName(page, "phone", "+56922222222");
-  await page.getByRole("button", { name: "Guardar" }).click();
-  await page.waitForURL(/\/panel\/conductores$/, { timeout: 30_000 });
-  await expect(
-    page.getByRole("link", { name: `Abrir ${crewName}` }),
-  ).toBeVisible();
-
-  await page.goto("/panel/camiones/nuevo");
-  await fillByName(page, "plate", plate);
-  await fillByName(page, "label", truckLabel);
-  await selectByName(page, "operatorId", { label: operatorName });
-  await page.getByRole("button", { name: "Guardar camión" }).click();
-  await page.waitForURL(/\/panel\/camiones$/, { timeout: 30_000 });
-  await expect(
-    page.getByRole("link", { name: `Abrir ${plate}` }),
-  ).toBeVisible();
-
+  await createOperatorWithAccess(page, {
+    name: operatorName,
+    email: operatorEmail,
+    password: operatorPassword,
+  });
+  await createOperatorFleet(page, operatorName, fleet);
   await logout(page);
 
   // --- 1. Cliente: /cotizar ---
@@ -167,9 +138,26 @@ test("cotización web → aprobar → operador → salvoconducto → En camino",
   await page.getByRole("button", { name: "Aceptar servicio" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
+  await expect(dialog.getByText(/Elige camión, conductor y completa el salvoconducto/)).toBeVisible();
 
-  await dialog.locator('select[name="truckId"]').selectOption({ index: 1 });
-  await dialog.locator('select[name="crewDriverId"]').selectOption({ index: 1 });
+  const truckOptions = dialog.locator('select[name="truckId"] option:not([disabled])');
+  const crewOptions = dialog.locator(
+    'select[name="crewDriverId"] option:not([disabled])',
+  );
+  await expect(truckOptions).toHaveCount(5);
+  await expect(crewOptions).toHaveCount(5);
+  for (const member of fleet) {
+    await expect(truckOptions.filter({ hasText: member.plate })).toHaveCount(1);
+    await expect(crewOptions.filter({ hasText: member.crewName })).toHaveCount(1);
+  }
+
+  const truckOptionLabel = `${pickTruck.plate} — ${pickTruck.truckLabel}`;
+  await dialog.locator('select[name="truckId"]').selectOption({
+    label: truckOptionLabel,
+  });
+  await dialog.locator('select[name="crewDriverId"]').selectOption({
+    label: pickCrew.crewName,
+  });
   await dialog.locator('input[name="folio"]').fill(folio);
   await dialog.locator('input[name="issuedAt"]').fill("2026-08-16");
   await dialog.locator('input[name="originCommune"]').fill("Providencia");
@@ -179,6 +167,8 @@ test("cotización web → aprobar → operador → salvoconducto → En camino",
   await dialog.getByRole("button", { name: "Confirmar aceptación" }).click();
 
   await expect(page.getByText(folio)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(pickTruck.plate)).toBeVisible();
+  await expect(page.getByText(pickCrew.crewName)).toBeVisible();
   await expect(page.getByRole("button", { name: "En camino" })).toBeVisible();
 
   await page.getByRole("button", { name: "En camino" }).click();

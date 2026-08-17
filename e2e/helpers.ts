@@ -78,3 +78,73 @@ export async function fillByName(page: Page, name: string, value: string) {
   await expect(input).toBeVisible({ timeout: 15_000 });
   await input.fill(value);
 }
+
+export type FleetMember = {
+  crewName: string;
+  crewEmail: string;
+  plate: string;
+  truckLabel: string;
+};
+
+export function buildTestFleet(suffix: string, size = 5): FleetMember[] {
+  return Array.from({ length: size }, (_, i) => {
+    const n = i + 1;
+    const plate = `EP${n}${suffix}`.replace(/[^A-Z0-9]/gi, "").slice(0, 10).toUpperCase();
+    return {
+      crewName: `E2E Chofer ${n} ${suffix}`,
+      crewEmail: `e2e.crew${n}.${suffix}@example.com`,
+      plate,
+      truckLabel: `Camión ${n} ${suffix}`,
+    };
+  });
+}
+
+export async function createOperatorWithAccess(
+  page: Page,
+  input: { name: string; email: string; password: string },
+) {
+  await page.goto("/panel/conductores/nuevo");
+  await selectByName(page, "kind", { label: "Operador (cuenta flota)" });
+  await fillByName(page, "name", input.name);
+  await fillByName(page, "email", input.email);
+  await fillByName(page, "phone", "+56911111111");
+  await page.locator('input[name="enableAppAccess"]').check();
+  await fillByName(page, "appPassword", input.password);
+  await page.getByRole("button", { name: "Guardar" }).click();
+  await page.waitForURL(/\/panel\/conductores$/, { timeout: 30_000 });
+  await expect(
+    page.getByRole("link", { name: `Abrir ${input.name}` }),
+  ).toBeVisible();
+}
+
+export async function createOperatorFleet(
+  page: Page,
+  operatorName: string,
+  fleet: FleetMember[],
+) {
+  for (const member of fleet) {
+    await page.goto("/panel/conductores/nuevo");
+    await selectByName(page, "kind", { label: "Conductor de flota" });
+    await selectByName(page, "operatorId", { label: operatorName });
+    await fillByName(page, "name", member.crewName);
+    await fillByName(page, "email", member.crewEmail);
+    await fillByName(page, "phone", "+56922222222");
+    await page.getByRole("button", { name: "Guardar" }).click();
+    await page.waitForURL(/\/panel\/conductores$/, { timeout: 30_000 });
+    await expect(
+      page.getByRole("link", { name: `Abrir ${member.crewName}` }),
+    ).toBeVisible();
+  }
+
+  for (const member of fleet) {
+    await page.goto("/panel/camiones/nuevo");
+    await fillByName(page, "plate", member.plate);
+    await fillByName(page, "label", member.truckLabel);
+    await selectByName(page, "operatorId", { label: operatorName });
+    await page.getByRole("button", { name: "Guardar camión" }).click();
+    await page.waitForURL(/\/panel\/camiones$/, { timeout: 30_000 });
+    await expect(
+      page.getByRole("link", { name: `Abrir ${member.plate}` }),
+    ).toBeVisible();
+  }
+}

@@ -13,7 +13,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:seed": "npx tsx scripts/seed-admin.ts",
-    "db:seed:catalog": "npx tsx scripts/seed-moving-catalog.ts"
+    "db:seed:catalog": "npx tsx scripts/seed-moving-catalog.ts",
+    "db:seed:fleet": "npx tsx scripts/seed-operator-fleet.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
