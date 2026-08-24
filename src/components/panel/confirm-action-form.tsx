@@ -15,7 +15,7 @@ export function ConfirmActionForm({
   triggerClassName,
   confirmClassName,
 }: {
-  action: (formData?: FormData) => Promise<unknown>;
+  action: (formData: FormData) => void | Promise<void>;
   triggerLabel: string;
   title: string;
   description: string;
