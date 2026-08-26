@@ -155,9 +155,9 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-ep3-navy/55">Salvoconducto</dt>
+                  <dt className="text-ep3-navy/55">RUT chofer</dt>
                   <dd className="text-right font-medium text-ep3-navy">
-                    {job.assignment?.salvoConductoFolio}
+                    {job.assignment?.crewDriverRut}
                   </dd>
                 </div>
               </>

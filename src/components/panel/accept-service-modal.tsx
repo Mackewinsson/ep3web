@@ -67,7 +67,7 @@ export function AcceptServiceModal({
                   Aceptar servicio
                 </h2>
                 <p className="mt-1 text-sm text-ep3-navy/60">
-                  Elige camión, conductor y completa el salvoconducto.
+                  Indica chofer, RUT y patente del camión.
                 </p>
               </div>
               <button
@@ -85,28 +85,7 @@ export function AcceptServiceModal({
             <form action={action} className="space-y-3">
               <label className="block text-sm">
                 <span className="mb-1 block font-medium text-ep3-navy">
-                  Camión (patente)
-                </span>
-                <select
-                  name="truckId"
-                  required
-                  defaultValue=""
-                  className="w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2.5 text-base text-ep3-navy outline-none focus:border-ep3-navy md:text-sm"
-                >
-                  <option value="" disabled>
-                    Seleccionar…
-                  </option>
-                  {trucks.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block text-sm">
-                <span className="mb-1 block font-medium text-ep3-navy">
-                  Conductor
+                  Nombre chofer
                 </span>
                 <select
                   name="crewDriverId"
@@ -127,59 +106,36 @@ export function AcceptServiceModal({
 
               <label className="block text-sm">
                 <span className="mb-1 block font-medium text-ep3-navy">
-                  Número / folio salvoconducto
+                  RUT chofer
                 </span>
                 <input
-                  name="folio"
+                  name="crewDriverRut"
                   required
-                  placeholder="Ej. SC-12345"
+                  placeholder="Ej. 12.345.678-9"
+                  autoComplete="off"
                   className="w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2.5 text-base text-ep3-navy outline-none focus:border-ep3-navy md:text-sm"
                 />
               </label>
 
               <label className="block text-sm">
                 <span className="mb-1 block font-medium text-ep3-navy">
-                  Fecha del documento
+                  Patente camión
                 </span>
-                <input
-                  name="issuedAt"
-                  type="date"
+                <select
+                  name="truckId"
                   required
+                  defaultValue=""
                   className="w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2.5 text-base text-ep3-navy outline-none focus:border-ep3-navy md:text-sm"
-                />
-              </label>
-
-              <label className="block text-sm">
-                <span className="mb-1 block font-medium text-ep3-navy">
-                  Comuna origen
-                </span>
-                <input
-                  name="originCommune"
-                  required
-                  className="w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2.5 text-base text-ep3-navy outline-none focus:border-ep3-navy md:text-sm"
-                />
-              </label>
-
-              <label className="block text-sm">
-                <span className="mb-1 block font-medium text-ep3-navy">
-                  Comuna destino
-                </span>
-                <input
-                  name="destinationCommune"
-                  required
-                  className="w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2.5 text-base text-ep3-navy outline-none focus:border-ep3-navy md:text-sm"
-                />
-              </label>
-
-              <label className="block text-sm">
-                <span className="mb-1 block font-medium text-ep3-navy">
-                  Notas (opcional)
-                </span>
-                <textarea
-                  name="notes"
-                  rows={2}
-                  className="w-full rounded-md border border-ep3-navy/20 bg-white px-3 py-2.5 text-base text-ep3-navy outline-none focus:border-ep3-navy md:text-sm"
-                />
+                >
+                  <option value="" disabled>
+                    Seleccionar…
+                  </option>
+                  {trucks.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <button

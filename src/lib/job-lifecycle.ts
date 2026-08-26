@@ -62,11 +62,13 @@ export async function endOpenAssignment(
 export function isReadyForEnCamino(assignment: {
   truckId: string | null;
   crewDriverId: string | null;
+  crewDriverRut?: string | null;
   salvoConductoCompletedAt: Date | null;
 } | null) {
   return Boolean(
     assignment?.truckId &&
       assignment?.crewDriverId &&
+      assignment?.crewDriverRut &&
       assignment?.salvoConductoCompletedAt,
   );
 }

@@ -6,7 +6,7 @@ import {
   completePublicQuote,
   createOperatorFleet,
   createOperatorWithAccess,
-  fillAcceptSalvo,
+  fillAcceptService,
   login,
   logout,
   openRecordByTitle,
@@ -69,7 +69,7 @@ test.describe("job edge cases", () => {
       0,
     );
     await expect(
-      page.getByText(/aún no registró camión, conductor y salvoconducto/),
+      page.getByText(/aún no registró chofer, RUT y patente/),
     ).toBeVisible();
     await logout(page);
 
@@ -165,11 +165,11 @@ test.describe("job edge cases", () => {
 
     await login(page, operator.email, operator.password);
     await openRecordByTitle(page, clientName);
-    await fillAcceptSalvo(page, {
+    await fillAcceptService(page, {
       plate: operator.fleet[0].plate,
       truckLabel: operator.fleet[0].truckLabel,
       crewName: operator.fleet[0].crewName,
-      folio: `SC-CX-${suffix}`,
+      rut: `11.111.111-9`,
     });
     await page.getByRole("button", { name: "En camino" }).click();
     await expect(page.getByRole("button", { name: "Finalizar" })).toBeVisible({
@@ -211,11 +211,11 @@ test.describe("job edge cases", () => {
 
     await login(page, operator.email, operator.password);
     await openRecordByTitle(page, clientName);
-    await fillAcceptSalvo(page, {
+    await fillAcceptService(page, {
       plate: operator.fleet[0].plate,
       truckLabel: operator.fleet[0].truckLabel,
       crewName: operator.fleet[0].crewName,
-      folio: `SC-DN-${suffix}`,
+      rut: `12.222.222-K`,
     });
     await page.getByRole("button", { name: "En camino" }).click();
     await expect(page.getByRole("button", { name: "Finalizar" })).toBeVisible({

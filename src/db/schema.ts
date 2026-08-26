@@ -286,6 +286,8 @@ export const jobAssignments = pgTable("job_assignments", {
   salvoConductoCompletedAt: timestamp("salvo_conducto_completed_at", {
     withTimezone: true,
   }),
+  /** RUT del chofer al aceptar el servicio */
+  crewDriverRut: varchar("crew_driver_rut", { length: 20 }),
   endedAt: timestamp("ended_at", { withTimezone: true }),
   /** declined | reassigned | cancelled */
   endReason: varchar("end_reason", { length: 40 }),

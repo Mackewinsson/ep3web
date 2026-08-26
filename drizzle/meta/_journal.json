@@ -64,6 +64,13 @@
       "when": 1786504000000,
       "tag": "0008_assignment_ended",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786505000000,
+      "tag": "0009_crew_driver_rut",
+      "breakpoints": true
     }
   ]
 }

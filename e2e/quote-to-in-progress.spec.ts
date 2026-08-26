@@ -12,7 +12,7 @@ import {
   uniqueSuffix,
 } from "./helpers";
 
-test("cotización web → aprobar → operador → salvoconducto → En camino", async ({
+test("cotización web → aprobar → operador → aceptar → En camino", async ({
   page,
 }) => {
   test.setTimeout(360_000);
@@ -27,7 +27,7 @@ test("cotización web → aprobar → operador → salvoconducto → En camino",
   const pickCrew = fleet[1];
   const clientName = `E2E Cliente ${suffix}`;
   const budgetTitle = `Cotización web — ${clientName}`;
-  const folio = `SC-E2E-${suffix}`;
+  const crewRut = `13.456.789-K`;
 
   // --- 0. Admin: operador + 5 choferes + 5 camiones ---
   await login(page, admin.email, admin.password);
@@ -60,7 +60,7 @@ test("cotización web → aprobar → operador → salvoconducto → En camino",
 
   await logout(page);
 
-  // --- 3. Operador: aceptar + salvo + En camino ---
+  // --- 3. Operador: aceptar (chofer, RUT, patente) + En camino ---
   await login(page, operatorEmail, operatorPassword);
   await expect(page).toHaveURL(/\/panel\/mis-trabajos/);
 
@@ -73,7 +73,7 @@ test("cotización web → aprobar → operador → salvoconducto → En camino",
   await page.getByRole("button", { name: "Aceptar servicio" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByText(/Elige camión, conductor y completa el salvoconducto/)).toBeVisible();
+  await expect(dialog.getByText(/Indica chofer, RUT y patente/)).toBeVisible();
 
   const truckOptions = dialog.locator('select[name="truckId"] option:not([disabled])');
   const crewOptions = dialog.locator(
@@ -87,21 +87,16 @@ test("cotización web → aprobar → operador → salvoconducto → En camino",
   }
 
   const truckOptionLabel = `${pickTruck.plate} — ${pickTruck.truckLabel}`;
-  await dialog.locator('select[name="truckId"]').selectOption({
-    label: truckOptionLabel,
-  });
   await dialog.locator('select[name="crewDriverId"]').selectOption({
     label: pickCrew.crewName,
   });
-  await dialog.locator('input[name="folio"]').fill(folio);
-  await dialog.locator('input[name="issuedAt"]').fill("2026-08-16");
-  await dialog.locator('input[name="originCommune"]').fill("Providencia");
-  await dialog
-    .locator('input[name="destinationCommune"]')
-    .fill("Las Condes");
+  await dialog.locator('input[name="crewDriverRut"]').fill(crewRut);
+  await dialog.locator('select[name="truckId"]').selectOption({
+    label: truckOptionLabel,
+  });
   await dialog.getByRole("button", { name: "Confirmar aceptación" }).click();
 
-  await expect(page.getByText(folio)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(crewRut)).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(pickTruck.plate)).toBeVisible();
   await expect(page.getByText(pickCrew.crewName)).toBeVisible();
   await expect(page.getByRole("button", { name: "En camino" })).toBeVisible();

@@ -245,30 +245,25 @@ export async function assignOperatorOnJob(page: Page, operatorName: string) {
   ).toBeVisible({ timeout: 30_000 });
 }
 
-export async function fillAcceptSalvo(
+export async function fillAcceptService(
   page: Page,
   input: {
     plate: string;
     truckLabel: string;
     crewName: string;
-    folio: string;
+    rut: string;
   },
 ) {
   await page.getByRole("button", { name: "Aceptar servicio" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
-  await dialog.locator('select[name="truckId"]').selectOption({
-    label: `${input.plate} — ${input.truckLabel}`,
-  });
   await dialog.locator('select[name="crewDriverId"]').selectOption({
     label: input.crewName,
   });
-  await dialog.locator('input[name="folio"]').fill(input.folio);
-  await dialog.locator('input[name="issuedAt"]').fill("2026-08-16");
-  await dialog.locator('input[name="originCommune"]').fill("Providencia");
-  await dialog
-    .locator('input[name="destinationCommune"]')
-    .fill("Las Condes");
+  await dialog.locator('input[name="crewDriverRut"]').fill(input.rut);
+  await dialog.locator('select[name="truckId"]').selectOption({
+    label: `${input.plate} — ${input.truckLabel}`,
+  });
   await dialog.getByRole("button", { name: "Confirmar aceptación" }).click();
-  await expect(page.getByText(input.folio)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(input.rut)).toBeVisible({ timeout: 30_000 });
 }

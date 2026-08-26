@@ -129,6 +129,7 @@ export async function getJobOperationalDetail(jobId: string) {
         jobAssignments.salvoConductoDestinationCommune,
       salvoConductoNotes: jobAssignments.salvoConductoNotes,
       salvoConductoCompletedAt: jobAssignments.salvoConductoCompletedAt,
+      crewDriverRut: jobAssignments.crewDriverRut,
     })
     .from(jobAssignments)
     .innerJoin(drivers, eq(jobAssignments.driverId, drivers.id))

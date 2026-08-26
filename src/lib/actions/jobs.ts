@@ -44,11 +44,12 @@ const scheduleSchema = z.object({
 const acceptSchema = z.object({
   truckId: z.string().uuid(),
   crewDriverId: z.string().uuid(),
-  folio: z.string().trim().min(1).max(80),
-  issuedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  originCommune: z.string().trim().min(1).max(120),
-  destinationCommune: z.string().trim().min(1).max(120),
-  notes: z.string().optional(),
+  crewDriverRut: z
+    .string()
+    .trim()
+    .min(8, "RUT inválido")
+    .max(20)
+    .regex(/^[0-9.\-kK]+$/, "RUT inválido"),
 });
 
 function revalidateJobPaths(jobId: string) {
@@ -111,7 +112,7 @@ export async function updateJobStatus(
     const open = await getOpenAssignment(jobId);
     if (!isReadyForEnCamino(open)) {
       throw new Error(
-        "El operador debe registrar camión, conductor y salvoconducto primero",
+        "El operador debe registrar chofer, RUT y patente primero",
       );
     }
   }
@@ -256,6 +257,7 @@ async function getOpenOperatorAssignment(jobId: string, operatorId: string) {
       driverId: jobAssignments.driverId,
       truckId: jobAssignments.truckId,
       crewDriverId: jobAssignments.crewDriverId,
+      crewDriverRut: jobAssignments.crewDriverRut,
       salvoConductoCompletedAt: jobAssignments.salvoConductoCompletedAt,
       status: jobs.status,
     })
@@ -317,11 +319,7 @@ export async function operatorAcceptJob(jobId: string, formData: FormData) {
   const parsed = acceptSchema.parse({
     truckId: formData.get("truckId"),
     crewDriverId: formData.get("crewDriverId"),
-    folio: formData.get("folio"),
-    issuedAt: formData.get("issuedAt"),
-    originCommune: formData.get("originCommune"),
-    destinationCommune: formData.get("destinationCommune"),
-    notes: formData.get("notes") || undefined,
+    crewDriverRut: formData.get("crewDriverRut"),
   });
 
   const latest = await getOpenOperatorAssignment(jobId, operatorId);
@@ -367,11 +365,12 @@ export async function operatorAcceptJob(jobId: string, formData: FormData) {
     .set({
       truckId: parsed.truckId,
       crewDriverId: parsed.crewDriverId,
-      salvoConductoFolio: parsed.folio,
-      salvoConductoIssuedAt: parsed.issuedAt,
-      salvoConductoOriginCommune: parsed.originCommune,
-      salvoConductoDestinationCommune: parsed.destinationCommune,
-      salvoConductoNotes: parsed.notes || null,
+      crewDriverRut: parsed.crewDriverRut.toUpperCase(),
+      salvoConductoFolio: null,
+      salvoConductoIssuedAt: null,
+      salvoConductoOriginCommune: null,
+      salvoConductoDestinationCommune: null,
+      salvoConductoNotes: null,
       salvoConductoCompletedAt: new Date(),
     })
     .where(eq(jobAssignments.id, latest.assignmentId));
@@ -402,15 +401,10 @@ export async function driverAdvanceJob(
     throw new Error("Solo puedes finalizar un trabajo en camino");
   }
 
-  if (nextStatus === "in_progress") {
-    if (!latest.truckId || !latest.crewDriverId) {
-      throw new Error("Debes aceptar el servicio (camión y conductor) primero");
-    }
-    if (!latest.salvoConductoCompletedAt) {
-      throw new Error(
-        "Debes registrar el salvo conducto antes de salir en camino",
-      );
-    }
+  if (nextStatus === "in_progress" && !isReadyForEnCamino(latest)) {
+    throw new Error(
+      "Debes registrar chofer, RUT y patente antes de salir en camino",
+    );
   }
 
   await db

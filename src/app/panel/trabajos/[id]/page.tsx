@@ -61,7 +61,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
       truckPlate: trucks.plate,
       truckLabel: trucks.label,
       crewDriverName: crewDrivers.name,
-      salvoConductoFolio: jobAssignments.salvoConductoFolio,
+      crewDriverRut: jobAssignments.crewDriverRut,
       salvoConductoCompletedAt: jobAssignments.salvoConductoCompletedAt,
     })
     .from(jobAssignments)
@@ -187,14 +187,17 @@ export default async function TrabajoDetailPage({ params }: Props) {
             </dd>
           </div>
           <div>
-            <dt className="text-ep3-navy/60">Salvo conducto</dt>
+            <dt className="text-ep3-navy/60">RUT chofer</dt>
+            <dd className="font-medium text-ep3-navy">
+              {job.assignment?.crewDriverRut ??
+                (job.assignment ? "Pendiente" : "—")}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-ep3-navy/60">Aceptación</dt>
             <dd className="font-medium text-ep3-navy">
               {job.assignment?.salvoConductoCompletedAt
-                ? `Registrado${
-                    job.assignment.salvoConductoFolio
-                      ? ` · ${job.assignment.salvoConductoFolio}`
-                      : ""
-                  }`
+                ? "Registrada"
                 : job.assignment
                   ? "Pendiente"
                   : "—"}
@@ -283,7 +286,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
           ) : null}
           {job.status === "assigned" && !readyForEnCamino ? (
             <p className="w-full text-sm text-ep3-navy/60">
-              El operador aún no registró camión, conductor y salvoconducto.
+              El operador aún no registró chofer, RUT y patente.
             </p>
           ) : null}
           {job.status === "in_progress" ? (
@@ -403,7 +406,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
                     {a.emailSentAt ? "Correo enviado" : "Correo pendiente"}
                     {" · "}
                     {a.salvoConductoCompletedAt
-                      ? `Salvo conducto ${a.salvoConductoFolio ?? "OK"}`
+                      ? `Aceptado${a.crewDriverRut ? ` · RUT ${a.crewDriverRut}` : ""}`
                       : "Sin aceptar aún"}
                   </p>
                 </div>
@@ -440,7 +443,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
               />
               <p className="text-xs text-ep3-navy/55">
                 El operador aceptará el servicio eligiendo camión, conductor de
-                flota y salvoconducto. Si aparece “sin acceso app”, actívalo en
+                flota (chofer, RUT y patente). Si aparece “sin acceso app”, actívalo en
                 Operadores.
               </p>
               <Field
