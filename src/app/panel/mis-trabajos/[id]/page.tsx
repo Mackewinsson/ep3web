@@ -232,7 +232,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
             </form>
           ) : null}
 
-          {job.status === "assigned" ? (
+          {canAccept ? (
             <ConfirmActionForm
               action={operatorDeclineJob.bind(null, id)}
               triggerLabel="Rechazar trabajo"

@@ -287,6 +287,11 @@ export async function operatorDeclineJob(jobId: string) {
   if (!latest) {
     throw new Error("Trabajo no asignado a este operador");
   }
+  if (isReadyForEnCamino(latest)) {
+    throw new Error(
+      "Ya aceptaste este servicio. Pide a administración que lo cancele.",
+    );
+  }
 
   await endOpenAssignment(jobId, "declined");
   await db
