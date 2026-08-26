@@ -73,6 +73,69 @@ export function stripClientPriceLines(
   return cleaned || null;
 }
 
+/** Matches wizard / admin “Estimación auto: X m³ · $Y CLP” lines. */
+const AUTO_ESTIMATE_LINE_RE =
+  /Estimaci[oó]n auto:\s*([\d.,]+)\s*m³(?:\s*·\s*\$?([\d.]+)(?:\s*CLP)?)?/i;
+
+function parseEsClAmount(raw: string): number {
+  const n = Number(raw.replace(/\./g, "").replace(",", "."));
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function formatEstimateAmountClp(amount: number): string {
+  return `$${Math.round(amount).toLocaleString("es-CL")} CLP`;
+}
+
+/** Read m³ from an “Estimación auto” line in volume notes, if present. */
+export function extractAutoEstimateM3(
+  notes: string | null | undefined,
+): number | null {
+  if (!notes) return null;
+  const match = notes.match(AUTO_ESTIMATE_LINE_RE);
+  if (!match) return null;
+  const n = Number(match[1].replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/**
+ * Keep the “Estimación auto” line in sync with an edited m³ value.
+ * Updates both the m³ figure and the money amount (scaled from the previous
+ * ratio when possible, otherwise `pricePerM3 * m3`).
+ */
+export function syncAutoEstimateInNotes(
+  notes: string,
+  m3: number,
+  opts?: { pricePerM3?: number },
+): string {
+  if (!Number.isFinite(m3) || m3 <= 0) return notes;
+  const m3Text = formatM3(m3);
+  const match = notes.match(AUTO_ESTIMATE_LINE_RE);
+
+  let amount: number | null = null;
+  if (match?.[2]) {
+    const oldM3 = Number(match[1].replace(",", "."));
+    const oldAmount = parseEsClAmount(match[2]);
+    if (Number.isFinite(oldM3) && oldM3 > 0 && Number.isFinite(oldAmount)) {
+      amount = Math.round(oldAmount * (m3 / oldM3));
+    }
+  }
+  if (amount == null && opts?.pricePerM3 != null && opts.pricePerM3 > 0) {
+    amount = Math.round(m3 * opts.pricePerM3);
+  }
+
+  const line =
+    amount != null
+      ? `Estimación auto: ${m3Text} m³ · ${formatEstimateAmountClp(amount)}`
+      : `Estimación auto: ${m3Text} m³`;
+
+  if (!match) {
+    const trimmed = notes.trim();
+    return trimmed ? `${trimmed}\n${line}` : line;
+  }
+  // Function replacer: dollar amounts must not be treated as `$n` substitutions.
+  return notes.replace(AUTO_ESTIMATE_LINE_RE, () => line);
+}
+
 export type VolumeItem = {
   id: string;
   name: string;

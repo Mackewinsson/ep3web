@@ -11,6 +11,7 @@ import {
   SubmitButton,
   TextArea,
 } from "@/components/panel/ui";
+import { QuoteVolumeSyncFields } from "@/components/panel/quote-volume-sync-fields";
 import { db } from "@/db";
 import { budgets, clients, quoteRequests, servicePackages } from "@/db/schema";
 import {
@@ -19,6 +20,7 @@ import {
   updateQuoteRequest,
 } from "@/lib/actions/quotes";
 import { QUOTE_STATUS_LABELS, quoteStatusTone } from "@/lib/format";
+import { getPricingConfig } from "@/lib/moving-catalog-db";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -36,7 +38,7 @@ export default async function CotizacionDetailPage({ params }: Props) {
 
   if (!quote) notFound();
 
-  const [clientRows, packageRows, linkedBudgets] = await Promise.all([
+  const [clientRows, packageRows, linkedBudgets, pricing] = await Promise.all([
     db
       .select({ id: clients.id, name: clients.name })
       .from(clients)
@@ -51,6 +53,7 @@ export default async function CotizacionDetailPage({ params }: Props) {
       .from(budgets)
       .where(eq(budgets.quoteRequestId, id))
       .orderBy(asc(budgets.createdAt)),
+    getPricingConfig(),
   ]);
 
   const update = updateQuoteRequest.bind(null, id);
@@ -210,27 +213,11 @@ export default async function CotizacionDetailPage({ params }: Props) {
             type="date"
             defaultValue={quote.preferredDate ?? undefined}
           />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field
-              label="m³ estimados"
-              name="estimatedM3"
-              type="number"
-              step="0.1"
-              defaultValue={quote.estimatedM3 ?? undefined}
-            />
-            <Field
-              label="Nº elementos"
-              name="estimatedItems"
-              type="number"
-              step="1"
-              defaultValue={quote.estimatedItems ?? undefined}
-            />
-          </div>
-          <TextArea
-            label="Volumen / notas"
-            name="volumeNotes"
-            rows={4}
-            defaultValue={quote.volumeNotes}
+          <QuoteVolumeSyncFields
+            initialM3={quote.estimatedM3}
+            initialItems={quote.estimatedItems}
+            initialNotes={quote.volumeNotes}
+            pricePerM3={pricing.pricePerM3}
           />
           <SubmitButton label="Guardar cambios" />
         </form>
