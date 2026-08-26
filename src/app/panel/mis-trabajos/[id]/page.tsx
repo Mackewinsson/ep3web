@@ -41,7 +41,9 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
   const job = await getJobOperationalDetail(id);
   if (!job) notFound();
 
-  const { operatorPayout } = await operatorFacingAmounts(job.clientTotalAmount);
+  const { operatorPayout, marginPercent } = await operatorFacingAmounts(
+    job.clientTotalAmount,
+  );
   const volumeNotes = operatorSafeNotes(job.volumeNotes);
   const jobNotes = operatorSafeNotes(job.notes);
 
@@ -162,14 +164,6 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 </div>
               </>
             ) : null}
-            {operatorPayout != null ? (
-              <div className="flex justify-between gap-3">
-                <dt className="text-ep3-navy/55">Tu pago</dt>
-                <dd className="text-right text-base font-semibold text-ep3-navy">
-                  {formatClp(operatorPayout)}
-                </dd>
-              </div>
-            ) : null}
             {volume ? (
               <div className="flex justify-between gap-3">
                 <dt className="text-ep3-navy/55">Carga</dt>
@@ -204,6 +198,32 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
 
       <PanelCard>
         <div className="space-y-2">
+          {operatorPayout != null ? (
+            <div
+              className={`rounded-lg border px-4 py-4 ${
+                canAccept
+                  ? "border-ep3-yellow/60 bg-ep3-yellow/25"
+                  : "border-ep3-navy/10 bg-ep3-navy/[0.04]"
+              }`}
+            >
+              <p className="text-xs font-medium uppercase tracking-wide text-ep3-navy/60">
+                Tu pago por este servicio
+              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-ep3-navy">
+                {formatClp(operatorPayout)}
+              </p>
+              <p className="mt-1 text-xs text-ep3-navy/55">
+                Ya descontado el {marginPercent}% de la empresa. No incluye el
+                precio que ve el cliente.
+              </p>
+            </div>
+          ) : canAccept ? (
+            <p className="rounded-lg bg-amber-50 px-4 py-3 text-center text-sm font-medium text-amber-900">
+              Este trabajo aún no tiene monto de presupuesto. Consulta con
+              administración antes de aceptar.
+            </p>
+          ) : null}
+
           {canAccept ? (
             <AcceptServiceModal
               jobId={id}
