@@ -88,10 +88,14 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 | `src/lib/actions/submit-wizard-quote.ts` | Public wizard persist |
 | `src/lib/actions/budgets.ts` | Approve → create job |
 | `src/lib/actions/jobs.ts` | Assign, accept, decline, advance |
-| `src/lib/job-lifecycle.ts` | Statuses, end reasons, open assignment, ready check |
+| `src/lib/job-rules.ts` | Pure status / ready-for-en-camino checks (unit-tested) |
+| `src/lib/job-lifecycle.ts` | Open assignment DB helpers; re-exports job-rules |
 | `src/lib/jobs-view.ts` | Operator queries, ownership, payout helpers, safe notes |
 | `src/components/panel/accept-service-modal.tsx` | Accept UI (chofer / RUT / patente) |
+| `src/components/panel/quote-volume-sync-fields.tsx` | Admin cotización: sync m³ ↔ Estimación auto notes |
 | `src/db/schema.ts` | Tables; `crewDriverRut`; acceptance timestamp on assignment |
+
+**Tests:** `npm run test:unit` (pricing + job rules). E2E: `npm run test:e2e`.
 
 ---
 

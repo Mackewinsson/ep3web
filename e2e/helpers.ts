@@ -265,5 +265,7 @@ export async function fillAcceptService(
     label: `${input.plate} — ${input.truckLabel}`,
   });
   await dialog.getByRole("button", { name: "Confirmar aceptación" }).click();
-  await expect(page.getByText(input.rut)).toBeVisible({ timeout: 30_000 });
+  await expect(
+    page.getByText(new RegExp(input.rut.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i")),
+  ).toBeVisible({ timeout: 30_000 });
 }

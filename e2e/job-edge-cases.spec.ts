@@ -48,7 +48,7 @@ test.describe("job edge cases", () => {
     await expect(page.getByRole("button", { name: "Rechazar" })).toHaveCount(0);
   });
 
-  test("sin salvo no hay En camino; cancelar asignado cierra el trabajo", async ({
+  test("sin aceptar no hay En camino; cancelar asignado cierra el trabajo", async ({
     page,
   }) => {
     const admin = requireAdminCreds();
@@ -77,6 +77,8 @@ test.describe("job edge cases", () => {
     await openRecordByTitle(page, clientName);
     await expect(page.getByRole("button", { name: "Aceptar servicio" })).toBeVisible();
     await expect(page.getByRole("button", { name: "En camino" })).toHaveCount(0);
+    await expect(page.getByText("Tu pago por este servicio")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Rechazar trabajo" })).toBeVisible();
     await logout(page);
 
     await login(page, admin.email, admin.password);
@@ -171,6 +173,9 @@ test.describe("job edge cases", () => {
       crewName: operator.fleet[0].crewName,
       rut: `11.111.111-9`,
     });
+    await expect(page.getByRole("button", { name: "Rechazar trabajo" })).toHaveCount(
+      0,
+    );
     await page.getByRole("button", { name: "En camino" }).click();
     await expect(page.getByRole("button", { name: "Finalizar" })).toBeVisible({
       timeout: 30_000,

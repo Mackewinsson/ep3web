@@ -69,11 +69,16 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
   await expect(
     page.getByRole("button", { name: "Aceptar servicio" }),
   ).toBeVisible();
+  await expect(page.getByText("Tu pago por este servicio")).toBeVisible();
+  await expect(page.getByText(/Ya descontado el \d+% de la empresa/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Rechazar trabajo" })).toBeVisible();
 
   await page.getByRole("button", { name: "Aceptar servicio" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText(/Indica chofer, RUT y patente/)).toBeVisible();
+  await expect(dialog.locator('input[name="folio"]')).toHaveCount(0);
+  await expect(dialog.locator('input[name="crewDriverRut"]')).toBeVisible();
 
   const truckOptions = dialog.locator('select[name="truckId"] option:not([disabled])');
   const crewOptions = dialog.locator(
@@ -100,6 +105,8 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
   await expect(page.getByText(pickTruck.plate)).toBeVisible();
   await expect(page.getByText(pickCrew.crewName)).toBeVisible();
   await expect(page.getByRole("button", { name: "En camino" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Rechazar trabajo" })).toHaveCount(0);
+  await expect(page.getByText("Tu pago por este servicio")).toBeVisible();
 
   await page.getByRole("button", { name: "En camino" }).click();
   await expect(page.getByRole("button", { name: "Finalizar" })).toBeVisible({
