@@ -14,6 +14,10 @@ import {
   isFragileValid,
 } from "@/components/cotizar/steps/FragileStep";
 import {
+  HelpersStep,
+  isHelpersValid,
+} from "@/components/cotizar/steps/HelpersStep";
+import {
   InventoryStep,
   isInventoryValid,
 } from "@/components/cotizar/steps/InventoryStep";
@@ -27,6 +31,7 @@ import type { PricingConfig } from "@/lib/quote-pricing";
 import {
   createInitialQuoteState,
   type AddressBlock,
+  type HelpersOption,
   type QuoteWizardState,
 } from "@/lib/quote-wizard-types";
 
@@ -40,6 +45,21 @@ function normalizeAddress(block: Partial<AddressBlock> | undefined): AddressBloc
     hasElevator:
       typeof block?.hasElevator === "boolean" ? block.hasElevator : null,
   };
+}
+
+function normalizeHelpers(
+  value: QuoteWizardState["helpers"] | undefined,
+): HelpersOption | "" {
+  if (
+    value === "driver_only" ||
+    value === "driver_plus_1" ||
+    value === "driver_plus_2" ||
+    value === "driver_plus_3" ||
+    value === "none"
+  ) {
+    return value;
+  }
+  return "";
 }
 
 function normalizeState(raw: Partial<QuoteWizardState>): QuoteWizardState {
@@ -60,6 +80,7 @@ function normalizeState(raw: Partial<QuoteWizardState>): QuoteWizardState {
             item.quantity > 0,
         )
       : [],
+    helpers: normalizeHelpers(raw.helpers),
     contact: { ...base.contact, ...raw.contact },
   };
 }
@@ -68,6 +89,7 @@ const STEPS = [
   "origin",
   "destination",
   "inventory",
+  "helpers",
   "fragile",
   "parkingOrigin",
   "parkingDestination",
@@ -134,6 +156,8 @@ export function QuoteWizard({
           catalog,
           state.customItems,
         );
+      case "helpers":
+        return isHelpersValid(state.helpers);
       case "fragile":
         return isFragileValid(state.hasFragile);
       case "parkingOrigin":
@@ -294,6 +318,13 @@ export function QuoteWizard({
                 onAddCustomItem={addCustomItem}
                 onCustomQuantityChange={setCustomQuantity}
                 onRemoveCustomItem={removeCustomItem}
+              />
+            ) : null}
+
+            {step === "helpers" ? (
+              <HelpersStep
+                value={state.helpers}
+                onChange={(helpers) => setState((s) => ({ ...s, helpers }))}
               />
             ) : null}
 

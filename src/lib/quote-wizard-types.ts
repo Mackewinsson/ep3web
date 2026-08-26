@@ -2,6 +2,13 @@ export type PropertyType = "casa" | "departamento" | "oficina";
 
 export type ParkingOption = "near" | "far" | "underground";
 
+export type HelpersOption =
+  | "driver_only"
+  | "driver_plus_1"
+  | "driver_plus_2"
+  | "driver_plus_3"
+  | "none";
+
 export type AddressBlock = {
   propertyType: PropertyType | "";
   address: string;
@@ -26,6 +33,7 @@ export type QuoteWizardState = {
   customItems: CustomInventoryItem[];
   packingBoxes: number;
   boxesPromptSeen: boolean;
+  helpers: HelpersOption | "";
   hasFragile: boolean | null;
   fragileNotes: string;
   parkingOrigin: ParkingOption | "";
@@ -52,6 +60,22 @@ export const PARKING_LABELS: Record<ParkingOption, string> = {
   underground: "No, la entrada es por subterráneo",
 };
 
+export const HELPERS_OPTIONS: HelpersOption[] = [
+  "driver_only",
+  "driver_plus_1",
+  "driver_plus_2",
+  "driver_plus_3",
+  "none",
+];
+
+export const HELPERS_LABELS: Record<HelpersOption, string> = {
+  driver_only: "Chofer (el chofer te ayuda)",
+  driver_plus_1: "Chofer y 1 ayudante (ambos ayudan)",
+  driver_plus_2: "Chofer y 2 ayudantes (los 3 ayudan)",
+  driver_plus_3: "Chofer y 3 ayudantes (los cuatro ayudan)",
+  none: "Sin ayudante (nosotros bajamos y subimos las cosas)",
+};
+
 export function createInitialQuoteState(): QuoteWizardState {
   return {
     origin: {
@@ -70,6 +94,7 @@ export function createInitialQuoteState(): QuoteWizardState {
     customItems: [],
     packingBoxes: 0,
     boxesPromptSeen: false,
+    helpers: "",
     hasFragile: null,
     fragileNotes: "",
     parkingOrigin: "",

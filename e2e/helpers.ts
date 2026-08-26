@@ -180,6 +180,14 @@ export async function completePublicQuote(page: Page, clientName: string) {
   await expect(page.getByText("Caja E2E")).toBeVisible();
   await page.getByRole("button", { name: "Siguiente" }).click();
 
+  await expect(
+    page.getByRole("heading", { name: /ayudantes/i }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: /Chofer \(el chofer te ayuda\)/i })
+    .click();
+  await page.getByRole("button", { name: "Siguiente" }).click();
+
   await expect(page.getByRole("heading", { name: /delicado/i })).toBeVisible();
   await page.getByRole("button", { name: "No", exact: true }).click();
   await page.getByRole("button", { name: "Siguiente" }).click();

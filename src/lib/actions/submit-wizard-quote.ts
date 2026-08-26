@@ -12,8 +12,10 @@ import {
   type PricingConfig,
 } from "@/lib/quote-pricing";
 import {
+  HELPERS_LABELS,
   PARKING_LABELS,
   PROPERTY_TYPE_LABELS,
+  type HelpersOption,
   type ParkingOption,
   type PropertyType,
 } from "@/lib/quote-wizard-types";
@@ -39,6 +41,13 @@ const wizardSchema = z.object({
     )
     .default([]),
   packingBoxes: z.number().int().min(0),
+  helpers: z.enum([
+    "driver_only",
+    "driver_plus_1",
+    "driver_plus_2",
+    "driver_plus_3",
+    "none",
+  ]),
   hasFragile: z.boolean(),
   fragileNotes: z.string(),
   parkingOrigin: z.enum(["near", "far", "underground"]),
@@ -160,6 +169,7 @@ export async function submitWizardQuote(
   const volumeNotes = [
     formatSide("Origen", data.origin, data.parkingOrigin),
     formatSide("Destino", data.destination, data.parkingDestination),
+    `Ayudantes: ${HELPERS_LABELS[data.helpers as HelpersOption]}`,
     `Delicados: ${data.hasFragile ? `Sí${data.fragileNotes ? ` — ${data.fragileNotes}` : ""}` : "No"}`,
     `Inventario: ${inventorySummary || "—"}`,
     data.packingBoxes > 0 ? `Cajas: ${data.packingBoxes}` : null,
