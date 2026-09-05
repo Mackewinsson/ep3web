@@ -55,7 +55,7 @@ Admin can cancel / reassign while unlocked. Locked statuses: `completed`, `cance
 
 While `assigned` and **not** yet accepted:
 
-1. Sees **Tu pago** = quoted price minus `operatorMarginPercent` (default **20%** app commission → operador sees **80%**). If the budget total is $0, payout is derived from *Estimación auto* / m³. Never show client total. Notes via `operatorSafeNotes` / `stripClientPriceLines`.
+1. Sees **Tu pago** = quoted price minus `operatorMarginPercent` (default **20%** app commission → operador sees **80%**). If the budget total is $0, payout is derived from *Estimación auto* / m³. Never show client total. Job detail shows each note **once** (`buildOperatorServiceNotes`); origin/dest extras sit on the map cards.
 2. **Aceptar servicio** — only three fields: **nombre chofer** (fleet), **RUT chofer** (`crewDriverRut`), **patente camión** (fleet).
 3. **Rechazar trabajo** — only before accept. Ends assignment `declined`; job → `pending_assignment`; notifies admins. After accept, decline is hidden/blocked (admin must cancel).
 

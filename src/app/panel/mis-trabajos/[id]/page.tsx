@@ -25,8 +25,11 @@ import {
   isReadyForEnCamino,
   mapsUrl,
   operatorFacingAmounts,
-  operatorSafeNotes,
 } from "@/lib/jobs-view";
+import {
+  buildOperatorServiceNotes,
+  operatorServiceNotesAreEmpty,
+} from "@/lib/operator-notes";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -49,16 +52,27 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
       estimatedM3: job.estimatedM3,
     },
   );
-  const volumeNotes = operatorSafeNotes(job.volumeNotes);
-  const jobNotes = operatorSafeNotes(job.notes);
+  const serviceNotes = buildOperatorServiceNotes(job.volumeNotes, job.notes, {
+    scheduledTime: job.scheduledTime,
+    originAddress: job.originAddress,
+    destinationAddress: job.destinationAddress,
+  });
 
-  const volume = formatVolume(job.estimatedM3, job.estimatedItems);
+  const volume = formatVolume(
+    job.estimatedM3,
+    serviceNotes.inventoryItems.length > 0 ? null : job.estimatedItems,
+  );
   const when = [formatDate(job.scheduledDate), job.scheduledTime]
     .filter(Boolean)
     .join(" · ");
 
   const accepted = isReadyForEnCamino(job.assignment);
   const canAccept = job.status === "assigned" && !accepted;
+  const showDetailsCard =
+    accepted ||
+    Boolean(volume) ||
+    !operatorServiceNotesAreEmpty(serviceNotes) ||
+    Boolean(job.assignment?.notes);
   const statusLabel =
     job.status === "assigned" && accepted
       ? "Listo para salir"
@@ -121,6 +135,11 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
               <p className="mt-1 text-base font-medium text-ep3-navy">
                 {job.originAddress}
               </p>
+              {serviceNotes.originAccess ? (
+                <p className="mt-1 text-sm text-ep3-navy/70">
+                  {serviceNotes.originAccess}
+                </p>
+              ) : null}
               <p className="mt-2 text-sm font-semibold text-ep3-navy underline">
                 Abrir en el mapa
               </p>
@@ -137,12 +156,18 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
               <p className="mt-1 text-base font-medium text-ep3-navy">
                 {job.destinationAddress}
               </p>
+              {serviceNotes.destinationAccess ? (
+                <p className="mt-1 text-sm text-ep3-navy/70">
+                  {serviceNotes.destinationAccess}
+                </p>
+              ) : null}
               <p className="mt-2 text-sm font-semibold text-ep3-navy underline">
                 Abrir en el mapa
               </p>
             </a>
           </div>
 
+          {showDetailsCard ? (
           <dl className="space-y-3 rounded-lg border border-ep3-navy/10 bg-white/70 p-4 text-sm">
             {accepted ? (
               <>
@@ -175,11 +200,61 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 <dd className="text-right font-medium text-ep3-navy">{volume}</dd>
               </div>
             ) : null}
-            {volumeNotes ? (
+            {serviceNotes.helpers ? (
+              <div className="flex justify-between gap-3">
+                <dt className="text-ep3-navy/55">Ayudantes</dt>
+                <dd className="text-right font-medium text-ep3-navy">
+                  {serviceNotes.helpers}
+                </dd>
+              </div>
+            ) : null}
+            {serviceNotes.fragile ? (
+              <div className="flex justify-between gap-3">
+                <dt className="text-ep3-navy/55">Delicados</dt>
+                <dd className="text-right font-medium text-ep3-navy">
+                  {serviceNotes.fragile}
+                </dd>
+              </div>
+            ) : null}
+            {serviceNotes.boxes ? (
+              <div className="flex justify-between gap-3">
+                <dt className="text-ep3-navy/55">Cajas</dt>
+                <dd className="text-right font-medium text-ep3-navy">
+                  {serviceNotes.boxes}
+                </dd>
+              </div>
+            ) : null}
+            {serviceNotes.preferredTime ? (
+              <div className="flex justify-between gap-3">
+                <dt className="text-ep3-navy/55">Hora preferida</dt>
+                <dd className="text-right font-medium text-ep3-navy">
+                  {serviceNotes.preferredTime}
+                </dd>
+              </div>
+            ) : null}
+            {serviceNotes.inventoryItems.length > 0 ? (
               <div>
-                <dt className="text-ep3-navy/55">Detalle volumen</dt>
+                <dt className="text-ep3-navy/55">Inventario</dt>
+                <dd className="mt-1 text-ep3-navy">
+                  <ul className="list-disc space-y-0.5 pl-4">
+                    {serviceNotes.inventoryItems.map((item, index) => (
+                      <li key={`${index}-${item}`}>{item}</li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            ) : null}
+            {serviceNotes.clientNotes ? (
+              <div>
+                <dt className="text-ep3-navy/55">Notas del cliente</dt>
+                <dd className="mt-1 text-ep3-navy">{serviceNotes.clientNotes}</dd>
+              </div>
+            ) : null}
+            {serviceNotes.extraLines ? (
+              <div>
+                <dt className="text-ep3-navy/55">Otras notas</dt>
                 <dd className="mt-1 whitespace-pre-line text-ep3-navy">
-                  {volumeNotes}
+                  {serviceNotes.extraLines}
                 </dd>
               </div>
             ) : null}
@@ -189,15 +264,8 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 <dd className="mt-1 text-ep3-navy">{job.assignment.notes}</dd>
               </div>
             ) : null}
-            {jobNotes ? (
-              <div>
-                <dt className="text-ep3-navy/55">Notas del trabajo</dt>
-                <dd className="mt-1 whitespace-pre-line text-ep3-navy">
-                  {jobNotes}
-                </dd>
-              </div>
-            ) : null}
           </dl>
+          ) : null}
         </div>
       </PanelCard>
 
