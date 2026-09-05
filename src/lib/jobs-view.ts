@@ -13,7 +13,7 @@ import {
 import { getOpenAssignment, jobIsLocked } from "@/lib/job-lifecycle";
 import { getPricingConfig } from "@/lib/moving-catalog-db";
 import {
-  operatorPayoutFromClientTotal,
+  operatorPayoutFromQuoteSources,
   stripClientPriceLines,
 } from "@/lib/quote-pricing";
 
@@ -32,6 +32,8 @@ export async function getDriverAssignedJobs(driverId: string) {
       clientName: clients.name,
       clientPhone: clients.phone,
       clientTotalAmount: budgets.totalAmount,
+      volumeNotes: quoteRequests.volumeNotes,
+      estimatedM3: quoteRequests.estimatedM3,
       truckPlate: trucks.plate,
       crewDriverName: crewDrivers.name,
       assignmentNotes: jobAssignments.notes,
@@ -42,6 +44,7 @@ export async function getDriverAssignedJobs(driverId: string) {
     .innerJoin(jobs, eq(jobAssignments.jobId, jobs.id))
     .innerJoin(clients, eq(jobs.clientId, clients.id))
     .leftJoin(budgets, eq(jobs.budgetId, budgets.id))
+    .leftJoin(quoteRequests, eq(budgets.quoteRequestId, quoteRequests.id))
     .leftJoin(trucks, eq(jobAssignments.truckId, trucks.id))
     .leftJoin(crewDrivers, eq(jobAssignments.crewDriverId, crewDrivers.id))
     .where(
@@ -156,16 +159,47 @@ export async function getOperatorMarginPercent() {
   return cfg.operatorMarginPercent;
 }
 
-export async function operatorFacingAmounts(clientTotalAmount: string | null) {
-  const marginPercent = await getOperatorMarginPercent();
-  const clientTotal = Number(clientTotalAmount);
-  const payout =
-    clientTotalAmount != null && Number.isFinite(clientTotal) && clientTotal > 0
-      ? operatorPayoutFromClientTotal(clientTotal, marginPercent)
-      : null;
+export function operatorPayoutForAssignedJob(
+  row: {
+    clientTotalAmount?: string | null;
+    volumeNotes?: string | null;
+    notes?: string | null;
+    estimatedM3?: string | null;
+  },
+  pricing: { operatorMarginPercent: number; pricePerM3: number },
+) {
+  return operatorPayoutFromQuoteSources(
+    {
+      budgetTotal: row.clientTotalAmount,
+      notes: [row.volumeNotes, row.notes].filter(Boolean).join("\n"),
+      estimatedM3: row.estimatedM3,
+      pricePerM3: pricing.pricePerM3,
+    },
+    pricing.operatorMarginPercent,
+  );
+}
+
+export async function operatorFacingAmounts(
+  clientTotalAmount: string | null,
+  fallback?: {
+    volumeNotes?: string | null;
+    jobNotes?: string | null;
+    estimatedM3?: string | null;
+  },
+) {
+  const cfg = await getPricingConfig();
+  const payout = operatorPayoutForAssignedJob(
+    {
+      clientTotalAmount,
+      volumeNotes: fallback?.volumeNotes,
+      notes: fallback?.jobNotes,
+      estimatedM3: fallback?.estimatedM3,
+    },
+    cfg,
+  );
   return {
     operatorPayout: payout,
-    marginPercent,
+    marginPercent: cfg.operatorMarginPercent,
   };
 }
 

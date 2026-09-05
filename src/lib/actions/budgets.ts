@@ -7,6 +7,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { budgetItems, budgets, jobs, quoteRequests } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
+import { ensureBudgetQuotedTotal } from "@/lib/budget-totals";
 
 const budgetMetaSchema = z.object({
   title: z.string().min(1).max(200),
@@ -202,6 +203,10 @@ export async function setBudgetStatus(
         "Solo puedes aprobar o rechazar un presupuesto en borrador o enviado",
       );
     }
+  }
+
+  if (status === "approved") {
+    await ensureBudgetQuotedTotal(budgetId);
   }
 
   await db

@@ -129,7 +129,7 @@ export default async function CotizadorAdminPage() {
           </label>
           <label className="block sm:col-span-2">
             <span className={labelClass}>
-              Margen admin para operadores (%)
+              Comisión de la app para el operador (%)
             </span>
             <input
               name="operatorMarginPercent"
@@ -142,13 +142,12 @@ export default async function CotizadorAdminPage() {
               required
             />
             <span className="mt-1 block text-xs text-ep3-navy/55">
-              El operador no ve el precio al cliente. Con {cfg.operatorMarginPercent}%
-              ve el {100 - cfg.operatorMarginPercent}% del presupuesto (ej. $100.000
-              → $
+              Del precio cotizado, la app se queda este %. El operador ve el{" "}
+              {100 - cfg.operatorMarginPercent}% (ej. $100.000 → $
               {Math.round(
                 (100000 * (100 - cfg.operatorMarginPercent)) / 100,
               ).toLocaleString("es-CL")}
-              ).
+              ). Nunca ve el total del cliente.
             </span>
           </label>
           <div className="flex items-end">
