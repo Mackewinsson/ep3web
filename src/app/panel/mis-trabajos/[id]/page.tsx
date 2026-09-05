@@ -43,6 +43,11 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
 
   const { operatorPayout, marginPercent } = await operatorFacingAmounts(
     job.clientTotalAmount,
+    {
+      volumeNotes: job.volumeNotes,
+      jobNotes: job.notes,
+      estimatedM3: job.estimatedM3,
+    },
   );
   const volumeNotes = operatorSafeNotes(job.volumeNotes);
   const jobNotes = operatorSafeNotes(job.notes);
@@ -213,8 +218,8 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 {formatClp(operatorPayout)}
               </p>
               <p className="mt-1 text-xs text-ep3-navy/55">
-                Ya descontado el {marginPercent}% de la empresa. No incluye el
-                precio que ve el cliente.
+                Ya descontado el {marginPercent}% de comisión de la app. No
+                incluye el precio que ve el cliente.
               </p>
             </div>
           ) : canAccept ? (

@@ -12,16 +12,14 @@ import {
   formatDate,
   jobStatusTone,
 } from "@/lib/format";
-import {
-  getDriverAssignedJobs,
-  getOperatorMarginPercent,
-} from "@/lib/jobs-view";
-import { operatorPayoutFromClientTotal } from "@/lib/quote-pricing";
+import { getDriverAssignedJobs, operatorPayoutForAssignedJob } from "@/lib/jobs-view";
+import { getPricingConfig } from "@/lib/moving-catalog-db";
 
 export default async function MisTrabajosPage() {
   const session = await requireDriver();
   const rows = await getDriverAssignedJobs(session.driverId!);
-  const marginPercent = await getOperatorMarginPercent();
+  const pricing = await getPricingConfig();
+  const marginPercent = pricing.operatorMarginPercent;
 
   // Deduplicate by job id keeping latest assignment
   const seen = new Set<string>();
@@ -51,58 +49,54 @@ export default async function MisTrabajosPage() {
         ) : (
           <RecordList
             emptyMessage="Aún no tienes trabajos asignados."
-            items={ordered.map((row) => ({
-              id: row.id,
-              href: `/panel/mis-trabajos/${row.id}`,
-              title: row.clientName,
-              badge: (
-                <StatusBadge
-                  label={
-                    DRIVER_JOB_STATUS_LABELS[row.status] ??
-                    row.status
-                  }
-                  tone={jobStatusTone(row.status)}
-                />
-              ),
-              fields: [
-                {
-                  label: "Ruta",
-                  value: (
-                    <span className="line-clamp-2">
-                      {row.originAddress} → {row.destinationAddress}
-                    </span>
-                  ),
-                },
-                {
-                  label: "Cuándo",
-                  value: [
-                    formatDate(row.scheduledDate),
-                    row.scheduledTime,
-                  ]
-                    .filter(Boolean)
-                    .join(" · "),
-                },
-                {
-                  label: "Camión",
-                  value: row.truckPlate ?? "Por aceptar",
-                },
-                {
-                  label: "Conductor",
-                  value: row.crewDriverName ?? "Por aceptar",
-                },
-                {
-                  label: "Tu pago",
-                  value: row.clientTotalAmount
-                    ? formatClp(
-                        operatorPayoutFromClientTotal(
-                          Number(row.clientTotalAmount),
-                          marginPercent,
-                        ),
-                      )
-                    : "—",
-                },
-              ],
-            }))}
+            items={ordered.map((row) => {
+              const payout = operatorPayoutForAssignedJob(row, pricing);
+              return {
+                id: row.id,
+                href: `/panel/mis-trabajos/${row.id}`,
+                title: row.clientName,
+                badge: (
+                  <StatusBadge
+                    label={
+                      DRIVER_JOB_STATUS_LABELS[row.status] ??
+                      row.status
+                    }
+                    tone={jobStatusTone(row.status)}
+                  />
+                ),
+                fields: [
+                  {
+                    label: "Ruta",
+                    value: (
+                      <span className="line-clamp-2">
+                        {row.originAddress} → {row.destinationAddress}
+                      </span>
+                    ),
+                  },
+                  {
+                    label: "Cuándo",
+                    value: [
+                      formatDate(row.scheduledDate),
+                      row.scheduledTime,
+                    ]
+                      .filter(Boolean)
+                      .join(" · "),
+                  },
+                  {
+                    label: "Camión",
+                    value: row.truckPlate ?? "Por aceptar",
+                  },
+                  {
+                    label: "Conductor",
+                    value: row.crewDriverName ?? "Por aceptar",
+                  },
+                  {
+                    label: `Tu pago (−${marginPercent}%)`,
+                    value: payout != null ? formatClp(payout) : "—",
+                  },
+                ],
+              };
+            })}
           />
         )}
       </PanelCard>

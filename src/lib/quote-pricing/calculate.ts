@@ -59,6 +59,50 @@ export function operatorPayoutFromClientTotal(
   return Math.round(amount * (1 - margin / 100));
 }
 
+export type QuotedClientTotalSources = {
+  budgetTotal?: string | number | null;
+  notes?: string | null;
+  estimatedM3?: string | number | null;
+  pricePerM3?: number;
+};
+
+/**
+ * Client-facing quote total used as the base for operator payout.
+ * Prefers the budget, then “Estimación auto” in notes, then m³ × pricePerM3.
+ * Treats 0 / empty budget rows as missing so operators don’t see $0.
+ */
+export function resolveQuotedClientTotal(
+  sources: QuotedClientTotalSources,
+): number | null {
+  const fromBudget = Number(sources.budgetTotal);
+  if (Number.isFinite(fromBudget) && fromBudget > 0) return fromBudget;
+
+  const fromNotes = extractAutoEstimateAmount(sources.notes);
+  if (fromNotes != null && fromNotes > 0) return fromNotes;
+
+  const rawM3 =
+    typeof sources.estimatedM3 === "string"
+      ? sources.estimatedM3.replace(",", ".")
+      : sources.estimatedM3;
+  const m3 = Number(rawM3);
+  const price = sources.pricePerM3;
+  if (Number.isFinite(m3) && m3 > 0 && price != null && price > 0) {
+    return Math.round(m3 * price);
+  }
+  return null;
+}
+
+/** Operator payout from quote sources, or null when there is no quoted price. */
+export function operatorPayoutFromQuoteSources(
+  sources: QuotedClientTotalSources,
+  marginPercent: number = DEFAULT_OPERATOR_MARGIN_PERCENT,
+): number | null {
+  const total = resolveQuotedClientTotal(sources);
+  if (total == null) return null;
+  const payout = operatorPayoutFromClientTotal(total, marginPercent);
+  return payout > 0 ? payout : null;
+}
+
 /** Drop quote-estimate price lines so operators never see the client total. */
 export function stripClientPriceLines(
   notes: string | null | undefined,
@@ -94,6 +138,17 @@ export function extractAutoEstimateM3(
   const match = notes.match(AUTO_ESTIMATE_LINE_RE);
   if (!match) return null;
   const n = Number(match[1].replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/** Read CLP amount from an “Estimación auto” line, if present. */
+export function extractAutoEstimateAmount(
+  notes: string | null | undefined,
+): number | null {
+  if (!notes) return null;
+  const match = notes.match(AUTO_ESTIMATE_LINE_RE);
+  if (!match?.[2]) return null;
+  const n = parseEsClAmount(match[2]);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 

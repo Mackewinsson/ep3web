@@ -44,6 +44,11 @@ export default async function TrabajoDetailPage({ params }: Props) {
   if (!job) notFound();
   const { operatorPayout, marginPercent } = await operatorFacingAmounts(
     job.clientTotalAmount,
+    {
+      volumeNotes: job.volumeNotes,
+      jobNotes: job.notes,
+      estimatedM3: job.estimatedM3,
+    },
   );
 
   const assignments = await db
@@ -153,7 +158,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
           </div>
           <div>
             <dt className="text-ep3-navy/60">
-              Pago operador (−{marginPercent}%)
+              Pago operador (−{marginPercent}% comisión app)
             </dt>
             <dd className="font-medium text-ep3-navy">
               {operatorPayout != null ? formatClp(operatorPayout) : "—"}

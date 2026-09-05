@@ -12,6 +12,7 @@ import {
   servicePackages,
 } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
+import { ensureBudgetQuotedTotal } from "@/lib/budget-totals";
 import { upsertClientByContact } from "@/lib/clients";
 
 const quoteFieldsSchema = z.object({
@@ -193,6 +194,8 @@ export async function convertQuoteToBudget(quoteId: string) {
         .where(eq(budgets.id, budget.id));
     }
   }
+
+  await ensureBudgetQuotedTotal(budget.id);
 
   await db
     .update(quoteRequests)

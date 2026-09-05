@@ -14,6 +14,9 @@ Root product flows (roles, accept, job lifecycle): [`/AGENTS.md`](../../../AGENT
 | `suggestBoxes(furnitureM3, config)` | Packing box count |
 | `buildQuoteEstimate({...})` | Totals + budget line drafts (CLP) |
 | `operatorPayoutFromClientTotal(total, margin%)` | Amount shown to operators (client total minus admin margin) |
+| `operatorPayoutFromQuoteSources(...)` | Same payout, resolving $0 budgets from estimación auto / m³ |
+| `resolveQuotedClientTotal(...)` | Client quote total: budget → estimación auto → m³ × price |
+| `extractAutoEstimateAmount(notes)` | Parse CLP from an “Estimación auto” line |
 | `stripClientPriceLines(notes)` | Remove estimate/$ CLP lines from operator-facing notes |
 | `syncAutoEstimateInNotes(notes, m3, opts?)` | Keep “Estimación auto” m³ + amount in sync when admin edits m³ |
 | `extractAutoEstimateM3(notes)` | Parse m³ from an “Estimación auto” line |
@@ -24,7 +27,7 @@ Root product flows (roles, accept, job lifecycle): [`/AGENTS.md`](../../../AGENT
 Table `quote_pricing_settings` edited at `/panel/cotizador` (admin only):
 
 - `boxesPerM3`, `minBoxes`, `boxVolumeM3`
-- `pricePerM3`, `noElevatorPerFloor`, `operatorMarginPercent` (operator sees `100 − margin`% of client budget)
+- `pricePerM3`, `noElevatorPerFloor`, `operatorMarginPercent` (app commission; operator sees `100 − margin`% of the quoted price)
 
 Catalog categories/items: tables `moving_categories` / `moving_catalog_items`, same admin page.
 
