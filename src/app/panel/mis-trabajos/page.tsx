@@ -19,7 +19,6 @@ export default async function MisTrabajosPage() {
   const session = await requireDriver();
   const rows = await getDriverAssignedJobs(session.driverId!);
   const pricing = await getPricingConfig();
-  const marginPercent = pricing.operatorMarginPercent;
 
   // Deduplicate by job id keeping latest assignment
   const seen = new Set<string>();
@@ -91,7 +90,7 @@ export default async function MisTrabajosPage() {
                     value: row.crewDriverName ?? "Por aceptar",
                   },
                   {
-                    label: `Tu pago (−${marginPercent}%)`,
+                    label: "Tu pago",
                     value: payout != null ? formatClp(payout) : "—",
                   },
                 ],
