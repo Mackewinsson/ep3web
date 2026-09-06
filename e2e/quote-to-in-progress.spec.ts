@@ -70,7 +70,7 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
     page.getByRole("button", { name: "Aceptar servicio" }),
   ).toBeVisible();
   await expect(page.getByText("Tu pago por este servicio")).toBeVisible();
-  await expect(page.getByText(/Ya descontado el \d+% de comisión de la app/)).toBeVisible();
+  await expect(page.getByText(/Monto neto para tu flota/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Rechazar trabajo" })).toBeVisible();
 
   await page.getByRole("button", { name: "Aceptar servicio" }).click();
