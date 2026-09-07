@@ -46,6 +46,10 @@ export default async function CotizadorAdminPage() {
         )
           ? Number(settings.operatorMarginPercent)
           : DEFAULT_PRICING_CONFIG.operatorMarginPercent,
+        helperDriverOnly: Number(settings.helperDriverOnly),
+        helperDriverPlus1: Number(settings.helperDriverPlus1),
+        helperDriverPlus2: Number(settings.helperDriverPlus2),
+        helperDriverPlus3: Number(settings.helperDriverPlus3),
       }
     : DEFAULT_PRICING_CONFIG;
 
@@ -150,7 +154,55 @@ export default async function CotizadorAdminPage() {
               ). Nunca ve el total del cliente.
             </span>
           </label>
-          <div className="flex items-end">
+          <label className="block">
+            <span className={labelClass}>Ayuda chofer (CLP)</span>
+            <input
+              name="helperDriverOnly"
+              type="number"
+              min="0"
+              step="1000"
+              defaultValue={cfg.helperDriverOnly}
+              className={fieldClass}
+              required
+            />
+          </label>
+          <label className="block">
+            <span className={labelClass}>Ayuda chofer y ayudante (CLP)</span>
+            <input
+              name="helperDriverPlus1"
+              type="number"
+              min="0"
+              step="1000"
+              defaultValue={cfg.helperDriverPlus1}
+              className={fieldClass}
+              required
+            />
+          </label>
+          <label className="block">
+            <span className={labelClass}>Ayuda chofer y 2 ayudantes (CLP)</span>
+            <input
+              name="helperDriverPlus2"
+              type="number"
+              min="0"
+              step="1000"
+              defaultValue={cfg.helperDriverPlus2}
+              className={fieldClass}
+              required
+            />
+          </label>
+          <label className="block">
+            <span className={labelClass}>Ayuda chofer y 3 ayudantes (CLP)</span>
+            <input
+              name="helperDriverPlus3"
+              type="number"
+              min="0"
+              step="1000"
+              defaultValue={cfg.helperDriverPlus3}
+              className={fieldClass}
+              required
+            />
+          </label>
+          <div className="flex items-end sm:col-span-3">
             <button
               type="submit"
               className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-ep3-navy px-5 py-2.5 text-sm font-bold text-ep3-yellow sm:w-auto"

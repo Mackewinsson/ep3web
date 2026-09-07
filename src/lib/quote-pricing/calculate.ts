@@ -13,6 +13,13 @@
  * `quote_pricing_settings` (editable in /panel/cotizador by admin only).
  */
 
+export type HelpersOption =
+  | "driver_only"
+  | "driver_plus_1"
+  | "driver_plus_2"
+  | "driver_plus_3"
+  | "none";
+
 export type PricingConfig = {
   /** Boxes suggested ≈ ceil(furnitureM3 * boxesPerM3), floored by minBoxes */
   boxesPerM3: number;
@@ -28,6 +35,14 @@ export type PricingConfig = {
    * Operator UI shows the remainder (e.g. 20 → operator sees 80%).
    */
   operatorMarginPercent: number;
+  /** Helper pricing: driver only (driver helps) */
+  helperDriverOnly: number;
+  /** Helper pricing: driver + 1 helper */
+  helperDriverPlus1: number;
+  /** Helper pricing: driver + 2 helpers */
+  helperDriverPlus2: number;
+  /** Helper pricing: driver + 3 helpers */
+  helperDriverPlus3: number;
   currency: "CLP";
 };
 
@@ -40,6 +55,10 @@ export const DEFAULT_PRICING_CONFIG: PricingConfig = {
   pricePerM3: 25000,
   noElevatorPerFloor: 15000,
   operatorMarginPercent: DEFAULT_OPERATOR_MARGIN_PERCENT,
+  helperDriverOnly: 30000,
+  helperDriverPlus1: 60000,
+  helperDriverPlus2: 90000,
+  helperDriverPlus3: 120000,
   currency: "CLP",
 };
 
@@ -287,6 +306,37 @@ function accessSurcharge(
   return floor * config.noElevatorPerFloor;
 }
 
+function helperCharge(helpers: HelpersOption | undefined, config: PricingConfig): number {
+  if (!helpers || helpers === "none") return 0;
+  switch (helpers) {
+    case "driver_only":
+      return config.helperDriverOnly;
+    case "driver_plus_1":
+      return config.helperDriverPlus1;
+    case "driver_plus_2":
+      return config.helperDriverPlus2;
+    case "driver_plus_3":
+      return config.helperDriverPlus3;
+    default:
+      return 0;
+  }
+}
+
+function helperLabel(helpers: HelpersOption): string {
+  switch (helpers) {
+    case "driver_only":
+      return "Ayuda chofer";
+    case "driver_plus_1":
+      return "Ayuda chofer y ayudante";
+    case "driver_plus_2":
+      return "Ayuda chofer y 2 ayudantes";
+    case "driver_plus_3":
+      return "Ayuda chofer y 3 ayudantes";
+    default:
+      return "Sin ayudante";
+  }
+}
+
 /**
  * Full estimate used by the public wizard (preview) and server submit (authoritative).
  */
@@ -298,6 +348,7 @@ export function buildQuoteEstimate(input: {
   config?: PricingConfig;
   origin?: AccessSurchargeInput;
   destination?: AccessSurchargeInput;
+  helpers?: HelpersOption;
 }): QuoteEstimate {
   const config = input.config ?? DEFAULT_PRICING_CONFIG;
   const { totalItems, furnitureM3, lines } = sumInventory(
@@ -365,6 +416,16 @@ export function buildQuoteEstimate(input: {
       pricingUnit: "fixed",
       quantity: 1,
       unitPrice: destFee,
+    });
+  }
+
+  const helpersFee = input.helpers ? helperCharge(input.helpers, config) : 0;
+  if (helpersFee > 0 && input.helpers && input.helpers !== "none") {
+    budgetLines.push({
+      description: helperLabel(input.helpers),
+      pricingUnit: "fixed",
+      quantity: 1,
+      unitPrice: helpersFee,
     });
   }
 

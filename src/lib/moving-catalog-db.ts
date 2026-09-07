@@ -41,6 +41,10 @@ export async function getPricingConfig(): Promise<PricingConfig> {
     operatorMarginPercent: Number.isFinite(margin)
       ? margin
       : DEFAULT_PRICING_CONFIG.operatorMarginPercent,
+    helperDriverOnly: Number(row.helperDriverOnly),
+    helperDriverPlus1: Number(row.helperDriverPlus1),
+    helperDriverPlus2: Number(row.helperDriverPlus2),
+    helperDriverPlus3: Number(row.helperDriverPlus3),
     currency: "CLP",
   };
 }
