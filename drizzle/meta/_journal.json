@@ -71,6 +71,13 @@
       "when": 1786505000000,
       "tag": "0009_crew_driver_rut",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788774444311,
+      "tag": "0010_amused_queen_noir",
+      "breakpoints": true
     }
   ]
 }

@@ -323,6 +323,34 @@ export const quotePricingSettings = pgTable("quote_pricing_settings", {
   })
     .default("20")
     .notNull(),
+  /** Helper pricing: driver only */
+  helperDriverOnly: numeric("helper_driver_only", {
+    precision: 14,
+    scale: 2,
+  })
+    .default("30000")
+    .notNull(),
+  /** Helper pricing: driver + 1 helper */
+  helperDriverPlus1: numeric("helper_driver_plus_1", {
+    precision: 14,
+    scale: 2,
+  })
+    .default("60000")
+    .notNull(),
+  /** Helper pricing: driver + 2 helpers */
+  helperDriverPlus2: numeric("helper_driver_plus_2", {
+    precision: 14,
+    scale: 2,
+  })
+    .default("90000")
+    .notNull(),
+  /** Helper pricing: driver + 3 helpers */
+  helperDriverPlus3: numeric("helper_driver_plus_3", {
+    precision: 14,
+    scale: 2,
+  })
+    .default("120000")
+    .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

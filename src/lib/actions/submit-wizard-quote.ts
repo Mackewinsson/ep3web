@@ -152,6 +152,7 @@ export async function submitWizardQuote(
     config: pricing satisfies PricingConfig,
     origin: data.origin,
     destination: data.destination,
+    helpers: data.helpers,
   });
 
   if (

@@ -31,6 +31,10 @@ export async function updateQuotePricingSettings(formData: FormData) {
       pricePerM3: z.coerce.number().min(0),
       noElevatorPerFloor: z.coerce.number().min(0),
       operatorMarginPercent: z.coerce.number().min(0).max(90),
+      helperDriverOnly: z.coerce.number().min(0),
+      helperDriverPlus1: z.coerce.number().min(0),
+      helperDriverPlus2: z.coerce.number().min(0),
+      helperDriverPlus3: z.coerce.number().min(0),
     })
     .parse({
       boxesPerM3: formData.get("boxesPerM3"),
@@ -39,6 +43,10 @@ export async function updateQuotePricingSettings(formData: FormData) {
       pricePerM3: formData.get("pricePerM3"),
       noElevatorPerFloor: formData.get("noElevatorPerFloor"),
       operatorMarginPercent: formData.get("operatorMarginPercent"),
+      helperDriverOnly: formData.get("helperDriverOnly"),
+      helperDriverPlus1: formData.get("helperDriverPlus1"),
+      helperDriverPlus2: formData.get("helperDriverPlus2"),
+      helperDriverPlus3: formData.get("helperDriverPlus3"),
     });
 
   const [existing] = await db.select().from(quotePricingSettings).limit(1);
@@ -52,6 +60,10 @@ export async function updateQuotePricingSettings(formData: FormData) {
         pricePerM3: String(parsed.pricePerM3),
         noElevatorPerFloor: String(parsed.noElevatorPerFloor),
         operatorMarginPercent: String(parsed.operatorMarginPercent),
+        helperDriverOnly: String(parsed.helperDriverOnly),
+        helperDriverPlus1: String(parsed.helperDriverPlus1),
+        helperDriverPlus2: String(parsed.helperDriverPlus2),
+        helperDriverPlus3: String(parsed.helperDriverPlus3),
         updatedAt: new Date(),
       })
       .where(eq(quotePricingSettings.id, existing.id));
@@ -63,6 +75,10 @@ export async function updateQuotePricingSettings(formData: FormData) {
       pricePerM3: String(parsed.pricePerM3),
       noElevatorPerFloor: String(parsed.noElevatorPerFloor),
       operatorMarginPercent: String(parsed.operatorMarginPercent),
+      helperDriverOnly: String(parsed.helperDriverOnly),
+      helperDriverPlus1: String(parsed.helperDriverPlus1),
+      helperDriverPlus2: String(parsed.helperDriverPlus2),
+      helperDriverPlus3: String(parsed.helperDriverPlus3),
     });
   }
 
