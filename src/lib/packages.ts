@@ -18,27 +18,32 @@ export type HomePackage = {
 
 export const getHomePackages = unstable_cache(
   async (): Promise<HomePackage[]> => {
-    return db
-      .select({
-        id: servicePackages.id,
-        name: servicePackages.name,
-        slug: servicePackages.slug,
-        shortDescription: servicePackages.shortDescription,
-        description: servicePackages.description,
-        pricingType: servicePackages.pricingType,
-        basePrice: servicePackages.basePrice,
-        includedM3: servicePackages.includedM3,
-        includedUnits: servicePackages.includedUnits,
-        highlights: servicePackages.highlights,
-      })
-      .from(servicePackages)
-      .where(
-        and(
-          eq(servicePackages.active, true),
-          eq(servicePackages.showOnHome, true),
-        ),
-      )
-      .orderBy(asc(servicePackages.sortOrder), asc(servicePackages.name));
+    if (!process.env.DATABASE_URL) return [];
+    try {
+      return await db
+        .select({
+          id: servicePackages.id,
+          name: servicePackages.name,
+          slug: servicePackages.slug,
+          shortDescription: servicePackages.shortDescription,
+          description: servicePackages.description,
+          pricingType: servicePackages.pricingType,
+          basePrice: servicePackages.basePrice,
+          includedM3: servicePackages.includedM3,
+          includedUnits: servicePackages.includedUnits,
+          highlights: servicePackages.highlights,
+        })
+        .from(servicePackages)
+        .where(
+          and(
+            eq(servicePackages.active, true),
+            eq(servicePackages.showOnHome, true),
+          ),
+        )
+        .orderBy(asc(servicePackages.sortOrder), asc(servicePackages.name));
+    } catch {
+      return [];
+    }
   },
   ["home-packages"],
   { revalidate: 60, tags: ["packages"] },
