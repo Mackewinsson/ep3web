@@ -28,25 +28,49 @@ export type MovingCatalogDto = {
   packingBox: { id: string; name: string; volumeM3: number };
 };
 
+function num(value: unknown, fallback: number): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 export async function getPricingConfig(): Promise<PricingConfig> {
-  const [row] = await db.select().from(quotePricingSettings).limit(1);
-  if (!row) return DEFAULT_PRICING_CONFIG;
-  const margin = Number(row.operatorMarginPercent);
-  return {
-    boxesPerM3: Number(row.boxesPerM3),
-    minBoxes: row.minBoxes,
-    boxVolumeM3: Number(row.boxVolumeM3),
-    pricePerM3: Number(row.pricePerM3),
-    noElevatorPerFloor: Number(row.noElevatorPerFloor),
-    operatorMarginPercent: Number.isFinite(margin)
-      ? margin
-      : DEFAULT_PRICING_CONFIG.operatorMarginPercent,
-    helperDriverOnly: Number(row.helperDriverOnly),
-    helperDriverPlus1: Number(row.helperDriverPlus1),
-    helperDriverPlus2: Number(row.helperDriverPlus2),
-    helperDriverPlus3: Number(row.helperDriverPlus3),
-    currency: "CLP",
-  };
+  try {
+    const [row] = await db.select().from(quotePricingSettings).limit(1);
+    if (!row) return DEFAULT_PRICING_CONFIG;
+    return {
+      boxesPerM3: num(row.boxesPerM3, DEFAULT_PRICING_CONFIG.boxesPerM3),
+      minBoxes: row.minBoxes ?? DEFAULT_PRICING_CONFIG.minBoxes,
+      boxVolumeM3: num(row.boxVolumeM3, DEFAULT_PRICING_CONFIG.boxVolumeM3),
+      pricePerM3: num(row.pricePerM3, DEFAULT_PRICING_CONFIG.pricePerM3),
+      noElevatorPerFloor: num(
+        row.noElevatorPerFloor,
+        DEFAULT_PRICING_CONFIG.noElevatorPerFloor,
+      ),
+      operatorMarginPercent: num(
+        row.operatorMarginPercent,
+        DEFAULT_PRICING_CONFIG.operatorMarginPercent,
+      ),
+      helperDriverOnly: num(
+        row.helperDriverOnly,
+        DEFAULT_PRICING_CONFIG.helperDriverOnly,
+      ),
+      helperDriverPlus1: num(
+        row.helperDriverPlus1,
+        DEFAULT_PRICING_CONFIG.helperDriverPlus1,
+      ),
+      helperDriverPlus2: num(
+        row.helperDriverPlus2,
+        DEFAULT_PRICING_CONFIG.helperDriverPlus2,
+      ),
+      helperDriverPlus3: num(
+        row.helperDriverPlus3,
+        DEFAULT_PRICING_CONFIG.helperDriverPlus3,
+      ),
+      currency: "CLP",
+    };
+  } catch {
+    return DEFAULT_PRICING_CONFIG;
+  }
 }
 
 export async function getMovingCatalogFromDb(): Promise<MovingCatalogDto | null> {
