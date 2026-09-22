@@ -20,7 +20,7 @@ import {
 const crewDrivers = alias(drivers, "crew_drivers");
 
 export async function getDriverAssignedJobs(driverId: string) {
-  return db
+  const rows = await db
     .select({
       id: jobs.id,
       originAddress: jobs.originAddress,
@@ -33,6 +33,7 @@ export async function getDriverAssignedJobs(driverId: string) {
       clientPhone: clients.phone,
       clientTotalAmount: budgets.totalAmount,
       volumeNotes: quoteRequests.volumeNotes,
+      budgetNotes: budgets.notes,
       estimatedM3: quoteRequests.estimatedM3,
       truckPlate: trucks.plate,
       truckId: jobAssignments.truckId,
@@ -63,6 +64,11 @@ export async function getDriverAssignedJobs(driverId: string) {
       ),
     )
     .orderBy(desc(jobAssignments.assignedAt));
+
+  return rows.map(({ budgetNotes, ...row }) => ({
+    ...row,
+    volumeNotes: row.volumeNotes || budgetNotes,
+  }));
 }
 
 export async function getJobOperationalDetail(jobId: string) {

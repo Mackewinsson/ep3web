@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmActionForm } from "@/components/panel/confirm-action-form";
 import {
@@ -174,6 +175,17 @@ export default async function TrabajoDetailPage({ params }: Props) {
               {job.clientTotalAmount
                 ? formatClpPlusIva(job.clientTotalAmount)
                 : "—"}
+              {job.budgetId ? (
+                <>
+                  {" · "}
+                  <Link
+                    href={`/panel/presupuestos/${job.budgetId}`}
+                    className="underline"
+                  >
+                    Ver inventario
+                  </Link>
+                </>
+              ) : null}
             </dd>
           </div>
           <div>
