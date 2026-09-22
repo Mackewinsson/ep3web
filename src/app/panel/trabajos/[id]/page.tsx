@@ -23,6 +23,7 @@ import {
   ASSIGNMENT_END_REASON_LABELS,
   adminJobBadge,
   formatClp,
+  formatClpPlusIva,
   formatDate,
 } from "@/lib/format";
 import { isReadyForEnCamino, jobIsLocked } from "@/lib/job-lifecycle";
@@ -168,7 +169,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
           <div>
             <dt className="text-ep3-navy/60">Presupuesto cliente</dt>
             <dd className="font-medium text-ep3-navy">
-              {job.clientTotalAmount ? formatClp(job.clientTotalAmount) : "—"}
+              {job.clientTotalAmount
+                ? formatClpPlusIva(job.clientTotalAmount)
+                : "—"}
             </dd>
           </div>
           <div>

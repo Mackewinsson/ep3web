@@ -5,7 +5,7 @@ import {
   submitPublicQuote,
   type PublicQuoteState,
 } from "@/lib/actions/public-quote";
-import { formatClp, PRICING_UNIT_LABELS } from "@/lib/format";
+import { formatClpPlusIva, PRICING_UNIT_LABELS } from "@/lib/format";
 
 type PackageOption = {
   id: string;
@@ -114,7 +114,7 @@ export function QuoteRequestForm({
           {packages.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name} — {PRICING_UNIT_LABELS[p.pricingType]} ·{" "}
-              {formatClp(p.basePrice)}
+              {formatClpPlusIva(p.basePrice)}
             </option>
           ))}
         </select>

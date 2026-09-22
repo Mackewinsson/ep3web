@@ -8,6 +8,30 @@ export function formatClp(amount: string | number) {
   }).format(value);
 }
 
+/** Shown on client quotes: stored totals are net; IVA is added later. */
+export const CLIENT_PRICE_IVA_SUFFIX = "+ IVA";
+
+export function formatClpPlusIva(amount: string | number) {
+  const formatted = formatClp(amount);
+  if (formatted === "—") return formatted;
+  return `${formatted} ${CLIENT_PRICE_IVA_SUFFIX}`;
+}
+
+export function formatClientPackagePrice(
+  amount: string | number,
+  pricingType: "fixed" | "m3" | "unit",
+) {
+  const formatted = formatClp(amount);
+  if (formatted === "—") return formatted;
+  if (pricingType === "m3") {
+    return `${formatted} / m³ ${CLIENT_PRICE_IVA_SUFFIX}`;
+  }
+  if (pricingType === "unit") {
+    return `${formatted} / unidad ${CLIENT_PRICE_IVA_SUFFIX}`;
+  }
+  return `${formatted} ${CLIENT_PRICE_IVA_SUFFIX}`;
+}
+
 export function formatDate(value: string | Date | null | undefined) {
   if (!value) return "—";
   const date = typeof value === "string" ? new Date(value) : value;

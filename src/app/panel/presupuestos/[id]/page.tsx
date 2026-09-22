@@ -23,6 +23,7 @@ import {
   BUDGET_STATUS_LABELS,
   budgetStatusTone,
   formatClp,
+  formatClpPlusIva,
   PRICING_UNIT_LABELS,
 } from "@/lib/format";
 
@@ -80,7 +81,11 @@ export default async function PresupuestoDetailPage({ params }: Props) {
             tone={budgetStatusTone(budget.status)}
           />
           <p className="text-lg font-semibold text-ep3-navy">
-            Total: {formatClp(budget.totalAmount)}
+            Total: {formatClpPlusIva(budget.totalAmount)}
+          </p>
+          <p className="w-full text-sm text-ep3-navy/60">
+            El cliente ve este monto + IVA. El IVA no está incluido y se suma
+            después.
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -93,7 +98,7 @@ export default async function PresupuestoDetailPage({ params }: Props) {
                 type="submit"
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-ep3-navy px-3 py-2 text-sm text-white sm:w-auto"
               >
-                Marcar enviado
+                Enviar al cliente
               </button>
             </form>
           ) : null}
