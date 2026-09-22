@@ -226,6 +226,8 @@ export async function submitWizardQuote(
         pricingUnit: line.pricingUnit,
         quantity: String(line.pricingUnit === "fixed" ? 1 : line.quantity),
         unitPrice: String(line.unitPrice),
+        unitVolumeM3:
+          line.unitVolumeM3 == null ? null : String(line.unitVolumeM3),
         sortOrder: index,
       })),
     );

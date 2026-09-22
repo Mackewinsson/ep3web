@@ -21,6 +21,10 @@ Root product flows (roles, accept, job lifecycle): [`/AGENTS.md`](../../../AGENT
 | `syncAutoEstimateInNotes(notes, m3, opts?)` | Keep “Estimación auto” m³ + amount in sync when admin edits m³ |
 | `syncBudgetItemsInNotes` | Rebuild Inventario / Cargos / Cajas / Estimación auto from `budget_items`, **merging** client Inventario still in notes |
 | `extractAutoEstimateM3(notes)` | Parse m³ from an “Estimación auto” line |
+| `createUnitVolumeResolver(catalog, boxVolumeM3)` | m³/unit for a budget line: stored `budget_items.unitVolumeM3` → packing box → catalog by name |
+| `budgetItemVolumeM3(item, resolve)` | m³ a line contributes (only `unit` lines) |
+| `adjustM3Line` / `pickAutoM3Line` | Apply an inventory m³ delta to the billed “Mudanza estimada” line (admin edits to that line are kept) |
+| `buildVolumeBreakdown(...)` | Per-item m³ table for presupuesto / trabajo / mis-trabajos (no prices) |
 | `DEFAULT_PRICING_CONFIG` | Fallback when DB settings missing (`operatorMarginPercent` default **20**) |
 
 ## Config (admin)
@@ -39,7 +43,8 @@ Catalog categories/items: tables `moving_categories` / `moving_catalog_items`, s
 1. User completes `/cotizar` (no volume/price on screen). Steps include **helpers** after inventory — preference only in `volumeNotes` (`Ayudantes: …`); **does not** affect price yet.
 2. Server action recalculates with DB config (never trust client totals).
 3. Creates `clients` + `quote_requests` (source=`website`) + `budgets` (status=**draft**) + `budget_items`
-   - One **unit** line per inventory item (+ packing boxes) for ops editing
+   - One **unit** line per inventory item (+ packing boxes) for ops editing, with `unitVolumeM3` stored
+   - Adding / editing / removing unit lines in the admin (`src/lib/actions/budgets.ts` → `applyInventoryVolumeDelta`) moves the m³ line and price by the volume change
    - Separate **m3/fixed** charge lines for internal price estimate
 4. Admin reviews/adjusts presupuesto (`budget_items` is source of truth; `budget.notes` + `quote_requests.volumeNotes` sync via `syncBudgetItemsInNotes`; **do not** copy that into `jobs.notes`) → mark sent / email client (**total is net**, shown as `$X + IVA`) → approve → `jobs` (`notes` empty)
 5. Operator sees **Tu pago** via `operatorPayoutFromClientTotal` only — never the client total

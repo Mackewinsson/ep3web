@@ -474,6 +474,7 @@ export type BudgetLineDraft = {
   pricingUnit: "fixed" | "m3" | "unit";
   quantity: number;
   unitPrice: number;
+  unitVolumeM3?: number;
 };
 
 export type QuoteEstimate = {
@@ -582,6 +583,158 @@ function helperLabel(helpers: HelpersOption): string {
   }
 }
 
+export type VolumeBreakdownLine = {
+  name: string;
+  quantity: number;
+  isPackingBox: boolean;
+  /** null when no m³ is stored and the item is not in the catalog. */
+  unitVolumeM3: number | null;
+  lineVolumeM3: number | null;
+};
+
+export type VolumeBreakdown = {
+  lines: VolumeBreakdownLine[];
+  catalogM3: number;
+  /** m³ billed on the budget (m³ lines), or the quote estimate when none. */
+  chargedM3: number | null;
+  /** chargedM3 not explained by catalog volumes (custom items, manual adjustments). */
+  unexplainedM3: number;
+  totalItems: number;
+};
+
+export type VolumeCatalogEntry = Pick<VolumeItem, "name" | "volumeM3">;
+
+export type VolumeBudgetItem = NotesBudgetItem & {
+  unitVolumeM3?: number | null;
+};
+
+/** Volume lookup for budget unit lines: stored value → packing box → catalog by name. */
+export function createUnitVolumeResolver(
+  catalog: VolumeCatalogEntry[],
+  boxVolumeM3: number,
+) {
+  const volumeByName = new Map(
+    catalog.map((c) => [normalizeInventoryName(c.name).toLowerCase(), c.volumeM3]),
+  );
+  return (item: Pick<VolumeBudgetItem, "description" | "unitVolumeM3">) => {
+    if (item.unitVolumeM3 != null && Number.isFinite(item.unitVolumeM3)) {
+      return item.unitVolumeM3;
+    }
+    if (isPackingBoxItem(item.description)) return boxVolumeM3;
+    return (
+      volumeByName.get(normalizeInventoryName(item.description).toLowerCase()) ??
+      null
+    );
+  };
+}
+
+/** m³ contributed by one budget line (only inventory "unit" lines carry volume). */
+export function budgetItemVolumeM3(
+  item: VolumeBudgetItem,
+  resolve: ReturnType<typeof createUnitVolumeResolver>,
+): number {
+  if (item.pricingUnit !== "unit" || item.quantity <= 0) return 0;
+  return (resolve(item) ?? 0) * item.quantity;
+}
+
+const AUTO_M3_LINE_RE = /^Mudanza estimada\b/i;
+
+export function autoM3LineDescription(totalM3: number) {
+  return `Mudanza estimada (${formatM3(totalM3)} m³)`;
+}
+
+/**
+ * New state of the billed m³ line after inventory volume changed by `deltaM3`.
+ * Keeps admin edits to the line (only the delta is applied).
+ */
+export function adjustM3Line(input: {
+  current: { description: string; quantity: number } | null;
+  deltaM3: number;
+}):
+  | { action: "none" }
+  | { action: "delete" }
+  | { action: "upsert"; description: string; quantity: number } {
+  const delta = Number(input.deltaM3.toFixed(3));
+  if (Math.abs(delta) < 0.005) return { action: "none" };
+
+  const base = input.current?.quantity ?? 0;
+  const quantity = Math.max(0, Number((base + delta).toFixed(2)));
+  if (!input.current && quantity <= 0) return { action: "none" };
+  if (quantity <= 0) return { action: "delete" };
+
+  const description =
+    !input.current || AUTO_M3_LINE_RE.test(input.current.description)
+      ? autoM3LineDescription(quantity)
+      : input.current.description;
+  return { action: "upsert", description, quantity };
+}
+
+/** Picks the billed m³ line to keep in sync (auto "Mudanza estimada" first). */
+export function pickAutoM3Line<T extends { description: string; pricingUnit: string }>(
+  items: T[],
+): T | null {
+  const m3 = items.filter((i) => i.pricingUnit === "m3");
+  return m3.find((i) => AUTO_M3_LINE_RE.test(i.description)) ?? m3[0] ?? null;
+}
+
+/**
+ * Explains where budget m³ come from: unit lines with stored or catalog volumes,
+ * packing boxes at the configured box volume, and the billed m³ total.
+ */
+export function buildVolumeBreakdown(input: {
+  items: VolumeBudgetItem[];
+  catalog: VolumeCatalogEntry[];
+  boxVolumeM3: number;
+  fallbackChargedM3?: number | null;
+}): VolumeBreakdown {
+  const resolve = createUnitVolumeResolver(input.catalog, input.boxVolumeM3);
+
+  const lines: VolumeBreakdownLine[] = [];
+  let catalogM3 = 0;
+  let totalItems = 0;
+  let m3Lines = 0;
+  let hasM3Line = false;
+
+  for (const item of input.items) {
+    if (item.pricingUnit === "m3") {
+      hasM3Line = true;
+      m3Lines += item.quantity;
+      continue;
+    }
+    if (item.pricingUnit !== "unit" || item.quantity <= 0) continue;
+
+    const isPackingBox = isPackingBoxItem(item.description);
+    const unit = resolve(item);
+    const lineVolume = unit == null ? null : unit * item.quantity;
+    if (lineVolume != null) catalogM3 += lineVolume;
+    totalItems += item.quantity;
+    lines.push({
+      name: item.description,
+      quantity: item.quantity,
+      isPackingBox,
+      unitVolumeM3: unit,
+      lineVolumeM3: lineVolume,
+    });
+  }
+
+  lines.sort((a, b) => {
+    if (a.isPackingBox !== b.isPackingBox) return a.isPackingBox ? 1 : -1;
+    return a.name.localeCompare(b.name, "es");
+  });
+
+  const chargedM3 = hasM3Line ? m3Lines : (input.fallbackChargedM3 ?? null);
+  const unexplainedM3 =
+    chargedM3 == null ? 0 : Math.max(0, Number((chargedM3 - catalogM3).toFixed(2)));
+
+  return {
+    lines,
+    catalogM3: Number(catalogM3.toFixed(2)),
+    chargedM3,
+    unexplainedM3,
+    totalItems,
+  };
+}
+
 /**
  * Full estimate used by the public wizard (preview) and server submit (authoritative).
  */
@@ -619,6 +772,7 @@ export function buildQuoteEstimate(input: {
       pricingUnit: "unit",
       quantity: line.quantity,
       unitPrice: 0,
+      unitVolumeM3: line.unitVolumeM3,
     });
   }
 
@@ -628,12 +782,13 @@ export function buildQuoteEstimate(input: {
       pricingUnit: "unit",
       quantity: packingBoxes,
       unitPrice: 0,
+      unitVolumeM3: config.boxVolumeM3,
     });
   }
 
   if (totalM3 > 0) {
     budgetLines.push({
-      description: `Mudanza estimada (${formatM3(totalM3)} m³)`,
+      description: autoM3LineDescription(totalM3),
       pricingUnit: "m3",
       quantity: Number(totalM3.toFixed(2)),
       unitPrice: config.pricePerM3,

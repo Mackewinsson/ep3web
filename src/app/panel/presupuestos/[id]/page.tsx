@@ -11,6 +11,7 @@ import {
   SubmitButton,
   TextArea,
 } from "@/components/panel/ui";
+import { VolumeBreakdownList } from "@/components/panel/volume-breakdown-list";
 import { db } from "@/db";
 import { budgetItems, budgets, clients, jobs } from "@/db/schema";
 import {
@@ -21,6 +22,12 @@ import {
   updateBudgetMeta,
 } from "@/lib/actions/budgets";
 import { ensureClientInventoryFromNotes } from "@/lib/budget-notes";
+import { formatM3 } from "@/lib/quote-pricing";
+import {
+  getBudgetVolumeBreakdown,
+  loadUnitVolumeResolver,
+  parseStoredVolume,
+} from "@/lib/volume-breakdown";
 import {
   BUDGET_STATUS_LABELS,
   budgetStatusTone,
@@ -91,6 +98,11 @@ export default async function PresupuestoDetailPage({ params }: Props) {
     .from(jobs)
     .where(eq(jobs.budgetId, id))
     .orderBy(asc(jobs.createdAt));
+
+  const [volumeBreakdown, resolveVolume] = await Promise.all([
+    getBudgetVolumeBreakdown(id),
+    loadUnitVolumeResolver(),
+  ]);
 
   const updateMeta = updateBudgetMeta.bind(null, id);
   const addItem = addBudgetItem.bind(null, id);
@@ -195,6 +207,21 @@ export default async function PresupuestoDetailPage({ params }: Props) {
         </form>
       </PanelCard>
 
+      <PanelCard>
+        <h2 className="mb-1 font-semibold text-ep3-navy">
+          De dónde vienen los m³
+        </h2>
+        <p className="mb-3 text-sm text-ep3-navy/60">
+          Volumen de cada ítem (cotizador web + agregados a mano). Al agregar,
+          editar o quitar ítems con m³, «Mudanza estimada» y el precio se
+          ajustan solos.
+        </p>
+        <VolumeBreakdownList
+          breakdown={volumeBreakdown}
+          overChargedLineHint="Los ítems suman más m³ que la línea «Por m³». Ajusta su cantidad si agregaste ítems."
+        />
+      </PanelCard>
+
       <section className="space-y-3">
         <div>
           <h2 className="font-semibold text-ep3-navy">
@@ -216,7 +243,14 @@ export default async function PresupuestoDetailPage({ params }: Props) {
         ) : (
           <div className="space-y-3">
             {inventoryItems.map((item) => (
-              <BudgetItemCard key={item.id} item={item} />
+              <BudgetItemCard
+                key={item.id}
+                item={item}
+                resolvedVolumeM3={resolveVolume({
+                  description: item.description,
+                  unitVolumeM3: parseStoredVolume(item.unitVolumeM3),
+                })}
+              />
             ))}
           </div>
         )}
@@ -276,6 +310,18 @@ export default async function PresupuestoDetailPage({ params }: Props) {
             defaultValue={0}
             required
           />
+          <div>
+            <Field
+              label="m³ por unidad (inventario)"
+              name="unitVolumeM3"
+              type="number"
+              step="0.001"
+            />
+            <p className="mt-1 text-xs text-ep3-navy/55">
+              Vacío = m³ del catálogo si el nombre coincide. Suma a «Mudanza
+              estimada» y al precio.
+            </p>
+          </div>
           <div className="sm:col-span-2">
             <SubmitButton label="Agregar ítem" />
           </div>
@@ -287,6 +333,7 @@ export default async function PresupuestoDetailPage({ params }: Props) {
 
 function BudgetItemCard({
   item,
+  resolvedVolumeM3 = null,
 }: {
   item: {
     id: string;
@@ -295,6 +342,7 @@ function BudgetItemCard({
     quantity: string;
     unitPrice: string;
   };
+  resolvedVolumeM3?: number | null;
 }) {
   const sub = Number(item.quantity) * Number(item.unitPrice);
 
@@ -363,6 +411,26 @@ function BudgetItemCard({
             />
           </label>
         </div>
+
+        {item.pricingUnit === "unit" ? (
+          <label className="block text-sm sm:max-w-xs">
+            <span className="mb-1 block text-xs text-ep3-navy/55">
+              m³ por unidad
+              {resolvedVolumeM3 != null
+                ? ` · total ${formatM3(resolvedVolumeM3 * Number(item.quantity))} m³`
+                : ""}
+            </span>
+            <input
+              name="unitVolumeM3"
+              type="number"
+              step="0.001"
+              min="0"
+              defaultValue={resolvedVolumeM3 ?? undefined}
+              placeholder="Sin m³"
+              className={inputClassName}
+            />
+          </label>
+        ) : null}
 
         <div className="flex flex-col gap-2 border-t border-ep3-navy/10 pt-3 sm:flex-row sm:flex-wrap">
           <button

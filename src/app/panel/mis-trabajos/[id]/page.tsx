@@ -8,6 +8,7 @@ import {
   PanelCard,
   StatusBadge,
 } from "@/components/panel/ui";
+import { VolumeBreakdownList } from "@/components/panel/volume-breakdown-list";
 import { db } from "@/db";
 import { drivers, trucks } from "@/db/schema";
 import { driverAdvanceJob, operatorDeclineJob } from "@/lib/actions/jobs";
@@ -27,6 +28,7 @@ import {
   operatorFacingAmounts,
   operatorSafeNotes,
 } from "@/lib/jobs-view";
+import { getBudgetVolumeBreakdown } from "@/lib/volume-breakdown";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -56,6 +58,9 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
   );
 
   const volume = formatVolume(job.estimatedM3, job.estimatedItems);
+  const volumeBreakdown = job.budgetId
+    ? await getBudgetVolumeBreakdown(job.budgetId, job.estimatedM3)
+    : null;
   const when = [formatDate(job.scheduledDate), job.scheduledTime]
     .filter(Boolean)
     .join(" · ");
@@ -169,10 +174,18 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 </div>
               </>
             ) : null}
-            {volume ? (
+            {volume && volumeBreakdown?.chargedM3 == null ? (
               <div className="flex justify-between gap-3">
                 <dt className="text-ep3-navy/55">Carga</dt>
                 <dd className="text-right font-medium text-ep3-navy">{volume}</dd>
+              </div>
+            ) : null}
+            {volumeBreakdown ? (
+              <div>
+                <dt className="mb-2 text-ep3-navy/55">Inventario y m³</dt>
+                <dd>
+                  <VolumeBreakdownList breakdown={volumeBreakdown} />
+                </dd>
               </div>
             ) : null}
             {volumeNotes ? (
