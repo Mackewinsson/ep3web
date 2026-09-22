@@ -9,6 +9,7 @@ import {
   resolveQuotedClientTotal,
   stripClientPriceLines,
   syncAutoEstimateInNotes,
+  syncBudgetItemsInNotes,
 } from "./calculate";
 
 describe("operatorPayoutFromClientTotal", () => {
@@ -170,5 +171,71 @@ describe("formatM3", () => {
     assert.equal(formatM3(12.29), "12.29");
     assert.equal(formatM3(12), "12");
     assert.equal(formatM3(12.1), "12.1");
+  });
+});
+
+describe("syncAutoEstimateInNotes amount override", () => {
+  it("uses the budget total instead of scaling", () => {
+    const out = syncAutoEstimateInNotes(
+      "Estimación auto: 10 m³ · $100.000 CLP",
+      10,
+      { amount: 458_500 },
+    );
+    assert.equal(out, "Estimación auto: 10 m³ · $458.500 CLP");
+  });
+});
+
+describe("syncBudgetItemsInNotes", () => {
+  const seed = [
+    "Origen: casa — Santiago",
+    "Ayudantes: Chofer + 1",
+    "Inventario: 2× Sofá, 1× Silla",
+    "Cajas: 6",
+    "Estimación auto: 10 m³ · $200.000 CLP",
+  ].join("\n");
+
+  it("adds a manual unit item to Inventario and the new total to Estimación auto", () => {
+    const out = syncBudgetItemsInNotes(
+      seed,
+      [
+        { description: "Sofá", pricingUnit: "unit", quantity: 2 },
+        { description: "Silla", pricingUnit: "unit", quantity: 1 },
+        { description: "Piano", pricingUnit: "unit", quantity: 1 },
+        { description: "Caja de mudanza", pricingUnit: "unit", quantity: 6 },
+        {
+          description: "Mudanza estimada (10 m³)",
+          pricingUnit: "m3",
+          quantity: 10,
+        },
+      ],
+      { totalAmount: 350_000, estimatedM3: 10 },
+    );
+    assert.match(out, /Inventario: 2× Sofá, 1× Silla, 1× Piano/);
+    assert.match(out, /Cajas: 6/);
+    assert.match(out, /Estimación auto: 10 m³ · \$350\.000 CLP/);
+    assert.match(out, /Origen: casa — Santiago/);
+    assert.doesNotMatch(out, /^Cargos:/m);
+  });
+
+  it("lists a manual fixed charge on Cargos without dropping other lines", () => {
+    const out = syncBudgetItemsInNotes(
+      seed,
+      [
+        { description: "Sofá", pricingUnit: "unit", quantity: 2 },
+        { description: "Recargo piano", pricingUnit: "fixed", quantity: 1 },
+        { description: "Caja de mudanza", pricingUnit: "unit", quantity: 6 },
+      ],
+      { totalAmount: 250_000, estimatedM3: 10 },
+    );
+    assert.match(out, /^Cargos: Recargo piano$/m);
+    assert.match(out, /Ayudantes: Chofer \+ 1/);
+  });
+
+  it("drops a removed unit item from Inventario", () => {
+    const out = syncBudgetItemsInNotes(seed, [
+      { description: "Sofá", pricingUnit: "unit", quantity: 2 },
+    ]);
+    assert.match(out, /Inventario: 2× Sofá$/m);
+    assert.doesNotMatch(out, /Silla/);
   });
 });

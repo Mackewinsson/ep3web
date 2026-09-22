@@ -31,6 +31,7 @@ import {
   formatVolume,
   getJobOperationalDetail,
   mapsUrl,
+  notesContentEqual,
   operatorFacingAmounts,
 } from "@/lib/jobs-view";
 
@@ -121,6 +122,8 @@ export default async function TrabajoDetailPage({ params }: Props) {
     .filter(Boolean)
     .join(" · ");
   const statusBadge = adminJobBadge(job.status, readyForEnCamino);
+  const volumeNotesDistinct =
+    Boolean(job.volumeNotes) && !notesContentEqual(job.volumeNotes, job.notes);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -279,16 +282,25 @@ export default async function TrabajoDetailPage({ params }: Props) {
               <dd className="text-ep3-navy">{volume}</dd>
             </div>
           ) : null}
-          {job.volumeNotes ? (
+          {volumeNotesDistinct ? (
             <div className="sm:col-span-2">
               <dt className="text-ep3-navy/60">Detalle volumen</dt>
-              <dd className="text-ep3-navy">{job.volumeNotes}</dd>
+              <dd className="whitespace-pre-line text-ep3-navy">
+                {job.volumeNotes}
+              </dd>
             </div>
           ) : null}
           {job.notes ? (
             <div className="sm:col-span-2">
               <dt className="text-ep3-navy/60">Notas</dt>
-              <dd className="text-ep3-navy">{job.notes}</dd>
+              <dd className="whitespace-pre-line text-ep3-navy">{job.notes}</dd>
+            </div>
+          ) : job.volumeNotes ? (
+            <div className="sm:col-span-2">
+              <dt className="text-ep3-navy/60">Detalle volumen</dt>
+              <dd className="whitespace-pre-line text-ep3-navy">
+                {job.volumeNotes}
+              </dd>
             </div>
           ) : null}
         </dl>
