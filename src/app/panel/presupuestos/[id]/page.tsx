@@ -1,4 +1,5 @@
 import { asc, eq } from "drizzle-orm";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   BackLink,
@@ -11,7 +12,7 @@ import {
   TextArea,
 } from "@/components/panel/ui";
 import { db } from "@/db";
-import { budgetItems, budgets, clients } from "@/db/schema";
+import { budgetItems, budgets, clients, jobs } from "@/db/schema";
 import {
   addBudgetItem,
   deleteBudgetItem,
@@ -25,6 +26,7 @@ import {
   budgetStatusTone,
   formatClp,
   formatClpPlusIva,
+  JOB_STATUS_LABELS,
   PRICING_UNIT_LABELS,
 } from "@/lib/format";
 
@@ -80,6 +82,15 @@ export default async function PresupuestoDetailPage({ params }: Props) {
 
   const inventoryItems = items.filter((i) => i.pricingUnit === "unit");
   const chargeItems = items.filter((i) => i.pricingUnit !== "unit");
+
+  const linkedJobs = await db
+    .select({
+      id: jobs.id,
+      status: jobs.status,
+    })
+    .from(jobs)
+    .where(eq(jobs.budgetId, id))
+    .orderBy(asc(jobs.createdAt));
 
   const updateMeta = updateBudgetMeta.bind(null, id);
   const addItem = addBudgetItem.bind(null, id);
@@ -149,6 +160,24 @@ export default async function PresupuestoDetailPage({ params }: Props) {
             </>
           ) : null}
         </div>
+        {linkedJobs.length > 0 ? (
+          <ul className="mt-4 space-y-2 border-t border-ep3-navy/10 pt-4 text-sm">
+            {linkedJobs.map((job) => (
+              <li key={job.id}>
+                <Link
+                  href={`/panel/trabajos/${job.id}`}
+                  className="font-medium text-ep3-navy underline"
+                >
+                  Ver trabajo
+                </Link>
+                <span className="text-ep3-navy/60">
+                  {" · "}
+                  {JOB_STATUS_LABELS[job.status] ?? job.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </PanelCard>
 
       <PanelCard>

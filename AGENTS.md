@@ -48,7 +48,7 @@ Step order (`QuoteWizard`):
 3. **Assign operador** (`assignJob`) → ends prior open assignment as `reassigned` if any; new open `job_assignments`; job → **`assigned`**; notifies operador.
 4. Operator **Aceptar servicio** — job stays `assigned` (no new status enum). Admin list/detail/dashboard show **Por aceptar** vs **Aceptado** via `adminJobBadge` + `isReadyForEnCamino`. Operator list/detail show **Por aceptar** vs **Por iniciar** via `driverJobBadge`. `notifyAdmins` type `job_accepted` (“Servicio aceptado”). The panel bell polls (~3s) and `router.refresh()` when unread increases so status updates without a full reload.
 
-Admin can cancel / reassign while unlocked. Locked statuses: `completed`, `cancelled`.
+Admin can cancel / reassign while unlocked. Changing fecha/hora/notas on an assigned job notifies the operador (`job_updated`). Locked statuses: `completed`, `cancelled`.
 
 ---
 

@@ -156,6 +156,25 @@ export async function updateJobSchedule(jobId: string, formData: FormData) {
     })
     .where(eq(jobs.id, jobId));
 
+  if (job.status === "assigned" || job.status === "in_progress") {
+    const open = await getOpenAssignment(jobId);
+    if (open) {
+      const when = [parsed.scheduledDate, parsed.scheduledTime]
+        .filter(Boolean)
+        .join(" · ");
+      const { notifyDriver } = await import("@/lib/notifications");
+      await notifyDriver({
+        driverId: open.driverId,
+        type: "job_updated",
+        title: "Trabajo actualizado",
+        body: when
+          ? `Administración actualizó fecha/hora: ${when}`
+          : "Administración actualizó la programación o las notas.",
+        href: `/panel/mis-trabajos/${jobId}`,
+      });
+    }
+  }
+
   revalidateJobPaths(jobId);
   redirect(`/panel/trabajos/${jobId}`);
 }
