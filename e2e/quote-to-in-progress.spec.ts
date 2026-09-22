@@ -107,6 +107,27 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
   await expect(page.getByRole("button", { name: "En camino" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Rechazar trabajo" })).toHaveCount(0);
   await expect(page.getByText("Tu pago por este servicio")).toBeVisible();
+  const operatorJobUrl = page.url();
+
+  await logout(page);
+  await login(page, admin.email, admin.password);
+  await page.getByRole("button", { name: /Notificaciones/ }).click();
+  await expect(page.getByText("Servicio aceptado").first()).toBeVisible();
+  await expect(page.getByText(new RegExp(clientName)).first()).toBeVisible();
+
+  await page.goto("/panel/trabajos");
+  await openRecordByTitle(page, clientName);
+  await expect(page.getByText("Aceptado").first()).toBeVisible();
+  await expect(page.getByText(/Servicio aceptado/)).toBeVisible();
+  await expect(page.getByText(pickCrew.crewName).first()).toBeVisible();
+  await expect(page.getByText(pickTruck.plate).first()).toBeVisible();
+
+  await logout(page);
+  await login(page, operatorEmail, operatorPassword);
+  await page.goto(operatorJobUrl);
+  await expect(page.getByRole("button", { name: "En camino" })).toBeVisible({
+    timeout: 30_000,
+  });
 
   await page.getByRole("button", { name: "En camino" }).click();
   await expect(page.getByRole("button", { name: "Finalizar" })).toBeVisible({

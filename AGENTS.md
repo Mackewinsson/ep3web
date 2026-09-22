@@ -46,6 +46,7 @@ Step order (`QuoteWizard`):
 1. Review presupuesto at `/panel/presupuestos` (edit lines, send, approve, reject, expire).
 2. **Approve** → creates `jobs` with status `pending_assignment` (linked to budget); redirects to `/panel/trabajos/[id]`.
 3. **Assign operador** (`assignJob`) → ends prior open assignment as `reassigned` if any; new open `job_assignments`; job → **`assigned`**; notifies operador.
+4. Operator **Aceptar servicio** — job stays `assigned` (no new status enum). Admin list/detail/dashboard show **Por aceptar** vs **Aceptado** via `adminJobBadge` + `isReadyForEnCamino`. `notifyAdmins` type `job_accepted` (“Servicio aceptado”). The panel bell polls (~3s) and `router.refresh()` when unread increases so status updates without a full reload.
 
 Admin can cancel / reassign while unlocked. Locked statuses: `completed`, `cancelled`.
 
@@ -56,7 +57,7 @@ Admin can cancel / reassign while unlocked. Locked statuses: `completed`, `cance
 While `assigned` and **not** yet accepted:
 
 1. Sees **Tu pago** = quoted price minus `operatorMarginPercent` (default **20%** app commission → operador sees **80%**). If the budget total is $0, payout is derived from *Estimación auto* / m³. Never show client total. Notes via `operatorSafeNotes` / `stripClientPriceLines`.
-2. **Aceptar servicio** — only three fields: **nombre chofer** (fleet), **RUT chofer** (`crewDriverRut`), **patente camión** (fleet).
+2. **Aceptar servicio** — only three fields: **nombre chofer** (fleet), **RUT chofer** (`crewDriverRut`), **patente camión** (fleet). Notifies admins (`job_accepted`).
 3. **Rechazar trabajo** — only before accept. Ends assignment `declined`; job → `pending_assignment`; notifies admins. After accept, decline is hidden/blocked (admin must cancel).
 
 After accept (`isReadyForEnCamino`):
@@ -90,12 +91,13 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 | `src/lib/actions/jobs.ts` | Assign, accept, decline, advance |
 | `src/lib/job-rules.ts` | Pure status / ready-for-en-camino checks (unit-tested) |
 | `src/lib/job-lifecycle.ts` | Open assignment DB helpers; re-exports job-rules |
-| `src/lib/jobs-view.ts` | Operator queries, ownership, payout helpers, safe notes |
+| `src/lib/jobs-view.ts` | Operator queries, ownership, payout helpers, safe notes; `getOpenAssignmentSummaries` for admin accepted badges |
+| `src/lib/format.ts` | Labels + `adminJobBadge` (Por aceptar / Aceptado) |
 | `src/components/panel/accept-service-modal.tsx` | Accept UI (chofer / RUT / patente) |
 | `src/components/panel/quote-volume-sync-fields.tsx` | Admin cotización: sync m³ ↔ Estimación auto notes |
 | `src/db/schema.ts` | Tables; `crewDriverRut`; acceptance timestamp on assignment |
 
-**Tests:** `npm run test:unit` (pricing + job rules). E2E: `npm run test:e2e`.
+**Tests:** `npm run test:unit` (pricing + job rules + admin badges). E2E: `npm run test:e2e`.
 
 ---
 
@@ -105,4 +107,5 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 - Duplicate volume / box / price formulas outside `src/lib/quote-pricing/`.
 - Treat accept as a full salvoconducto form (folio, comunas, etc.) — only chofer + RUT + patente.
 - Invent alternate decline rules (decline only before accept).
+- Invent a new `jobs.status` for accept — derive **Aceptado** from `isReadyForEnCamino`.
 - Give drivers access to admin panel routes.

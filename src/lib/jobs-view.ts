@@ -10,7 +10,7 @@ import {
   quoteRequests,
   trucks,
 } from "@/db/schema";
-import { getOpenAssignment, jobIsLocked } from "@/lib/job-lifecycle";
+import { getOpenAssignment, isReadyForEnCamino, jobIsLocked } from "@/lib/job-lifecycle";
 import { getPricingConfig } from "@/lib/moving-catalog-db";
 import {
   operatorPayoutFromQuoteSources,
@@ -152,6 +152,36 @@ export async function getJobOperationalDetail(jobId: string) {
     clientTotalAmount,
     assignment: assignment ?? null,
   };
+}
+
+export async function getOpenAssignmentSummaries(jobIds: string[]) {
+  const map = new Map<string, { driverName: string; accepted: boolean }>();
+  if (jobIds.length === 0) return map;
+
+  const rows = await db
+    .select({
+      jobId: jobAssignments.jobId,
+      driverName: drivers.name,
+      truckId: jobAssignments.truckId,
+      crewDriverId: jobAssignments.crewDriverId,
+      crewDriverRut: jobAssignments.crewDriverRut,
+      salvoConductoCompletedAt: jobAssignments.salvoConductoCompletedAt,
+    })
+    .from(jobAssignments)
+    .innerJoin(drivers, eq(jobAssignments.driverId, drivers.id))
+    .where(
+      and(inArray(jobAssignments.jobId, jobIds), isNull(jobAssignments.endedAt)),
+    )
+    .orderBy(desc(jobAssignments.assignedAt));
+
+  for (const row of rows) {
+    if (map.has(row.jobId)) continue;
+    map.set(row.jobId, {
+      driverName: row.driverName,
+      accepted: isReadyForEnCamino(row),
+    });
+  }
+  return map;
 }
 
 export async function getOperatorMarginPercent() {

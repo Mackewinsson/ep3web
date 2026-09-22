@@ -1,12 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
   markAllNotificationsRead,
   markNotificationRead,
+  getPanelNotifications,
 } from "@/lib/actions/notifications";
 import type { NotificationDto } from "@/lib/notifications";
+
+const POLL_MS = 3000;
 
 function relativeTime(date: Date | string) {
   const d = typeof date === "string" ? new Date(date) : date;
@@ -34,13 +38,49 @@ export function NotificationBell({
   const rootRef = useRef<HTMLDivElement>(null);
   const [syncedItems, setSyncedItems] = useState(initialItems);
   const [syncedUnread, setSyncedUnread] = useState(unreadCount);
+  const router = useRouter();
+  const unreadRef = useRef(unreadCount);
 
   if (syncedItems !== initialItems || syncedUnread !== unreadCount) {
     setSyncedItems(initialItems);
     setSyncedUnread(unreadCount);
     setItems(initialItems);
     setUnread(unreadCount);
+    unreadRef.current = unreadCount;
   }
+
+  useEffect(() => {
+    unreadRef.current = unread;
+  }, [unread]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function poll() {
+      if (document.visibilityState === "hidden") return;
+      try {
+        const next = await getPanelNotifications();
+        if (cancelled) return;
+        const previousUnread = unreadRef.current;
+        setItems(next.items);
+        setUnread(next.unreadCount);
+        unreadRef.current = next.unreadCount;
+        if (next.unreadCount > previousUnread) {
+          router.refresh();
+        }
+      } catch {
+        // Keep showing the last known inbox if a poll fails.
+      }
+    }
+
+    const id = window.setInterval(poll, POLL_MS);
+    document.addEventListener("visibilitychange", poll);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", poll);
+    };
+  }, [router]);
 
   useEffect(() => {
     if (!open) return;
