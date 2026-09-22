@@ -3,7 +3,8 @@ import Link from "next/link";
 import { PageHeader, PanelCard, StatusBadge } from "@/components/panel/ui";
 import { db } from "@/db";
 import { budgets, clients, jobs, quoteRequests } from "@/db/schema";
-import { formatDate, JOB_STATUS_LABELS, jobStatusTone } from "@/lib/format";
+import { adminJobBadge, formatDate } from "@/lib/format";
+import { getOpenAssignmentSummaries } from "@/lib/jobs-view";
 
 export default async function PanelDashboardPage() {
   const today = new Date();
@@ -91,6 +92,9 @@ export default async function PanelDashboardPage() {
       .orderBy(asc(jobs.scheduledDate))
       .limit(5),
   ]);
+
+  const upcomingJobIds = upcomingJobs.map((j) => j.id);
+  const upcomingAssignments = await getOpenAssignmentSummaries(upcomingJobIds);
 
   const cards = [
     {
@@ -195,32 +199,35 @@ export default async function PanelDashboardPage() {
           </p>
         ) : (
           <ul className="divide-y divide-ep3-navy/5">
-            {upcomingJobs.map((job) => (
-              <li key={job.id}>
-                <Link
-                  href={`/panel/trabajos/${job.id}`}
-                  className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0">
-                    <p className="font-medium text-ep3-navy">{job.clientName}</p>
-                    <p className="truncate text-sm text-ep3-navy/70">
-                      {job.originAddress} → {job.destinationAddress}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className="text-sm text-ep3-navy/70">
-                      {[formatDate(job.scheduledDate), job.scheduledTime]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                    <StatusBadge
-                      label={JOB_STATUS_LABELS[job.status] ?? job.status}
-                      tone={jobStatusTone(job.status)}
-                    />
-                  </div>
-                </Link>
-              </li>
-            ))}
+            {upcomingJobs.map((job) => {
+              const badge = adminJobBadge(
+                job.status,
+                upcomingAssignments.get(job.id)?.accepted ?? false,
+              );
+              return (
+                <li key={job.id}>
+                  <Link
+                    href={`/panel/trabajos/${job.id}`}
+                    className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium text-ep3-navy">{job.clientName}</p>
+                      <p className="truncate text-sm text-ep3-navy/70">
+                        {job.originAddress} → {job.destinationAddress}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="text-sm text-ep3-navy/70">
+                        {[formatDate(job.scheduledDate), job.scheduledTime]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                      <StatusBadge label={badge.label} tone={badge.tone} />
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </PanelCard>

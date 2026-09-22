@@ -58,6 +58,7 @@ function revalidateJobPaths(jobId: string) {
   revalidatePath(`/panel/trabajos/${jobId}`);
   revalidatePath("/panel/trabajos");
   revalidatePath("/panel");
+  revalidatePath("/panel", "layout");
 }
 
 async function requireJob(jobId: string) {
@@ -374,6 +375,27 @@ export async function operatorAcceptJob(jobId: string, formData: FormData) {
       salvoConductoCompletedAt: new Date(),
     })
     .where(eq(jobAssignments.id, latest.assignmentId));
+
+  const [jobRow] = await db
+    .select({
+      originAddress: jobs.originAddress,
+      destinationAddress: jobs.destinationAddress,
+      clientName: clients.name,
+    })
+    .from(jobs)
+    .innerJoin(clients, eq(jobs.clientId, clients.id))
+    .where(eq(jobs.id, jobId))
+    .limit(1);
+
+  const { notifyAdmins } = await import("@/lib/notifications");
+  await notifyAdmins({
+    type: "job_accepted",
+    title: "Servicio aceptado",
+    body: jobRow
+      ? `${jobRow.clientName} · ${crew.name} · ${truck.plate} · ${jobRow.originAddress} → ${jobRow.destinationAddress}`
+      : `${crew.name} · ${truck.plate}`,
+    href: `/panel/trabajos/${jobId}`,
+  });
 
   revalidateJobPaths(jobId);
   redirect(`/panel/mis-trabajos/${jobId}`);

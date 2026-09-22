@@ -1,4 +1,4 @@
-import { desc, eq, inArray } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import {
   EmptyState,
@@ -8,8 +8,9 @@ import {
 } from "@/components/panel/ui";
 import { RecordList } from "@/components/panel/record-list";
 import { db } from "@/db";
-import { clients, drivers, jobAssignments, jobs } from "@/db/schema";
-import { formatDate, JOB_STATUS_LABELS, jobStatusTone } from "@/lib/format";
+import { clients, jobs } from "@/db/schema";
+import { adminJobBadge, formatDate } from "@/lib/format";
+import { getOpenAssignmentSummaries } from "@/lib/jobs-view";
 
 const FILTERS = [
   { value: "", label: "Todos" },
@@ -58,26 +59,7 @@ export default async function TrabajosPage({ searchParams }: Props) {
     : await query.orderBy(desc(jobs.createdAt));
 
   const jobIds = rows.map((r) => r.id);
-  const assignmentByJob = new Map<string, string>();
-
-  if (jobIds.length > 0) {
-    const assignmentRows = await db
-      .select({
-        jobId: jobAssignments.jobId,
-        driverName: drivers.name,
-        assignedAt: jobAssignments.assignedAt,
-      })
-      .from(jobAssignments)
-      .innerJoin(drivers, eq(jobAssignments.driverId, drivers.id))
-      .where(inArray(jobAssignments.jobId, jobIds))
-      .orderBy(desc(jobAssignments.assignedAt));
-
-    for (const row of assignmentRows) {
-      if (!assignmentByJob.has(row.jobId)) {
-        assignmentByJob.set(row.jobId, row.driverName);
-      }
-    }
-  }
+  const assignmentByJob = await getOpenAssignmentSummaries(jobIds);
 
   return (
     <div>
@@ -115,15 +97,16 @@ export default async function TrabajosPage({ searchParams }: Props) {
           <RecordList
             emptyMessage="No hay trabajos con este filtro."
             items={rows.map((row) => {
-              const assignedDriver = assignmentByJob.get(row.id);
+              const assignment = assignmentByJob.get(row.id);
+              const badge = adminJobBadge(row.status, assignment?.accepted ?? false);
               return {
                 id: row.id,
                 href: `/panel/trabajos/${row.id}`,
                 title: row.clientName,
                 badge: (
                   <StatusBadge
-                    label={JOB_STATUS_LABELS[row.status] ?? row.status}
-                    tone={jobStatusTone(row.status)}
+                    label={badge.label}
+                    tone={badge.tone}
                   />
                 ),
                 fields: [
@@ -138,7 +121,7 @@ export default async function TrabajosPage({ searchParams }: Props) {
                   { label: "Fecha", value: formatDate(row.scheduledDate) },
                   {
                     label: "Operador",
-                    value: assignedDriver ?? "Sin asignar",
+                    value: assignment?.driverName ?? "Sin asignar",
                   },
                   { label: "Teléfono", value: row.clientPhone ?? "—" },
                 ],

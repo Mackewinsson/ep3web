@@ -81,6 +81,22 @@ export function jobStatusTone(status: string): StatusTone {
   }
 }
 
+/** Admin-facing badge: split `assigned` into waiting vs accepted by the operator. */
+export function adminJobBadge(
+  status: string,
+  accepted: boolean,
+): { label: string; tone: StatusTone } {
+  if (status === "assigned") {
+    return accepted
+      ? { label: "Aceptado", tone: "success" }
+      : { label: "Por aceptar", tone: "warning" };
+  }
+  return {
+    label: JOB_STATUS_LABELS[status] ?? status,
+    tone: jobStatusTone(status),
+  };
+}
+
 export function quoteStatusTone(status: string): StatusTone {
   switch (status) {
     case "new":

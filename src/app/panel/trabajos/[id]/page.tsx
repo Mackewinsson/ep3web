@@ -21,10 +21,9 @@ import {
 } from "@/lib/actions/jobs";
 import {
   ASSIGNMENT_END_REASON_LABELS,
+  adminJobBadge,
   formatClp,
   formatDate,
-  JOB_STATUS_LABELS,
-  jobStatusTone,
 } from "@/lib/format";
 import { isReadyForEnCamino, jobIsLocked } from "@/lib/job-lifecycle";
 import {
@@ -120,6 +119,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
   const when = [formatDate(job.scheduledDate), job.scheduledTime]
     .filter(Boolean)
     .join(" · ");
+  const statusBadge = adminJobBadge(job.status, readyForEnCamino);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -134,10 +134,25 @@ export default async function TrabajoDetailPage({ params }: Props) {
       <PanelCard>
         <div className="mb-3">
           <StatusBadge
-            label={JOB_STATUS_LABELS[job.status] ?? job.status}
-            tone={jobStatusTone(job.status)}
+            label={statusBadge.label}
+            tone={statusBadge.tone}
           />
         </div>
+        {job.status === "assigned" && readyForEnCamino ? (
+          <p className="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
+            Servicio aceptado
+            {job.assignment?.crewDriverName
+              ? ` · ${job.assignment.crewDriverName}`
+              : ""}
+            {job.assignment?.truckPlate
+              ? ` · ${job.assignment.truckPlate}`
+              : ""}
+            {job.assignment?.crewDriverRut
+              ? ` · RUT ${job.assignment.crewDriverRut}`
+              : ""}
+            .
+          </p>
+        ) : null}
         {job.status === "in_progress" ? (
           <p className="mb-4 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-950">
             Aviso al cliente (simulado): se envió correo de que su mudanza va en
@@ -202,7 +217,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
             <dt className="text-ep3-navy/60">Aceptación</dt>
             <dd className="font-medium text-ep3-navy">
               {job.assignment?.salvoConductoCompletedAt
-                ? "Registrada"
+                ? "Aceptado"
                 : job.assignment
                   ? "Pendiente"
                   : "—"}
