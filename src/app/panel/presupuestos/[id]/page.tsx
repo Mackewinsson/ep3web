@@ -19,6 +19,7 @@ import {
   updateBudgetItem,
   updateBudgetMeta,
 } from "@/lib/actions/budgets";
+import { ensureClientInventoryFromNotes } from "@/lib/budget-notes";
 import {
   BUDGET_STATUS_LABELS,
   budgetStatusTone,
@@ -52,6 +53,25 @@ export default async function PresupuestoDetailPage({ params }: Props) {
 
   if (!budget) notFound();
 
+  const { hydrated } = await ensureClientInventoryFromNotes(id);
+  const [synced] = hydrated
+    ? await db
+        .select({
+          id: budgets.id,
+          title: budgets.title,
+          status: budgets.status,
+          totalAmount: budgets.totalAmount,
+          validUntil: budgets.validUntil,
+          notes: budgets.notes,
+          clientName: clients.name,
+        })
+        .from(budgets)
+        .innerJoin(clients, eq(budgets.clientId, clients.id))
+        .where(eq(budgets.id, id))
+        .limit(1)
+    : [null];
+  const row = synced ?? budget;
+
   const items = await db
     .select()
     .from(budgetItems)
@@ -69,19 +89,19 @@ export default async function PresupuestoDetailPage({ params }: Props) {
       <div>
         <BackLink href="/panel/presupuestos" label="Volver a presupuestos" />
         <PageHeader
-          title={budget.title}
-          description={`Cliente: ${budget.clientName}`}
+          title={row.title}
+          description={`Cliente: ${row.clientName}`}
         />
       </div>
 
       <PanelCard>
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <StatusBadge
-            label={BUDGET_STATUS_LABELS[budget.status] ?? budget.status}
-            tone={budgetStatusTone(budget.status)}
+            label={BUDGET_STATUS_LABELS[row.status] ?? row.status}
+            tone={budgetStatusTone(row.status)}
           />
           <p className="text-lg font-semibold text-ep3-navy">
-            Total: {formatClpPlusIva(budget.totalAmount)}
+            Total: {formatClpPlusIva(row.totalAmount)}
           </p>
           <p className="w-full text-sm text-ep3-navy/60">
             El cliente ve este monto + IVA. El IVA no está incluido y se suma
@@ -89,7 +109,7 @@ export default async function PresupuestoDetailPage({ params }: Props) {
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          {budget.status === "draft" ? (
+          {row.status === "draft" ? (
             <form
               action={setBudgetStatus.bind(null, id, "sent")}
               className="w-full sm:w-auto"
@@ -102,7 +122,7 @@ export default async function PresupuestoDetailPage({ params }: Props) {
               </button>
             </form>
           ) : null}
-          {budget.status === "sent" || budget.status === "draft" ? (
+          {row.status === "sent" || row.status === "draft" ? (
             <>
               <form
                 action={setBudgetStatus.bind(null, id, "approved")}
@@ -134,14 +154,14 @@ export default async function PresupuestoDetailPage({ params }: Props) {
       <PanelCard>
         <h2 className="mb-3 font-semibold text-ep3-navy">Datos</h2>
         <form action={updateMeta} className="space-y-4">
-          <Field label="Título" name="title" required defaultValue={budget.title} />
+          <Field label="Título" name="title" required defaultValue={row.title} />
           <Field
             label="Válido hasta"
             name="validUntil"
             type="date"
-            defaultValue={budget.validUntil ?? undefined}
+            defaultValue={row.validUntil ?? undefined}
           />
-          <TextArea label="Notas" name="notes" defaultValue={budget.notes} />
+          <TextArea label="Notas" name="notes" defaultValue={row.notes} />
           <SubmitButton label="Guardar datos" />
         </form>
       </PanelCard>

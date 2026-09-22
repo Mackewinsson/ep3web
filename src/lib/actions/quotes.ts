@@ -12,6 +12,7 @@ import {
   servicePackages,
 } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
+import { syncLinkedNotesFromBudgetItems } from "@/lib/budget-notes";
 import { ensureBudgetQuotedTotal } from "@/lib/budget-totals";
 import { upsertClientByContact } from "@/lib/clients";
 
@@ -196,6 +197,7 @@ export async function convertQuoteToBudget(quoteId: string) {
   }
 
   await ensureBudgetQuotedTotal(budget.id);
+  await syncLinkedNotesFromBudgetItems(budget.id);
 
   await db
     .update(quoteRequests)

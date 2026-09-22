@@ -151,7 +151,7 @@ export async function updateJobSchedule(jobId: string, formData: FormData) {
     .set({
       scheduledDate: parsed.scheduledDate || null,
       scheduledTime: parsed.scheduledTime || null,
-      notes: parsed.notes,
+      notes: parsed.notes?.trim() || null,
       updatedAt: new Date(),
     })
     .where(eq(jobs.id, jobId));

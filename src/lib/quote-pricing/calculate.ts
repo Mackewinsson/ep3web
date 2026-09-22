@@ -219,7 +219,105 @@ export type NotesBudgetItem = {
 };
 
 function isPackingBoxItem(description: string) {
-  return /caja/i.test(description);
+  return /^cajas? de mudanza$/i.test(description.trim());
+}
+
+const INVENTARIO_HEADER_RE = /^Inventario:\s*(.*)$/i;
+const INVENTARIO_ENTRY_RE = /(\d+)\s*[×xX]\s*([^,]+)/g;
+const NOTES_SECTION_HEADER_RE =
+  /^(Origen|Destino|Ayudantes|Delicados|Cajas|Cargos|Estimaci[oó]n auto|Notas cliente|Hora preferida|Inventario)\s*:/i;
+
+export function normalizeInventoryName(name: string) {
+  return name
+    .replace(/[×xX]/g, "x")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function parseInventarioList(text: string): NotesBudgetItem[] {
+  const entries: NotesBudgetItem[] = [];
+  const re = new RegExp(INVENTARIO_ENTRY_RE.source, "g");
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text))) {
+    const quantity = Number(match[1]);
+    const name = match[2].trim();
+    if (!name || name === "—") continue;
+    entries.push({
+      description: name,
+      pricingUnit: "unit",
+      quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
+    });
+  }
+  return entries;
+}
+
+/** Parse `Inventario: 2× Sofá, 1× Silla` (and following item lines) from notes. */
+export function parseInventarioEntries(
+  notes: string | null | undefined,
+): NotesBudgetItem[] {
+  if (!notes) return [];
+  const lines = notes.split("\n");
+  const found: NotesBudgetItem[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const header = lines[i].match(INVENTARIO_HEADER_RE);
+    if (!header) continue;
+    const rest = header[1].trim();
+    if (rest && rest !== "—") found.push(...parseInventarioList(rest));
+    for (let j = i + 1; j < lines.length; j++) {
+      const cont = lines[j].trim();
+      if (!cont) break;
+      if (NOTES_SECTION_HEADER_RE.test(cont)) break;
+      found.push(...parseInventarioList(cont));
+    }
+  }
+
+  const byName = new Map<string, NotesBudgetItem>();
+  for (const entry of found) {
+    const key = normalizeInventoryName(entry.description);
+    if (!key) continue;
+    const prev = byName.get(key);
+    if (!prev || entry.quantity > prev.quantity) byName.set(key, entry);
+  }
+  return [...byName.values()];
+}
+
+export function inventoryItemsMissingFromBudget(
+  notes: string | null | undefined,
+  items: NotesBudgetItem[],
+): NotesBudgetItem[] {
+  const present = new Set(
+    items
+      .filter(
+        (item) =>
+          item.pricingUnit === "unit" &&
+          !isPackingBoxItem(item.description),
+      )
+      .map((item) => normalizeInventoryName(item.description)),
+  );
+  return parseInventarioEntries(notes).filter(
+    (entry) => !present.has(normalizeInventoryName(entry.description)),
+  );
+}
+
+function mergeUnitInventory(
+  fromItems: NotesBudgetItem[],
+  notes: string | null | undefined,
+  mergeFromNotes: boolean,
+): NotesBudgetItem[] {
+  const byName = new Map<string, NotesBudgetItem>();
+  for (const item of fromItems) {
+    const key = normalizeInventoryName(item.description);
+    if (key) byName.set(key, item);
+  }
+  if (mergeFromNotes) {
+    for (const entry of parseInventarioEntries(notes)) {
+      const key = normalizeInventoryName(entry.description);
+      if (key && !byName.has(key)) byName.set(key, entry);
+    }
+  }
+  return [...byName.values()];
 }
 
 function isPrimaryM3Estimate(description: string, pricingUnit: string) {
@@ -245,6 +343,22 @@ const CARGOS_LINE_RE = /^Cargos:\s*.*$/im;
 const CAJAS_LINE_RE = /^Cajas:\s*.*$/im;
 const AUTO_LINE_ANCHOR_RE = /^(Estimaci[oó]n auto:.*)$/im;
 
+function collapseInventarioBlock(notes: string): string {
+  const lines = notes.split("\n");
+  const out: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    out.push(lines[i]);
+    if (!INVENTARIO_HEADER_RE.test(lines[i])) continue;
+    while (i + 1 < lines.length) {
+      const cont = lines[i + 1].trim();
+      if (!cont) break;
+      if (NOTES_SECTION_HEADER_RE.test(cont)) break;
+      i += 1;
+    }
+  }
+  return out.join("\n");
+}
+
 function upsertNotesLine(
   notes: string,
   lineRe: RegExp,
@@ -266,16 +380,24 @@ function upsertNotesLine(
 /**
  * Rebuild Inventario / Cargos / Cajas / Estimación auto from budget_items.
  * Other note lines (origen, ayudantes, notas cliente, …) are kept.
+ * By default, Inventario also keeps names that only exist in the notes
+ * (client wizard list) so adding a manual line cannot wipe that detail.
  */
 export function syncBudgetItemsInNotes(
   notes: string | null | undefined,
   items: NotesBudgetItem[],
-  opts?: { totalAmount?: number | null; estimatedM3?: number | null },
+  opts?: {
+    totalAmount?: number | null;
+    estimatedM3?: number | null;
+    mergeInventory?: boolean;
+  },
 ): string {
   const valid = items.filter((item) => item.description?.trim());
   const unitItems = valid.filter((item) => item.pricingUnit === "unit");
-  const inventoryItems = unitItems.filter(
-    (item) => !isPackingBoxItem(item.description),
+  const inventoryItems = mergeUnitInventory(
+    unitItems.filter((item) => !isPackingBoxItem(item.description)),
+    notes,
+    opts?.mergeInventory !== false,
   );
   const boxItems = unitItems.filter((item) => isPackingBoxItem(item.description));
   const chargeItems = valid.filter(
@@ -294,7 +416,7 @@ export function syncBudgetItemsInNotes(
     return sum + (Number.isFinite(item.quantity) ? item.quantity : 0);
   }, 0);
 
-  let next = notes ?? "";
+  let next = collapseInventarioBlock(notes ?? "");
   next = upsertNotesLine(
     next,
     INVENTARIO_LINE_RE,

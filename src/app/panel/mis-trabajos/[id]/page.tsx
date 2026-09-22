@@ -23,9 +23,9 @@ import {
   getJobOperationalDetail,
   isReadyForEnCamino,
   mapsUrl,
+  operationalJobNotes,
   operatorFacingAmounts,
   operatorSafeNotes,
-  notesContentEqual,
 } from "@/lib/jobs-view";
 
 type Props = { params: Promise<{ id: string }> };
@@ -50,9 +50,10 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
     },
   );
   const volumeNotes = operatorSafeNotes(job.volumeNotes);
-  const jobNotes = operatorSafeNotes(job.notes);
-  const volumeNotesDistinct =
-    Boolean(volumeNotes) && !notesContentEqual(volumeNotes, jobNotes);
+  const jobNotes = operationalJobNotes(
+    operatorSafeNotes(job.notes),
+    volumeNotes,
+  );
 
   const volume = formatVolume(job.estimatedM3, job.estimatedItems);
   const when = [formatDate(job.scheduledDate), job.scheduledTime]
@@ -174,7 +175,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 <dd className="text-right font-medium text-ep3-navy">{volume}</dd>
               </div>
             ) : null}
-            {volumeNotesDistinct ? (
+            {volumeNotes ? (
               <div>
                 <dt className="text-ep3-navy/55">Detalle volumen</dt>
                 <dd className="mt-1 whitespace-pre-line text-ep3-navy">
@@ -193,13 +194,6 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 <dt className="text-ep3-navy/55">Notas del trabajo</dt>
                 <dd className="mt-1 whitespace-pre-line text-ep3-navy">
                   {jobNotes}
-                </dd>
-              </div>
-            ) : volumeNotes ? (
-              <div>
-                <dt className="text-ep3-navy/55">Detalle volumen</dt>
-                <dd className="mt-1 whitespace-pre-line text-ep3-navy">
-                  {volumeNotes}
                 </dd>
               </div>
             ) : null}

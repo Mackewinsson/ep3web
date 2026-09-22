@@ -14,6 +14,8 @@ export {
   sumInventory,
   syncAutoEstimateInNotes,
   syncBudgetItemsInNotes,
+  parseInventarioEntries,
+  inventoryItemsMissingFromBudget,
   type AccessSurchargeInput,
   type BudgetLineDraft,
   type InventoryLine,
