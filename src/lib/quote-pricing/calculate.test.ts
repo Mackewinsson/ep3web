@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  buildVolumeBreakdown,
   extractAutoEstimateAmount,
   extractAutoEstimateM3,
   formatM3,
@@ -286,5 +287,61 @@ describe("inventoryItemsMissingFromBudget", () => {
       missing.map((e) => e.description).sort(),
       ["Silla", "Sofá"],
     );
+  });
+});
+
+describe("buildVolumeBreakdown", () => {
+  const catalog = [
+    { name: "Sofá 3 cuerpos", volumeM3: 1.5 },
+    { name: "Cama 2 plazas", volumeM3: 2 },
+  ];
+
+  it("explains m³ from catalog items and boxes", () => {
+    const result = buildVolumeBreakdown({
+      catalog,
+      boxVolumeM3: 0.08,
+      items: [
+        { description: "Sofá 3 cuerpos", pricingUnit: "unit", quantity: 1 },
+        { description: "Caja de mudanza", pricingUnit: "unit", quantity: 10 },
+        { description: "Mudanza estimada (2.3 m³)", pricingUnit: "m3", quantity: 2.3 },
+        { description: "Ayuda chofer", pricingUnit: "fixed", quantity: 1 },
+      ],
+    });
+    assert.equal(result.lines.length, 2);
+    assert.equal(result.lines[0].name, "Sofá 3 cuerpos");
+    assert.equal(result.lines[0].lineVolumeM3, 1.5);
+    assert.equal(result.lines[1].isPackingBox, true);
+    assert.ok(Math.abs((result.lines[1].lineVolumeM3 ?? 0) - 0.8) < 1e-9);
+    assert.equal(result.catalogM3, 2.3);
+    assert.equal(result.chargedM3, 2.3);
+    assert.equal(result.unexplainedM3, 0);
+    assert.equal(result.totalItems, 11);
+  });
+
+  it("flags manual items without catalog volume and the unexplained gap", () => {
+    const result = buildVolumeBreakdown({
+      catalog,
+      boxVolumeM3: 0.08,
+      items: [
+        { description: "cama 2 plazas", pricingUnit: "unit", quantity: 1 },
+        { description: "Piano", pricingUnit: "unit", quantity: 1 },
+        { description: "Mudanza estimada", pricingUnit: "m3", quantity: 5 },
+      ],
+    });
+    const piano = result.lines.find((l) => l.name === "Piano");
+    assert.equal(piano?.unitVolumeM3, null);
+    assert.equal(result.catalogM3, 2);
+    assert.equal(result.unexplainedM3, 3);
+  });
+
+  it("falls back to the quote m³ when there is no m³ line", () => {
+    const result = buildVolumeBreakdown({
+      catalog,
+      boxVolumeM3: 0.08,
+      items: [],
+      fallbackChargedM3: 4,
+    });
+    assert.equal(result.chargedM3, 4);
+    assert.equal(result.unexplainedM3, 4);
   });
 });

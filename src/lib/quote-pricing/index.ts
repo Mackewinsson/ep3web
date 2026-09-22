@@ -2,6 +2,7 @@ export {
   DEFAULT_OPERATOR_MARGIN_PERCENT,
   DEFAULT_PRICING_CONFIG,
   buildQuoteEstimate,
+  buildVolumeBreakdown,
   clampOperatorMarginPercent,
   extractAutoEstimateAmount,
   extractAutoEstimateM3,
@@ -23,5 +24,7 @@ export {
   type PricingConfig,
   type QuoteEstimate,
   type QuotedClientTotalSources,
+  type VolumeBreakdown,
+  type VolumeBreakdownLine,
   type VolumeItem,
 } from "./calculate";

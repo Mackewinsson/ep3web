@@ -582,6 +582,87 @@ function helperLabel(helpers: HelpersOption): string {
   }
 }
 
+export type VolumeBreakdownLine = {
+  name: string;
+  quantity: number;
+  isPackingBox: boolean;
+  /** null when the item is not in the catalog (manual / custom lines). */
+  unitVolumeM3: number | null;
+  lineVolumeM3: number | null;
+};
+
+export type VolumeBreakdown = {
+  lines: VolumeBreakdownLine[];
+  catalogM3: number;
+  /** m³ billed on the budget (m³ lines), or the quote estimate when none. */
+  chargedM3: number | null;
+  /** chargedM3 not explained by catalog volumes (custom items, manual adjustments). */
+  unexplainedM3: number;
+  totalItems: number;
+};
+
+/**
+ * Explains where budget m³ come from: unit lines matched to catalog volumes,
+ * packing boxes at the configured box volume, and the billed m³ total.
+ */
+export function buildVolumeBreakdown(input: {
+  items: NotesBudgetItem[];
+  catalog: Pick<VolumeItem, "name" | "volumeM3">[];
+  boxVolumeM3: number;
+  fallbackChargedM3?: number | null;
+}): VolumeBreakdown {
+  const volumeByName = new Map(
+    input.catalog.map((c) => [normalizeInventoryName(c.name).toLowerCase(), c.volumeM3]),
+  );
+
+  const lines: VolumeBreakdownLine[] = [];
+  let catalogM3 = 0;
+  let totalItems = 0;
+  let m3Lines = 0;
+  let hasM3Line = false;
+
+  for (const item of input.items) {
+    if (item.pricingUnit === "m3") {
+      hasM3Line = true;
+      m3Lines += item.quantity;
+      continue;
+    }
+    if (item.pricingUnit !== "unit" || item.quantity <= 0) continue;
+
+    const isPackingBox = isPackingBoxItem(item.description);
+    const unit = isPackingBox
+      ? input.boxVolumeM3
+      : volumeByName.get(normalizeInventoryName(item.description).toLowerCase()) ?? null;
+    const lineVolume = unit == null ? null : unit * item.quantity;
+    if (lineVolume != null) catalogM3 += lineVolume;
+    totalItems += item.quantity;
+    lines.push({
+      name: item.description,
+      quantity: item.quantity,
+      isPackingBox,
+      unitVolumeM3: unit,
+      lineVolumeM3: lineVolume,
+    });
+  }
+
+  lines.sort((a, b) => {
+    if (a.isPackingBox !== b.isPackingBox) return a.isPackingBox ? 1 : -1;
+    return a.name.localeCompare(b.name, "es");
+  });
+
+  const chargedM3 = hasM3Line ? m3Lines : (input.fallbackChargedM3 ?? null);
+  const unexplainedM3 =
+    chargedM3 == null ? 0 : Math.max(0, Number((chargedM3 - catalogM3).toFixed(2)));
+
+  return {
+    lines,
+    catalogM3: Number(catalogM3.toFixed(2)),
+    chargedM3,
+    unexplainedM3,
+    totalItems,
+  };
+}
+
 /**
  * Full estimate used by the public wizard (preview) and server submit (authoritative).
  */

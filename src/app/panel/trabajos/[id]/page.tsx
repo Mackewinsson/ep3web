@@ -13,6 +13,7 @@ import {
   SubmitButton,
   TextArea,
 } from "@/components/panel/ui";
+import { VolumeBreakdownList } from "@/components/panel/volume-breakdown-list";
 import { db } from "@/db";
 import { drivers, jobAssignments, staffUsers, trucks } from "@/db/schema";
 import {
@@ -35,6 +36,7 @@ import {
   operationalJobNotes,
   operatorFacingAmounts,
 } from "@/lib/jobs-view";
+import { getBudgetVolumeBreakdown } from "@/lib/volume-breakdown";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -119,6 +121,9 @@ export default async function TrabajoDetailPage({ params }: Props) {
   const assignAction = assignJob.bind(null, id);
   const scheduleAction = updateJobSchedule.bind(null, id);
   const volume = formatVolume(job.estimatedM3, job.estimatedItems);
+  const volumeBreakdown = job.budgetId
+    ? await getBudgetVolumeBreakdown(job.budgetId, job.estimatedM3)
+    : null;
   const when = [formatDate(job.scheduledDate), job.scheduledTime]
     .filter(Boolean)
     .join(" · ");
@@ -287,10 +292,18 @@ export default async function TrabajoDetailPage({ params }: Props) {
               </a>
             </dd>
           </div>
-          {volume ? (
+          {volume && volumeBreakdown?.chargedM3 == null ? (
             <div>
               <dt className="text-ep3-navy/60">Carga</dt>
               <dd className="text-ep3-navy">{volume}</dd>
+            </div>
+          ) : null}
+          {volumeBreakdown ? (
+            <div className="sm:col-span-2">
+              <dt className="mb-2 text-ep3-navy/60">Inventario y m³</dt>
+              <dd>
+                <VolumeBreakdownList breakdown={volumeBreakdown} />
+              </dd>
             </div>
           ) : null}
           {job.volumeNotes ? (

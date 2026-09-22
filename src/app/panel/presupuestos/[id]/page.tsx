@@ -11,6 +11,7 @@ import {
   SubmitButton,
   TextArea,
 } from "@/components/panel/ui";
+import { VolumeBreakdownList } from "@/components/panel/volume-breakdown-list";
 import { db } from "@/db";
 import { budgetItems, budgets, clients, jobs } from "@/db/schema";
 import {
@@ -21,6 +22,7 @@ import {
   updateBudgetMeta,
 } from "@/lib/actions/budgets";
 import { ensureClientInventoryFromNotes } from "@/lib/budget-notes";
+import { getBudgetVolumeBreakdown } from "@/lib/volume-breakdown";
 import {
   BUDGET_STATUS_LABELS,
   budgetStatusTone,
@@ -91,6 +93,8 @@ export default async function PresupuestoDetailPage({ params }: Props) {
     .from(jobs)
     .where(eq(jobs.budgetId, id))
     .orderBy(asc(jobs.createdAt));
+
+  const volumeBreakdown = await getBudgetVolumeBreakdown(id);
 
   const updateMeta = updateBudgetMeta.bind(null, id);
   const addItem = addBudgetItem.bind(null, id);
@@ -193,6 +197,20 @@ export default async function PresupuestoDetailPage({ params }: Props) {
           <TextArea label="Notas" name="notes" defaultValue={row.notes} />
           <SubmitButton label="Guardar datos" />
         </form>
+      </PanelCard>
+
+      <PanelCard>
+        <h2 className="mb-1 font-semibold text-ep3-navy">
+          De dónde vienen los m³
+        </h2>
+        <p className="mb-3 text-sm text-ep3-navy/60">
+          Volumen por ítem según el catálogo del cotizador. El total es la
+          cantidad de las líneas «Por m³».
+        </p>
+        <VolumeBreakdownList
+          breakdown={volumeBreakdown}
+          overChargedLineHint="Los ítems suman más m³ que la línea «Por m³». Ajusta su cantidad si agregaste ítems."
+        />
       </PanelCard>
 
       <section className="space-y-3">
