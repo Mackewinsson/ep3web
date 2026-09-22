@@ -13,10 +13,9 @@ import { drivers, trucks } from "@/db/schema";
 import { driverAdvanceJob, operatorDeclineJob } from "@/lib/actions/jobs";
 import { requireDriver } from "@/lib/auth";
 import {
-  DRIVER_JOB_STATUS_LABELS,
+  driverJobBadge,
   formatClp,
   formatDate,
-  jobStatusTone,
 } from "@/lib/format";
 import {
   assertDriverOwnsJob,
@@ -62,10 +61,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
 
   const accepted = isReadyForEnCamino(job.assignment);
   const canAccept = job.status === "assigned" && !accepted;
-  const statusLabel =
-    job.status === "assigned" && accepted
-      ? "Listo para salir"
-      : (DRIVER_JOB_STATUS_LABELS[job.status] ?? job.status);
+  const statusBadge = driverJobBadge(job.status, accepted);
 
   const fleetTrucks = await db
     .select({
@@ -95,8 +91,8 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
 
       <PanelCard>
         <StatusBadge
-          label={statusLabel}
-          tone={jobStatusTone(job.status)}
+          label={statusBadge.label}
+          tone={statusBadge.tone}
         />
 
         <div className="mt-4 space-y-4">

@@ -46,7 +46,7 @@ Step order (`QuoteWizard`):
 1. Review presupuesto at `/panel/presupuestos` (edit lines, send, approve, reject, expire). Client-facing totals use `formatClpPlusIva` (`$X + IVA`); the stored amount stays net — do **not** bake IVA into pricing formulas. **Enviar al cliente** emails the total with `+ IVA` (`notifyClientQuote`). Adding/editing/removing budget lines updates **Notas**, `quote_requests.volumeNotes`, and **Notas del trabajo** from `budget_items` (`syncBudgetItemsInNotes`).
 2. **Approve** → creates `jobs` with status `pending_assignment` (linked to budget); redirects to `/panel/trabajos/[id]`.
 3. **Assign operador** (`assignJob`) → ends prior open assignment as `reassigned` if any; new open `job_assignments`; job → **`assigned`**; notifies operador.
-4. Operator **Aceptar servicio** — job stays `assigned` (no new status enum). Admin list/detail/dashboard show **Por aceptar** vs **Aceptado** via `adminJobBadge` + `isReadyForEnCamino`. `notifyAdmins` type `job_accepted` (“Servicio aceptado”). The panel bell polls (~3s) and `router.refresh()` when unread increases so status updates without a full reload.
+4. Operator **Aceptar servicio** — job stays `assigned` (no new status enum). Admin list/detail/dashboard show **Por aceptar** vs **Aceptado** via `adminJobBadge` + `isReadyForEnCamino`. Operator list/detail show **Por aceptar** vs **Por iniciar** via `driverJobBadge`. `notifyAdmins` type `job_accepted` (“Servicio aceptado”). The panel bell polls (~3s) and `router.refresh()` when unread increases so status updates without a full reload.
 
 Admin can cancel / reassign while unlocked. Locked statuses: `completed`, `cancelled`.
 
@@ -93,7 +93,7 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 | `src/lib/job-rules.ts` | Pure status / ready-for-en-camino checks (unit-tested) |
 | `src/lib/job-lifecycle.ts` | Open assignment DB helpers; re-exports job-rules |
 | `src/lib/jobs-view.ts` | Operator queries, ownership, payout helpers, safe notes; `getOpenAssignmentSummaries` for admin accepted badges |
-| `src/lib/format.ts` | Labels + `adminJobBadge` + `formatClpPlusIva` (client totals are net) |
+| `src/lib/format.ts` | Labels + `adminJobBadge` / `driverJobBadge` + `formatClpPlusIva` |
 | `src/components/panel/accept-service-modal.tsx` | Accept UI (chofer / RUT / patente) |
 | `src/components/panel/quote-volume-sync-fields.tsx` | Admin cotización: sync m³ ↔ Estimación auto notes |
 | `src/db/schema.ts` | Tables; `crewDriverRut`; acceptance timestamp on assignment |

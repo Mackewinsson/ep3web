@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { adminJobBadge, formatClientPackagePrice, formatClpPlusIva } from "./format";
+import { adminJobBadge, driverJobBadge, formatClientPackagePrice, formatClpPlusIva } from "./format";
 
 describe("adminJobBadge", () => {
   it("splits assigned into waiting vs accepted", () => {
@@ -30,6 +30,26 @@ describe("adminJobBadge", () => {
     assert.deepEqual(adminJobBadge("cancelled", false), {
       label: "Cancelado",
       tone: "danger",
+    });
+  });
+});
+
+describe("driverJobBadge", () => {
+  it("splits assigned into por aceptar vs por iniciar", () => {
+    assert.deepEqual(driverJobBadge("assigned", false), {
+      label: "Por aceptar",
+      tone: "warning",
+    });
+    assert.deepEqual(driverJobBadge("assigned", true), {
+      label: "Por iniciar",
+      tone: "info",
+    });
+  });
+
+  it("keeps other statuses unchanged", () => {
+    assert.deepEqual(driverJobBadge("in_progress", true), {
+      label: "En camino",
+      tone: "accent",
     });
   });
 });

@@ -121,6 +121,22 @@ export function adminJobBadge(
   };
 }
 
+/** Operator-facing badge: waiting to accept vs ready to go en camino. */
+export function driverJobBadge(
+  status: string,
+  accepted: boolean,
+): { label: string; tone: StatusTone } {
+  if (status === "assigned") {
+    return accepted
+      ? { label: "Por iniciar", tone: "info" }
+      : { label: "Por aceptar", tone: "warning" };
+  }
+  return {
+    label: DRIVER_JOB_STATUS_LABELS[status] ?? status,
+    tone: jobStatusTone(status),
+  };
+}
+
 export function quoteStatusTone(status: string): StatusTone {
   switch (status) {
     case "new":
