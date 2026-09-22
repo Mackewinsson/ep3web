@@ -173,20 +173,22 @@ export function extractAutoEstimateAmount(
 
 /**
  * Keep the “Estimación auto” line in sync with an edited m³ value.
- * Updates both the m³ figure and the money amount (scaled from the previous
- * ratio when possible, otherwise `pricePerM3 * m3`).
+ * Updates both the m³ figure and the money amount (`opts.amount` wins,
+ * otherwise scaled from the previous ratio, otherwise `pricePerM3 * m3`).
  */
 export function syncAutoEstimateInNotes(
   notes: string,
   m3: number,
-  opts?: { pricePerM3?: number },
+  opts?: { pricePerM3?: number; amount?: number },
 ): string {
   if (!Number.isFinite(m3) || m3 <= 0) return notes;
   const m3Text = formatM3(m3);
   const match = notes.match(AUTO_ESTIMATE_LINE_RE);
 
   let amount: number | null = null;
-  if (match?.[2]) {
+  if (opts?.amount != null && Number.isFinite(opts.amount) && opts.amount > 0) {
+    amount = Math.round(opts.amount);
+  } else if (match?.[2]) {
     const oldM3 = Number(match[1].replace(",", "."));
     const oldAmount = parseEsClAmount(match[2]);
     if (Number.isFinite(oldM3) && oldM3 > 0 && Number.isFinite(oldAmount)) {
@@ -208,6 +210,127 @@ export function syncAutoEstimateInNotes(
   }
   // Function replacer: dollar amounts must not be treated as `$n` substitutions.
   return notes.replace(AUTO_ESTIMATE_LINE_RE, () => line);
+}
+
+export type NotesBudgetItem = {
+  description: string;
+  pricingUnit: "fixed" | "m3" | "unit";
+  quantity: number;
+};
+
+function isPackingBoxItem(description: string) {
+  return /caja/i.test(description);
+}
+
+function isPrimaryM3Estimate(description: string, pricingUnit: string) {
+  return pricingUnit === "m3" && /mudanza estimada/i.test(description);
+}
+
+export function formatBudgetItemNoteLabel(item: NotesBudgetItem): string {
+  const name = item.description.trim() || "Ítem";
+  const qty = item.quantity;
+  if (item.pricingUnit === "m3") {
+    if (Number.isFinite(qty) && qty > 0) {
+      return `${name} (${formatM3(qty)} m³)`;
+    }
+    return name;
+  }
+  if (item.pricingUnit === "fixed") return name;
+  const n = Number.isFinite(qty) && qty > 0 ? qty : 1;
+  return `${n}× ${name}`;
+}
+
+const INVENTARIO_LINE_RE = /^Inventario:\s*.*$/im;
+const CARGOS_LINE_RE = /^Cargos:\s*.*$/im;
+const CAJAS_LINE_RE = /^Cajas:\s*.*$/im;
+const AUTO_LINE_ANCHOR_RE = /^(Estimaci[oó]n auto:.*)$/im;
+
+function upsertNotesLine(
+  notes: string,
+  lineRe: RegExp,
+  line: string | null,
+): string {
+  if (!line) {
+    return notes.replace(lineRe, "").replace(/\n{3,}/g, "\n\n").trim();
+  }
+  if (lineRe.test(notes)) {
+    return notes.replace(lineRe, () => line);
+  }
+  if (AUTO_LINE_ANCHOR_RE.test(notes)) {
+    return notes.replace(AUTO_LINE_ANCHOR_RE, (match) => `${line}\n${match}`);
+  }
+  const trimmed = notes.trim();
+  return trimmed ? `${trimmed}\n${line}` : line;
+}
+
+/**
+ * Rebuild Inventario / Cargos / Cajas / Estimación auto from budget_items.
+ * Other note lines (origen, ayudantes, notas cliente, …) are kept.
+ */
+export function syncBudgetItemsInNotes(
+  notes: string | null | undefined,
+  items: NotesBudgetItem[],
+  opts?: { totalAmount?: number | null; estimatedM3?: number | null },
+): string {
+  const valid = items.filter((item) => item.description?.trim());
+  const unitItems = valid.filter((item) => item.pricingUnit === "unit");
+  const inventoryItems = unitItems.filter(
+    (item) => !isPackingBoxItem(item.description),
+  );
+  const boxItems = unitItems.filter((item) => isPackingBoxItem(item.description));
+  const chargeItems = valid.filter(
+    (item) =>
+      item.pricingUnit !== "unit" &&
+      !isPrimaryM3Estimate(item.description, item.pricingUnit),
+  );
+
+  const inventorySummary = inventoryItems.length
+    ? inventoryItems.map(formatBudgetItemNoteLabel).join(", ")
+    : "—";
+  const cargosSummary = chargeItems
+    .map(formatBudgetItemNoteLabel)
+    .join(", ");
+  const boxQty = boxItems.reduce((sum, item) => {
+    return sum + (Number.isFinite(item.quantity) ? item.quantity : 0);
+  }, 0);
+
+  let next = notes ?? "";
+  next = upsertNotesLine(
+    next,
+    INVENTARIO_LINE_RE,
+    `Inventario: ${inventorySummary}`,
+  );
+  next = upsertNotesLine(
+    next,
+    CARGOS_LINE_RE,
+    cargosSummary ? `Cargos: ${cargosSummary}` : null,
+  );
+  next = upsertNotesLine(
+    next,
+    CAJAS_LINE_RE,
+    boxQty > 0 ? `Cajas: ${boxQty}` : null,
+  );
+
+  const m3 =
+    opts?.estimatedM3 != null &&
+    Number.isFinite(opts.estimatedM3) &&
+    opts.estimatedM3 > 0
+      ? opts.estimatedM3
+      : extractAutoEstimateM3(next);
+  const total =
+    opts?.totalAmount != null &&
+    Number.isFinite(opts.totalAmount) &&
+    opts.totalAmount > 0
+      ? opts.totalAmount
+      : null;
+
+  if (m3 != null) {
+    next = syncAutoEstimateInNotes(next, m3, {
+      amount: total ?? undefined,
+    });
+  }
+
+  return next.replace(/\n{3,}/g, "\n\n").trim();
 }
 
 export type VolumeItem = {

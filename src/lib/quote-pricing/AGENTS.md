@@ -19,6 +19,7 @@ Root product flows (roles, accept, job lifecycle): [`/AGENTS.md`](../../../AGENT
 | `extractAutoEstimateAmount(notes)` | Parse CLP from an “Estimación auto” line |
 | `stripClientPriceLines(notes)` | Remove estimate/$ CLP lines from operator-facing notes |
 | `syncAutoEstimateInNotes(notes, m3, opts?)` | Keep “Estimación auto” m³ + amount in sync when admin edits m³ |
+| `syncBudgetItemsInNotes` | Rebuild Inventario / Cargos / Cajas / Estimación auto from `budget_items` |
 | `extractAutoEstimateM3(notes)` | Parse m³ from an “Estimación auto” line |
 | `DEFAULT_PRICING_CONFIG` | Fallback when DB settings missing (`operatorMarginPercent` default **20**) |
 
@@ -40,5 +41,5 @@ Catalog categories/items: tables `moving_categories` / `moving_catalog_items`, s
 3. Creates `clients` + `quote_requests` (source=`website`) + `budgets` (status=**draft**) + `budget_items`
    - One **unit** line per inventory item (+ packing boxes) for ops editing
    - Separate **m3/fixed** charge lines for internal price estimate
-4. Admin reviews/adjusts presupuesto → mark sent / email client (**total is net**, shown as `$X + IVA`) → approve → `jobs`
+4. Admin reviews/adjusts presupuesto (`budget_items` is source of truth; notes/job notes sync via `syncBudgetItemsInNotes`) → mark sent / email client (**total is net**, shown as `$X + IVA`) → approve → `jobs`
 5. Operator sees **Tu pago** via `operatorPayoutFromClientTotal` only — never the client total

@@ -237,6 +237,16 @@ export function operatorSafeNotes(notes: string | null | undefined) {
   return stripClientPriceLines(notes);
 }
 
+export function notesContentEqual(
+  a?: string | null,
+  b?: string | null,
+) {
+  return (
+    (a ?? "").replace(/\s+/g, " ").trim() ===
+    (b ?? "").replace(/\s+/g, " ").trim()
+  );
+}
+
 export { isReadyForEnCamino } from "@/lib/job-lifecycle";
 
 export async function assertDriverOwnsJob(jobId: string, driverId: string) {

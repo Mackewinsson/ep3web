@@ -7,6 +7,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { budgetItems, budgets, clients, jobs, quoteRequests } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
+import { syncLinkedNotesFromBudgetItems } from "@/lib/budget-notes";
 import { ensureBudgetQuotedTotal } from "@/lib/budget-totals";
 
 const budgetMetaSchema = z.object({
@@ -30,6 +31,18 @@ function calcTotal(
     0,
   );
   return total.toFixed(2);
+}
+
+function revalidateBudgetItemPaths(budgetId: string, jobIds: string[]) {
+  revalidatePath(`/panel/presupuestos/${budgetId}`);
+  revalidatePath("/panel/presupuestos");
+  revalidatePath("/panel/cotizaciones");
+  revalidatePath("/panel/trabajos");
+  revalidatePath("/panel/mis-trabajos");
+  for (const jobId of jobIds) {
+    revalidatePath(`/panel/trabajos/${jobId}`);
+    revalidatePath(`/panel/mis-trabajos/${jobId}`);
+  }
 }
 
 export async function createBudget(formData: FormData) {
@@ -99,6 +112,11 @@ async function recalcBudgetTotal(budgetId: string) {
     .where(eq(budgets.id, budgetId));
 }
 
+async function recalcBudgetTotalAndNotes(budgetId: string) {
+  await recalcBudgetTotal(budgetId);
+  return syncLinkedNotesFromBudgetItems(budgetId);
+}
+
 export async function addBudgetItem(budgetId: string, formData: FormData) {
   await requireAdmin();
   const item = itemSchema.parse({
@@ -118,9 +136,9 @@ export async function addBudgetItem(budgetId: string, formData: FormData) {
     unitPrice: String(item.unitPrice),
   });
 
-  await recalcBudgetTotal(budgetId);
+  const { jobIds } = await recalcBudgetTotalAndNotes(budgetId);
 
-  revalidatePath(`/panel/presupuestos/${budgetId}`);
+  revalidateBudgetItemPaths(budgetId, jobIds);
   redirect(`/panel/presupuestos/${budgetId}`);
 }
 
@@ -155,9 +173,9 @@ export async function updateBudgetItem(itemId: string, formData: FormData) {
     })
     .where(eq(budgetItems.id, itemId));
 
-  await recalcBudgetTotal(existing.budgetId);
+  const { jobIds } = await recalcBudgetTotalAndNotes(existing.budgetId);
 
-  revalidatePath(`/panel/presupuestos/${existing.budgetId}`);
+  revalidateBudgetItemPaths(existing.budgetId, jobIds);
   redirect(`/panel/presupuestos/${existing.budgetId}`);
 }
 
@@ -175,9 +193,9 @@ export async function deleteBudgetItem(itemId: string) {
   }
 
   await db.delete(budgetItems).where(eq(budgetItems.id, itemId));
-  await recalcBudgetTotal(existing.budgetId);
+  const { jobIds } = await recalcBudgetTotalAndNotes(existing.budgetId);
 
-  revalidatePath(`/panel/presupuestos/${existing.budgetId}`);
+  revalidateBudgetItemPaths(existing.budgetId, jobIds);
   redirect(`/panel/presupuestos/${existing.budgetId}`);
 }
 
@@ -209,6 +227,15 @@ export async function setBudgetStatus(
     await ensureBudgetQuotedTotal(budgetId);
   }
 
+  await syncLinkedNotesFromBudgetItems(budgetId);
+  const [fresh] = await db
+    .select()
+    .from(budgets)
+    .where(eq(budgets.id, budgetId))
+    .limit(1);
+  const notes = fresh?.notes ?? budget.notes;
+  const totalAmount = fresh?.totalAmount ?? budget.totalAmount;
+
   await db
     .update(budgets)
     .set({ status, updatedAt: new Date() })
@@ -228,9 +255,9 @@ export async function setBudgetStatus(
       clientName: client?.name ?? "Cliente",
       clientEmail: client?.email ?? null,
       title: budget.title,
-      totalAmount: budget.totalAmount,
+      totalAmount,
       validUntil: budget.validUntil,
-      notes: budget.notes,
+      notes,
     });
   }
 
@@ -268,7 +295,7 @@ export async function setBudgetStatus(
           destinationAddress: destination,
           scheduledDate,
           status: "pending_assignment",
-          notes: budget.notes,
+          notes,
         })
         .returning();
 
