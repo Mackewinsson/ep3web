@@ -7,12 +7,15 @@ import {
 import { RecordList } from "@/components/panel/record-list";
 import { requireDriver } from "@/lib/auth";
 import {
-  DRIVER_JOB_STATUS_LABELS,
+  driverJobBadge,
   formatClp,
   formatDate,
-  jobStatusTone,
 } from "@/lib/format";
-import { getDriverAssignedJobs, operatorPayoutForAssignedJob } from "@/lib/jobs-view";
+import {
+  getDriverAssignedJobs,
+  isReadyForEnCamino,
+  operatorPayoutForAssignedJob,
+} from "@/lib/jobs-view";
 import { getPricingConfig } from "@/lib/moving-catalog-db";
 
 export default async function MisTrabajosPage() {
@@ -50,17 +53,16 @@ export default async function MisTrabajosPage() {
             emptyMessage="Aún no tienes trabajos asignados."
             items={ordered.map((row) => {
               const payout = operatorPayoutForAssignedJob(row, pricing);
+              const accepted = isReadyForEnCamino(row);
+              const badge = driverJobBadge(row.status, accepted);
               return {
                 id: row.id,
                 href: `/panel/mis-trabajos/${row.id}`,
                 title: row.clientName,
                 badge: (
                   <StatusBadge
-                    label={
-                      DRIVER_JOB_STATUS_LABELS[row.status] ??
-                      row.status
-                    }
-                    tone={jobStatusTone(row.status)}
+                    label={badge.label}
+                    tone={badge.tone}
                   />
                 ),
                 fields: [
@@ -83,11 +85,11 @@ export default async function MisTrabajosPage() {
                   },
                   {
                     label: "Camión",
-                    value: row.truckPlate ?? "Por aceptar",
+                    value: row.truckPlate ?? "Pendiente",
                   },
                   {
                     label: "Conductor",
-                    value: row.crewDriverName ?? "Por aceptar",
+                    value: row.crewDriverName ?? "Pendiente",
                   },
                   {
                     label: "Tu pago",
