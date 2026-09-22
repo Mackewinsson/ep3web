@@ -43,7 +43,7 @@ Step order (`QuoteWizard`):
 
 ## Admin ops flow
 
-1. Review presupuesto at `/panel/presupuestos` (edit lines, send, approve, reject, expire). Client-facing totals use `formatClpPlusIva` (`$X + IVA`); the stored amount stays net — do **not** bake IVA into pricing formulas. **Enviar al cliente** emails the total with `+ IVA` (`notifyClientQuote`). Adding/editing/removing budget lines updates **Notas** (presupuesto) and `quote_requests.volumeNotes` from `budget_items` (`syncBudgetItemsInNotes`). Volume details live only there — **Notas del trabajo** (`jobs.notes`) stays empty so admin can write operational notes.
+1. Review presupuesto at `/panel/presupuestos` (edit lines, send, approve, reject, expire). Client-facing totals use `formatClpPlusIva` (`$X + IVA`); the stored amount stays net — do **not** bake IVA into pricing formulas. **Enviar al cliente** emails the total with `+ IVA` (`notifyClientQuote`). Adding/editing budget lines updates **Notas** and `quote_requests.volumeNotes` from `budget_items` **merged with the client Inventario still in notes** (`syncBudgetItemsInNotes`). Missing client items are inserted as unit rows. Volume details live there — **Notas del trabajo** (`jobs.notes`) stays empty so admin can write operational notes.
 2. **Approve** → creates `jobs` with status `pending_assignment` (linked to budget) and `notes: null`; redirects to `/panel/trabajos/[id]`.
 3. **Assign operador** (`assignJob`) → ends prior open assignment as `reassigned` if any; new open `job_assignments`; job → **`assigned`**; notifies operador.
 4. Operator **Aceptar servicio** — job stays `assigned` (no new status enum). Admin list/detail/dashboard show **Por aceptar** vs **Aceptado** via `adminJobBadge` + `isReadyForEnCamino`. Operator list/detail show **Por aceptar** vs **Por iniciar** via `driverJobBadge`. `notifyAdmins` type `job_accepted` (“Servicio aceptado”). The panel bell polls (~3s) and `router.refresh()` when unread increases so status updates without a full reload.
@@ -107,7 +107,7 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 
 - Show **client price / budget total** to operators (payout + stripped notes only).
 - Duplicate volume / box / price formulas outside `src/lib/quote-pricing/`.
-- Keep a second inventory list in notes that can drift from `budget_items` — notes Inventario/Cargos come from the budget lines.
+- Keep a second inventory list in notes that can drift from `budget_items` — notes Inventario/Cargos come from the budget lines, **merged** with the client wizard list still in notes so adding a manual line cannot wipe what the client chose.
 - Copy volume/inventory into **Notas del trabajo** — that field is operational only; volume stays in `quote_requests.volumeNotes`.
 - Bake IVA into stored quote/budget totals — show `+ IVA` next to the net amount.
 - Treat accept as a full salvoconducto form (folio, comunas, etc.) — only chofer + RUT + patente.

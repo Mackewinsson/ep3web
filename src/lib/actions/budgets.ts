@@ -88,6 +88,8 @@ export async function updateBudgetMeta(budgetId: string, formData: FormData) {
     })
     .where(eq(budgets.id, budgetId));
 
+  await syncLinkedNotesFromBudgetItems(budgetId);
+
   revalidatePath(`/panel/presupuestos/${budgetId}`);
   redirect(`/panel/presupuestos/${budgetId}`);
 }
@@ -112,9 +114,12 @@ async function recalcBudgetTotal(budgetId: string) {
     .where(eq(budgets.id, budgetId));
 }
 
-async function recalcBudgetTotalAndNotes(budgetId: string) {
+async function recalcBudgetTotalAndNotes(
+  budgetId: string,
+  notesOptions?: { hydrateFromNotes?: boolean; mergeInventory?: boolean },
+) {
   await recalcBudgetTotal(budgetId);
-  return syncLinkedNotesFromBudgetItems(budgetId);
+  return syncLinkedNotesFromBudgetItems(budgetId, notesOptions);
 }
 
 export async function addBudgetItem(budgetId: string, formData: FormData) {
@@ -193,7 +198,10 @@ export async function deleteBudgetItem(itemId: string) {
   }
 
   await db.delete(budgetItems).where(eq(budgetItems.id, itemId));
-  const { jobIds } = await recalcBudgetTotalAndNotes(existing.budgetId);
+  const { jobIds } = await recalcBudgetTotalAndNotes(existing.budgetId, {
+    hydrateFromNotes: false,
+    mergeInventory: false,
+  });
 
   revalidateBudgetItemPaths(existing.budgetId, jobIds);
   redirect(`/panel/presupuestos/${existing.budgetId}`);

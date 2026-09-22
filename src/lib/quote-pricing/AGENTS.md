@@ -19,7 +19,7 @@ Root product flows (roles, accept, job lifecycle): [`/AGENTS.md`](../../../AGENT
 | `extractAutoEstimateAmount(notes)` | Parse CLP from an “Estimación auto” line |
 | `stripClientPriceLines(notes)` | Remove estimate/$ CLP lines from operator-facing notes |
 | `syncAutoEstimateInNotes(notes, m3, opts?)` | Keep “Estimación auto” m³ + amount in sync when admin edits m³ |
-| `syncBudgetItemsInNotes` | Rebuild Inventario / Cargos / Cajas / Estimación auto from `budget_items` |
+| `syncBudgetItemsInNotes` | Rebuild Inventario / Cargos / Cajas / Estimación auto from `budget_items`, **merging** client Inventario still in notes |
 | `extractAutoEstimateM3(notes)` | Parse m³ from an “Estimación auto” line |
 | `DEFAULT_PRICING_CONFIG` | Fallback when DB settings missing (`operatorMarginPercent` default **20**) |
 

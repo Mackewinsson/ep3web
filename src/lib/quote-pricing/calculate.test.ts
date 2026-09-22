@@ -4,8 +4,10 @@ import {
   extractAutoEstimateAmount,
   extractAutoEstimateM3,
   formatM3,
+  inventoryItemsMissingFromBudget,
   operatorPayoutFromClientTotal,
   operatorPayoutFromQuoteSources,
+  parseInventarioEntries,
   resolveQuotedClientTotal,
   stripClientPriceLines,
   syncAutoEstimateInNotes,
@@ -232,10 +234,57 @@ describe("syncBudgetItemsInNotes", () => {
   });
 
   it("drops a removed unit item from Inventario", () => {
-    const out = syncBudgetItemsInNotes(seed, [
-      { description: "Sofá", pricingUnit: "unit", quantity: 2 },
-    ]);
+    const out = syncBudgetItemsInNotes(
+      seed,
+      [{ description: "Sofá", pricingUnit: "unit", quantity: 2 }],
+      { mergeInventory: false },
+    );
     assert.match(out, /Inventario: 2× Sofá$/m);
     assert.doesNotMatch(out, /Silla/);
+  });
+
+  it("keeps the client's Inventario when only a manual line exists on the budget", () => {
+    const out = syncBudgetItemsInNotes(seed, [
+      { description: "Piano", pricingUnit: "unit", quantity: 1 },
+    ]);
+    assert.match(out, /Inventario: 1× Piano, 2× Sofá, 1× Silla/);
+    assert.match(out, /Origen: casa — Santiago/);
+  });
+
+  it("keeps catalog boxes in Inventario and only counts Caja de mudanza as Cajas", () => {
+    const out = syncBudgetItemsInNotes(
+      "Inventario: 2× Caja 60×40×40",
+      [
+        { description: "Caja 60×40×40", pricingUnit: "unit", quantity: 2 },
+        { description: "Caja de mudanza", pricingUnit: "unit", quantity: 6 },
+      ],
+    );
+    assert.match(out, /Inventario: 2× Caja 60×40×40/);
+    assert.match(out, /Cajas: 6/);
+  });
+});
+
+describe("parseInventarioEntries", () => {
+  it("parses a comma-separated Inventario line", () => {
+    const entries = parseInventarioEntries(
+      "Inventario: 2× Sofá, 1× Silla\nCajas: 6",
+    );
+    assert.deepEqual(
+      entries.map((e) => `${e.quantity} ${e.description}`),
+      ["2 Sofá", "1 Silla"],
+    );
+  });
+});
+
+describe("inventoryItemsMissingFromBudget", () => {
+  it("returns client items that are not yet budget rows", () => {
+    const missing = inventoryItemsMissingFromBudget(
+      "Inventario: 2× Sofá, 1× Silla",
+      [{ description: "Piano", pricingUnit: "unit", quantity: 1 }],
+    );
+    assert.deepEqual(
+      missing.map((e) => e.description).sort(),
+      ["Silla", "Sofá"],
+    );
   });
 });
