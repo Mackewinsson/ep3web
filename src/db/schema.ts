@@ -225,6 +225,8 @@ export const budgetItems = pgTable("budget_items", {
   unitPrice: numeric("unit_price", { precision: 14, scale: 2 })
     .default("0")
     .notNull(),
+  /** m³ per unit for inventory lines; null = resolve from catalog by name. */
+  unitVolumeM3: numeric("unit_volume_m3", { precision: 10, scale: 3 }),
   sortOrder: integer("sort_order").default(0).notNull(),
 });
 

@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  adjustM3Line,
+  budgetItemVolumeM3,
+  buildQuoteEstimate,
   buildVolumeBreakdown,
+  createUnitVolumeResolver,
+  pickAutoM3Line,
   extractAutoEstimateAmount,
   extractAutoEstimateM3,
   formatM3,
@@ -343,5 +348,100 @@ describe("buildVolumeBreakdown", () => {
     });
     assert.equal(result.chargedM3, 4);
     assert.equal(result.unexplainedM3, 4);
+  });
+});
+
+describe("createUnitVolumeResolver", () => {
+  const resolve = createUnitVolumeResolver(
+    [{ name: "Sofá 3 cuerpos", volumeM3: 1.5 }],
+    0.08,
+  );
+
+  it("prefers stored volume, then box volume, then catalog", () => {
+    assert.equal(resolve({ description: "Sofá 3 cuerpos", unitVolumeM3: 2 }), 2);
+    assert.equal(resolve({ description: "Caja de mudanza", unitVolumeM3: null }), 0.08);
+    assert.equal(resolve({ description: "sofá 3 cuerpos", unitVolumeM3: null }), 1.5);
+    assert.equal(resolve({ description: "Piano", unitVolumeM3: null }), null);
+  });
+
+  it("only unit lines add volume", () => {
+    assert.equal(
+      budgetItemVolumeM3(
+        { description: "Caja de mudanza", pricingUnit: "unit", quantity: 10 },
+        resolve,
+      ).toFixed(2),
+      "0.80",
+    );
+    assert.equal(
+      budgetItemVolumeM3(
+        { description: "Sofá 3 cuerpos", pricingUnit: "fixed", quantity: 1 },
+        resolve,
+      ),
+      0,
+    );
+  });
+});
+
+describe("adjustM3Line", () => {
+  it("adds the delta and renames the auto line", () => {
+    assert.deepEqual(
+      adjustM3Line({
+        current: { description: "Mudanza estimada (5 m³)", quantity: 5 },
+        deltaM3: 1.2,
+      }),
+      { action: "upsert", description: "Mudanza estimada (6.2 m³)", quantity: 6.2 },
+    );
+  });
+
+  it("keeps a custom m³ line description", () => {
+    assert.deepEqual(
+      adjustM3Line({
+        current: { description: "Flete por m³", quantity: 5 },
+        deltaM3: -1,
+      }),
+      { action: "upsert", description: "Flete por m³", quantity: 4 },
+    );
+  });
+
+  it("creates the line when missing and deletes it at zero", () => {
+    assert.deepEqual(adjustM3Line({ current: null, deltaM3: 2 }), {
+      action: "upsert",
+      description: "Mudanza estimada (2 m³)",
+      quantity: 2,
+    });
+    assert.deepEqual(
+      adjustM3Line({
+        current: { description: "Mudanza estimada (1 m³)", quantity: 1 },
+        deltaM3: -1,
+      }),
+      { action: "delete" },
+    );
+    assert.deepEqual(adjustM3Line({ current: null, deltaM3: -1 }), { action: "none" });
+    assert.deepEqual(
+      adjustM3Line({ current: { description: "x", quantity: 3 }, deltaM3: 0 }),
+      { action: "none" },
+    );
+  });
+
+  it("picks the auto line before other m³ lines", () => {
+    const line = pickAutoM3Line([
+      { description: "Flete", pricingUnit: "m3" },
+      { description: "Mudanza estimada (3 m³)", pricingUnit: "m3" },
+    ]);
+    assert.equal(line?.description, "Mudanza estimada (3 m³)");
+  });
+});
+
+describe("buildQuoteEstimate volumes", () => {
+  it("stores per-unit m³ on inventory and box lines", () => {
+    const estimate = buildQuoteEstimate({
+      quantities: { sofa: 1 },
+      items: [{ id: "sofa", name: "Sofá", volumeM3: 1.5 }],
+      packingBoxes: 10,
+    });
+    const sofa = estimate.budgetLines.find((l) => l.description === "Sofá");
+    const boxes = estimate.budgetLines.find((l) => l.description === "Caja de mudanza");
+    assert.equal(sofa?.unitVolumeM3, 1.5);
+    assert.equal(boxes?.unitVolumeM3, estimate.config.boxVolumeM3);
   });
 });

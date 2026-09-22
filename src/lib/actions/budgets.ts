@@ -9,6 +9,12 @@ import { budgetItems, budgets, clients, jobs, quoteRequests } from "@/db/schema"
 import { requireAdmin } from "@/lib/auth";
 import { syncLinkedNotesFromBudgetItems } from "@/lib/budget-notes";
 import { ensureBudgetQuotedTotal } from "@/lib/budget-totals";
+import { applyInventoryVolumeDelta } from "@/lib/budget-volume";
+import { budgetItemVolumeM3 } from "@/lib/quote-pricing";
+import {
+  loadUnitVolumeResolver,
+  parseStoredVolume,
+} from "@/lib/volume-breakdown";
 
 const budgetMetaSchema = z.object({
   title: z.string().min(1).max(200),
@@ -21,7 +27,23 @@ const itemSchema = z.object({
   quantity: z.coerce.number().positive(),
   unitPrice: z.coerce.number().min(0),
   pricingUnit: z.enum(["fixed", "m3", "unit"]).default("unit"),
+  unitVolumeM3: z.preprocess(
+    (v) => (v === "" || v == null ? undefined : v),
+    z.coerce.number().min(0).optional(),
+  ),
 });
+
+type ParsedItem = z.infer<typeof itemSchema>;
+
+function parseItemForm(formData: FormData): ParsedItem {
+  return itemSchema.parse({
+    description: formData.get("description"),
+    quantity: formData.get("quantity"),
+    unitPrice: formData.get("unitPrice"),
+    pricingUnit: formData.get("pricingUnit") || "unit",
+    unitVolumeM3: formData.get("unitVolumeM3"),
+  });
+}
 
 function calcTotal(
   items: { quantity: number; unitPrice: number }[],
@@ -124,14 +146,15 @@ async function recalcBudgetTotalAndNotes(
 
 export async function addBudgetItem(budgetId: string, formData: FormData) {
   await requireAdmin();
-  const item = itemSchema.parse({
-    description: formData.get("description"),
-    quantity: formData.get("quantity"),
-    unitPrice: formData.get("unitPrice"),
-    pricingUnit: formData.get("pricingUnit") || "unit",
-  });
+  const item = parseItemForm(formData);
+  const resolve = await loadUnitVolumeResolver();
 
   const quantity = item.pricingUnit === "fixed" ? 1 : item.quantity;
+  const unitVolume =
+    item.pricingUnit === "unit"
+      ? (item.unitVolumeM3 ??
+        resolve({ description: item.description, unitVolumeM3: null }))
+      : null;
 
   await db.insert(budgetItems).values({
     budgetId,
@@ -139,8 +162,16 @@ export async function addBudgetItem(budgetId: string, formData: FormData) {
     pricingUnit: item.pricingUnit,
     quantity: String(quantity),
     unitPrice: String(item.unitPrice),
+    unitVolumeM3: unitVolume == null ? null : String(unitVolume),
   });
 
+  await applyInventoryVolumeDelta(
+    budgetId,
+    budgetItemVolumeM3(
+      { ...item, quantity, unitVolumeM3: unitVolume },
+      resolve,
+    ),
+  );
   const { jobIds } = await recalcBudgetTotalAndNotes(budgetId);
 
   revalidateBudgetItemPaths(budgetId, jobIds);
@@ -149,12 +180,7 @@ export async function addBudgetItem(budgetId: string, formData: FormData) {
 
 export async function updateBudgetItem(itemId: string, formData: FormData) {
   await requireAdmin();
-  const item = itemSchema.parse({
-    description: formData.get("description"),
-    quantity: formData.get("quantity"),
-    unitPrice: formData.get("unitPrice"),
-    pricingUnit: formData.get("pricingUnit") || "unit",
-  });
+  const item = parseItemForm(formData);
 
   const [existing] = await db
     .select()
@@ -166,7 +192,28 @@ export async function updateBudgetItem(itemId: string, formData: FormData) {
     throw new Error("Ítem no encontrado");
   }
 
+  const resolve = await loadUnitVolumeResolver();
+  const storedVolume = parseStoredVolume(existing.unitVolumeM3);
+  const before = budgetItemVolumeM3(
+    {
+      description: existing.description,
+      pricingUnit: existing.pricingUnit,
+      quantity: Number(existing.quantity),
+      unitVolumeM3: storedVolume,
+    },
+    resolve,
+  );
+
   const quantity = item.pricingUnit === "fixed" ? 1 : item.quantity;
+  const sameDescription = existing.description === item.description;
+  const unitVolume =
+    item.pricingUnit === "unit"
+      ? (item.unitVolumeM3 ??
+        resolve({
+          description: item.description,
+          unitVolumeM3: sameDescription ? storedVolume : null,
+        }))
+      : storedVolume;
 
   await db
     .update(budgetItems)
@@ -175,9 +222,15 @@ export async function updateBudgetItem(itemId: string, formData: FormData) {
       pricingUnit: item.pricingUnit,
       quantity: String(quantity),
       unitPrice: String(item.unitPrice),
+      unitVolumeM3: unitVolume == null ? null : String(unitVolume),
     })
     .where(eq(budgetItems.id, itemId));
 
+  const after = budgetItemVolumeM3(
+    { ...item, quantity, unitVolumeM3: unitVolume },
+    resolve,
+  );
+  await applyInventoryVolumeDelta(existing.budgetId, after - before);
   const { jobIds } = await recalcBudgetTotalAndNotes(existing.budgetId);
 
   revalidateBudgetItemPaths(existing.budgetId, jobIds);
@@ -197,7 +250,19 @@ export async function deleteBudgetItem(itemId: string) {
     throw new Error("Ítem no encontrado");
   }
 
+  const resolve = await loadUnitVolumeResolver();
+  const removedVolume = budgetItemVolumeM3(
+    {
+      description: existing.description,
+      pricingUnit: existing.pricingUnit,
+      quantity: Number(existing.quantity),
+      unitVolumeM3: parseStoredVolume(existing.unitVolumeM3),
+    },
+    resolve,
+  );
+
   await db.delete(budgetItems).where(eq(budgetItems.id, itemId));
+  await applyInventoryVolumeDelta(existing.budgetId, -removedVolume);
   const { jobIds } = await recalcBudgetTotalAndNotes(existing.budgetId, {
     hydrateFromNotes: false,
     mergeInventory: false,
