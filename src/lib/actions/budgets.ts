@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
-import { budgetItems, budgets, jobs, quoteRequests } from "@/db/schema";
+import { budgetItems, budgets, clients, jobs, quoteRequests } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { ensureBudgetQuotedTotal } from "@/lib/budget-totals";
 
@@ -213,6 +213,26 @@ export async function setBudgetStatus(
     .update(budgets)
     .set({ status, updatedAt: new Date() })
     .where(eq(budgets.id, budgetId));
+
+  if (status === "sent") {
+    const [client] = await db
+      .select({
+        name: clients.name,
+        email: clients.email,
+      })
+      .from(clients)
+      .where(eq(clients.id, budget.clientId))
+      .limit(1);
+    const { notifyClientQuote } = await import("@/lib/email/client-quote");
+    await notifyClientQuote({
+      clientName: client?.name ?? "Cliente",
+      clientEmail: client?.email ?? null,
+      title: budget.title,
+      totalAmount: budget.totalAmount,
+      validUntil: budget.validUntil,
+      notes: budget.notes,
+    });
+  }
 
   if (status === "approved") {
     let origin = "Por definir";

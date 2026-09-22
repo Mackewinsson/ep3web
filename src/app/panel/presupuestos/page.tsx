@@ -7,7 +7,7 @@ import {
 import { RecordList } from "@/components/panel/record-list";
 import { db } from "@/db";
 import { budgets, clients } from "@/db/schema";
-import { BUDGET_STATUS_LABELS, budgetStatusTone, formatClp, formatDate } from "@/lib/format";
+import { BUDGET_STATUS_LABELS, budgetStatusTone, formatClpPlusIva, formatDate } from "@/lib/format";
 import { desc, eq } from "drizzle-orm";
 
 export default async function PresupuestosPage() {
@@ -50,7 +50,7 @@ export default async function PresupuestosPage() {
               ),
               fields: [
                 { label: "Cliente", value: row.clientName },
-                { label: "Total", value: formatClp(row.totalAmount) },
+                { label: "Total", value: formatClpPlusIva(row.totalAmount) },
                 { label: "Válido hasta", value: formatDate(row.validUntil) },
               ],
             }))}

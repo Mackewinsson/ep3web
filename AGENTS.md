@@ -43,7 +43,7 @@ Step order (`QuoteWizard`):
 
 ## Admin ops flow
 
-1. Review presupuesto at `/panel/presupuestos` (edit lines, send, approve, reject, expire).
+1. Review presupuesto at `/panel/presupuestos` (edit lines, send, approve, reject, expire). Client-facing totals use `formatClpPlusIva` (`$X + IVA`); the stored amount stays net — do **not** bake IVA into pricing formulas. **Enviar al cliente** emails the total with `+ IVA` (`notifyClientQuote`).
 2. **Approve** → creates `jobs` with status `pending_assignment` (linked to budget); redirects to `/panel/trabajos/[id]`.
 3. **Assign operador** (`assignJob`) → ends prior open assignment as `reassigned` if any; new open `job_assignments`; job → **`assigned`**; notifies operador.
 4. Operator **Aceptar servicio** — job stays `assigned` (no new status enum). Admin list/detail/dashboard show **Por aceptar** vs **Aceptado** via `adminJobBadge` + `isReadyForEnCamino`. `notifyAdmins` type `job_accepted` (“Servicio aceptado”). The panel bell polls (~3s) and `router.refresh()` when unread increases so status updates without a full reload.
@@ -92,12 +92,12 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 | `src/lib/job-rules.ts` | Pure status / ready-for-en-camino checks (unit-tested) |
 | `src/lib/job-lifecycle.ts` | Open assignment DB helpers; re-exports job-rules |
 | `src/lib/jobs-view.ts` | Operator queries, ownership, payout helpers, safe notes; `getOpenAssignmentSummaries` for admin accepted badges |
-| `src/lib/format.ts` | Labels + `adminJobBadge` (Por aceptar / Aceptado) |
+| `src/lib/format.ts` | Labels + `adminJobBadge` + `formatClpPlusIva` (client totals are net) |
 | `src/components/panel/accept-service-modal.tsx` | Accept UI (chofer / RUT / patente) |
 | `src/components/panel/quote-volume-sync-fields.tsx` | Admin cotización: sync m³ ↔ Estimación auto notes |
 | `src/db/schema.ts` | Tables; `crewDriverRut`; acceptance timestamp on assignment |
 
-**Tests:** `npm run test:unit` (pricing + job rules + admin badges). E2E: `npm run test:e2e`.
+**Tests:** `npm run test:unit` (pricing + job rules + admin badges + quote IVA). E2E: `npm run test:e2e`.
 
 ---
 
@@ -105,6 +105,7 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 
 - Show **client price / budget total** to operators (payout + stripped notes only).
 - Duplicate volume / box / price formulas outside `src/lib/quote-pricing/`.
+- Bake IVA into stored quote/budget totals — show `+ IVA` next to the net amount.
 - Treat accept as a full salvoconducto form (folio, comunas, etc.) — only chofer + RUT + patente.
 - Invent alternate decline rules (decline only before accept).
 - Invent a new `jobs.status` for accept — derive **Aceptado** from `isReadyForEnCamino`.

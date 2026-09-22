@@ -29,6 +29,8 @@ Table `quote_pricing_settings` edited at `/panel/cotizador` (admin only):
 - `boxesPerM3`, `minBoxes`, `boxVolumeM3`
 - `pricePerM3`, `noElevatorPerFloor`, `operatorMarginPercent` (app commission; operator sees `100 − margin`% of the quoted price)
 
+Quoted CLP amounts are **net**. Client UI/email append `+ IVA`; do not multiply by 1.19 in formulas.
+
 Catalog categories/items: tables `moving_categories` / `moving_catalog_items`, same admin page.
 
 ## Public → ops flow
@@ -38,5 +40,5 @@ Catalog categories/items: tables `moving_categories` / `moving_catalog_items`, s
 3. Creates `clients` + `quote_requests` (source=`website`) + `budgets` (status=**draft**) + `budget_items`
    - One **unit** line per inventory item (+ packing boxes) for ops editing
    - Separate **m3/fixed** charge lines for internal price estimate
-4. Admin reviews/adjusts presupuesto → mark sent / email client → approve → `jobs`
+4. Admin reviews/adjusts presupuesto → mark sent / email client (**total is net**, shown as `$X + IVA`) → approve → `jobs`
 5. Operator sees **Tu pago** via `operatorPayoutFromClientTotal` only — never the client total

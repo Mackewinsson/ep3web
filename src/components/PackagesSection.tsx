@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatClp, PRICING_UNIT_LABELS } from "@/lib/format";
+import { formatClientPackagePrice, PRICING_UNIT_LABELS } from "@/lib/format";
 import type { HomePackage } from "@/lib/packages";
 import { getHomePackages } from "@/lib/packages";
 
@@ -10,12 +10,7 @@ function PackageCard({ pkg }: { pkg: HomePackage }) {
     .filter(Boolean)
     .slice(0, 4);
 
-  const priceHint =
-    pkg.pricingType === "fixed"
-      ? formatClp(pkg.basePrice)
-      : pkg.pricingType === "m3"
-        ? `${formatClp(pkg.basePrice)} / m³`
-        : `${formatClp(pkg.basePrice)} / unidad`;
+  const priceHint = formatClientPackagePrice(pkg.basePrice, pkg.pricingType);
 
   return (
     <article className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
