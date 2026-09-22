@@ -43,8 +43,8 @@ Step order (`QuoteWizard`):
 
 ## Admin ops flow
 
-1. Review presupuesto at `/panel/presupuestos` (edit lines, send, approve, reject, expire). Client-facing totals use `formatClpPlusIva` (`$X + IVA`); the stored amount stays net — do **not** bake IVA into pricing formulas. **Enviar al cliente** emails the total with `+ IVA` (`notifyClientQuote`). Adding/editing/removing budget lines updates **Notas**, `quote_requests.volumeNotes`, and **Notas del trabajo** from `budget_items` (`syncBudgetItemsInNotes`).
-2. **Approve** → creates `jobs` with status `pending_assignment` (linked to budget); redirects to `/panel/trabajos/[id]`.
+1. Review presupuesto at `/panel/presupuestos` (edit lines, send, approve, reject, expire). Client-facing totals use `formatClpPlusIva` (`$X + IVA`); the stored amount stays net — do **not** bake IVA into pricing formulas. **Enviar al cliente** emails the total with `+ IVA` (`notifyClientQuote`). Adding/editing/removing budget lines updates **Notas** (presupuesto) and `quote_requests.volumeNotes` from `budget_items` (`syncBudgetItemsInNotes`). Volume details live only there — **Notas del trabajo** (`jobs.notes`) stays empty so admin can write operational notes.
+2. **Approve** → creates `jobs` with status `pending_assignment` (linked to budget) and `notes: null`; redirects to `/panel/trabajos/[id]`.
 3. **Assign operador** (`assignJob`) → ends prior open assignment as `reassigned` if any; new open `job_assignments`; job → **`assigned`**; notifies operador.
 4. Operator **Aceptar servicio** — job stays `assigned` (no new status enum). Admin list/detail/dashboard show **Por aceptar** vs **Aceptado** via `adminJobBadge` + `isReadyForEnCamino`. Operator list/detail show **Por aceptar** vs **Por iniciar** via `driverJobBadge`. `notifyAdmins` type `job_accepted` (“Servicio aceptado”). The panel bell polls (~3s) and `router.refresh()` when unread increases so status updates without a full reload.
 
@@ -88,7 +88,8 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 | `src/lib/quote-pricing/` | Volume, boxes, budget math, operator margin |
 | `src/lib/actions/submit-wizard-quote.ts` | Public wizard persist |
 | `src/lib/actions/budgets.ts` | Approve → create job; item add/edit/delete syncs notes from `budget_items` |
-| `src/lib/budget-notes.ts` | Push budget lines into budget/quote/job notes |
+| `src/lib/budget-notes.ts` | Push budget lines into budget notes + `quote_requests.volumeNotes`; clear volume copies from `jobs.notes` |
+| `src/lib/job-notes.ts` | Hide job notes that duplicate volume (`operationalJobNotes`) |
 | `src/lib/actions/jobs.ts` | Assign, accept, decline, advance |
 | `src/lib/job-rules.ts` | Pure status / ready-for-en-camino checks (unit-tested) |
 | `src/lib/job-lifecycle.ts` | Open assignment DB helpers; re-exports job-rules |
@@ -98,7 +99,7 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 | `src/components/panel/quote-volume-sync-fields.tsx` | Admin cotización: sync m³ ↔ Estimación auto notes |
 | `src/db/schema.ts` | Tables; `crewDriverRut`; acceptance timestamp on assignment |
 
-**Tests:** `npm run test:unit` (pricing + job rules + admin badges + quote IVA). E2E: `npm run test:e2e`.
+**Tests:** `npm run test:unit` (pricing + job rules + job notes vs volume + admin badges + quote IVA). E2E: `npm run test:e2e`.
 
 ---
 
@@ -107,6 +108,7 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 - Show **client price / budget total** to operators (payout + stripped notes only).
 - Duplicate volume / box / price formulas outside `src/lib/quote-pricing/`.
 - Keep a second inventory list in notes that can drift from `budget_items` — notes Inventario/Cargos come from the budget lines.
+- Copy volume/inventory into **Notas del trabajo** — that field is operational only; volume stays in `quote_requests.volumeNotes`.
 - Bake IVA into stored quote/budget totals — show `+ IVA` next to the net amount.
 - Treat accept as a full salvoconducto form (folio, comunas, etc.) — only chofer + RUT + patente.
 - Invent alternate decline rules (decline only before accept).

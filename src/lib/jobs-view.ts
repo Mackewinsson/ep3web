@@ -98,6 +98,7 @@ export async function getJobOperationalDetail(jobId: string) {
         estimatedM3: quoteRequests.estimatedM3,
         estimatedItems: quoteRequests.estimatedItems,
         volumeNotes: quoteRequests.volumeNotes,
+        budgetNotes: budgets.notes,
         totalAmount: budgets.totalAmount,
       })
       .from(budgets)
@@ -111,7 +112,7 @@ export async function getJobOperationalDetail(jobId: string) {
     if (quote) {
       estimatedM3 = quote.estimatedM3;
       estimatedItems = quote.estimatedItems;
-      volumeNotes = quote.volumeNotes;
+      volumeNotes = quote.volumeNotes || quote.budgetNotes;
       clientTotalAmount = quote.totalAmount;
     }
   }
@@ -240,15 +241,10 @@ export function operatorSafeNotes(notes: string | null | undefined) {
   return stripClientPriceLines(notes);
 }
 
-export function notesContentEqual(
-  a?: string | null,
-  b?: string | null,
-) {
-  return (
-    (a ?? "").replace(/\s+/g, " ").trim() ===
-    (b ?? "").replace(/\s+/g, " ").trim()
-  );
-}
+export {
+  notesContentEqual,
+  operationalJobNotes,
+} from "@/lib/job-notes";
 
 export { isReadyForEnCamino } from "@/lib/job-lifecycle";
 

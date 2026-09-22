@@ -31,7 +31,7 @@ import {
   formatVolume,
   getJobOperationalDetail,
   mapsUrl,
-  notesContentEqual,
+  operationalJobNotes,
   operatorFacingAmounts,
 } from "@/lib/jobs-view";
 
@@ -122,8 +122,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
     .filter(Boolean)
     .join(" · ");
   const statusBadge = adminJobBadge(job.status, readyForEnCamino);
-  const volumeNotesDistinct =
-    Boolean(job.volumeNotes) && !notesContentEqual(job.volumeNotes, job.notes);
+  const jobNotes = operationalJobNotes(job.notes, job.volumeNotes);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -282,20 +281,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
               <dd className="text-ep3-navy">{volume}</dd>
             </div>
           ) : null}
-          {volumeNotesDistinct ? (
-            <div className="sm:col-span-2">
-              <dt className="text-ep3-navy/60">Detalle volumen</dt>
-              <dd className="whitespace-pre-line text-ep3-navy">
-                {job.volumeNotes}
-              </dd>
-            </div>
-          ) : null}
-          {job.notes ? (
-            <div className="sm:col-span-2">
-              <dt className="text-ep3-navy/60">Notas</dt>
-              <dd className="whitespace-pre-line text-ep3-navy">{job.notes}</dd>
-            </div>
-          ) : job.volumeNotes ? (
+          {job.volumeNotes ? (
             <div className="sm:col-span-2">
               <dt className="text-ep3-navy/60">Detalle volumen</dt>
               <dd className="whitespace-pre-line text-ep3-navy">
@@ -367,10 +353,10 @@ export default async function TrabajoDetailPage({ params }: Props) {
                 {job.scheduledTime || "—"}
               </dd>
             </div>
-            {job.notes ? (
+            {jobNotes ? (
               <div className="sm:col-span-2">
-                <dt className="text-ep3-navy/60">Notas</dt>
-                <dd className="text-ep3-navy">{job.notes}</dd>
+                <dt className="text-ep3-navy/60">Notas del trabajo</dt>
+                <dd className="whitespace-pre-line text-ep3-navy">{jobNotes}</dd>
               </div>
             ) : null}
           </dl>
@@ -392,7 +378,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
               <TextArea
                 label="Notas del trabajo"
                 name="notes"
-                defaultValue={job.notes}
+                defaultValue={jobNotes ?? ""}
               />
             </div>
             <div className="sm:col-span-2">

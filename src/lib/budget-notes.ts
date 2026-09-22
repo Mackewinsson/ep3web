@@ -1,6 +1,7 @@
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { budgetItems, budgets, jobs, quoteRequests } from "@/db/schema";
+import { notesContentEqual } from "@/lib/job-notes";
 import {
   extractAutoEstimateM3,
   formatM3,
@@ -27,8 +28,9 @@ function positiveNumber(value: unknown): number | null {
 }
 
 /**
- * budget_items is the source of truth. Push Inventario / Cargos / Cajas /
- * Estimación auto into budget.notes, quote.volumeNotes, and jobs.notes.
+ * budget_items is the source of truth for volume details.
+ * Push Inventario / Cargos / Cajas / Estimación auto into quote.volumeNotes
+ * and budget.notes. jobs.notes stay operational (empty unless admin writes).
  */
 export async function syncLinkedNotesFromBudgetItems(budgetId: string) {
   const [budget] = await db
@@ -93,6 +95,7 @@ export async function syncLinkedNotesFromBudgetItems(budgetId: string) {
       .where(eq(budgets.id, budgetId));
   }
 
+  let nextQuoteNotes: string | null = null;
   if (budget.quoteRequestId) {
     const [quote] = await db
       .select({
@@ -105,7 +108,7 @@ export async function syncLinkedNotesFromBudgetItems(budgetId: string) {
       .where(eq(quoteRequests.id, budget.quoteRequestId))
       .limit(1);
     if (quote) {
-      const nextQuoteNotes = syncBudgetItemsInNotes(
+      nextQuoteNotes = syncBudgetItemsInNotes(
         quote.volumeNotes,
         items,
         opts,
@@ -133,17 +136,22 @@ export async function syncLinkedNotesFromBudgetItems(budgetId: string) {
     }
   }
 
+  const volumeSnapshot = nextQuoteNotes || nextBudgetNotes;
+
   const jobRows = await db
     .select({ id: jobs.id, notes: jobs.notes })
     .from(jobs)
     .where(eq(jobs.budgetId, budgetId));
 
   for (const job of jobRows) {
-    const nextJobNotes = syncBudgetItemsInNotes(job.notes, items, opts);
-    if (nextJobNotes !== (job.notes ?? "").trim()) {
+    const isVolumeCopy =
+      notesContentEqual(job.notes, volumeSnapshot) ||
+      notesContentEqual(job.notes, nextBudgetNotes) ||
+      notesContentEqual(job.notes, budget.notes);
+    if (job.notes && isVolumeCopy) {
       await db
         .update(jobs)
-        .set({ notes: nextJobNotes || null, updatedAt: new Date() })
+        .set({ notes: null, updatedAt: new Date() })
         .where(eq(jobs.id, job.id));
     }
   }

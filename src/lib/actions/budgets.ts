@@ -295,7 +295,7 @@ export async function setBudgetStatus(
           destinationAddress: destination,
           scheduledDate,
           status: "pending_assignment",
-          notes,
+          notes: null,
         })
         .returning();
 
