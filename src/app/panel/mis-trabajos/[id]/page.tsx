@@ -69,6 +69,12 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
   const accepted = isReadyForEnCamino(job.assignment);
   const canAccept = job.status === "assigned" && !accepted;
   const statusBadge = driverJobBadge(job.status, accepted);
+  const showJobFacts = Boolean(
+    accepted ||
+      (volume && volumeBreakdown?.chargedM3 == null) ||
+      job.assignment?.notes ||
+      jobNotes,
+  );
 
   const fleetTrucks = await db
     .select({
@@ -149,53 +155,57 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
             </a>
           </div>
 
-          <dl className="space-y-3 rounded-lg border border-ep3-navy/10 bg-white/70 p-4 text-sm">
-            {accepted ? (
-              <>
+          {showJobFacts ? (
+            <dl className="space-y-3 rounded-lg border border-ep3-navy/10 bg-white/70 p-4 text-sm">
+              {accepted ? (
+                <>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-ep3-navy/55">Camión</dt>
+                    <dd className="text-right font-medium text-ep3-navy">
+                      {job.assignment?.truckPlate}
+                      {job.assignment?.truckLabel
+                        ? ` · ${job.assignment.truckLabel}`
+                        : ""}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-ep3-navy/55">Conductor</dt>
+                    <dd className="text-right font-medium text-ep3-navy">
+                      {job.assignment?.crewDriverName}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-ep3-navy/55">RUT chofer</dt>
+                    <dd className="text-right font-medium text-ep3-navy">
+                      {job.assignment?.crewDriverRut}
+                    </dd>
+                  </div>
+                </>
+              ) : null}
+              {volume && volumeBreakdown?.chargedM3 == null ? (
                 <div className="flex justify-between gap-3">
-                  <dt className="text-ep3-navy/55">Camión</dt>
+                  <dt className="text-ep3-navy/55">Carga</dt>
                   <dd className="text-right font-medium text-ep3-navy">
-                    {job.assignment?.truckPlate}
-                    {job.assignment?.truckLabel
-                      ? ` · ${job.assignment.truckLabel}`
-                      : ""}
+                    {volume}
                   </dd>
                 </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-ep3-navy/55">Conductor</dt>
-                  <dd className="text-right font-medium text-ep3-navy">
-                    {job.assignment?.crewDriverName}
+              ) : null}
+              {job.assignment?.notes ? (
+                <div>
+                  <dt className="text-ep3-navy/55">Notas para ti</dt>
+                  <dd className="mt-1 text-ep3-navy">{job.assignment.notes}</dd>
+                </div>
+              ) : null}
+              {jobNotes ? (
+                <div>
+                  <dt className="text-ep3-navy/55">Notas del trabajo</dt>
+                  <dd className="mt-1 whitespace-pre-line text-ep3-navy">
+                    {jobNotes}
                   </dd>
                 </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-ep3-navy/55">RUT chofer</dt>
-                  <dd className="text-right font-medium text-ep3-navy">
-                    {job.assignment?.crewDriverRut}
-                  </dd>
-                </div>
-              </>
-            ) : null}
-            {volume && volumeBreakdown?.chargedM3 == null ? (
-              <div className="flex justify-between gap-3">
-                <dt className="text-ep3-navy/55">Carga</dt>
-                <dd className="text-right font-medium text-ep3-navy">{volume}</dd>
-              </div>
-            ) : null}
-            {job.assignment?.notes ? (
-              <div>
-                <dt className="text-ep3-navy/55">Notas para ti</dt>
-                <dd className="mt-1 text-ep3-navy">{job.assignment.notes}</dd>
-              </div>
-            ) : null}
-            {jobNotes ? (
-              <div>
-                <dt className="text-ep3-navy/55">Notas del trabajo</dt>
-                <dd className="mt-1 whitespace-pre-line text-ep3-navy">
-                  {jobNotes}
-                </dd>
-              </div>
-            ) : null}
-          </dl>
+              ) : null}
+            </dl>
+          ) : null}
         </div>
       </PanelCard>
 
