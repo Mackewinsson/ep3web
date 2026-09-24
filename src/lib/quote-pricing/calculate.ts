@@ -218,7 +218,7 @@ export type NotesBudgetItem = {
   quantity: number;
 };
 
-function isPackingBoxItem(description: string) {
+export function isPackingBoxItem(description: string) {
   return /^cajas? de mudanza$/i.test(description.trim());
 }
 
@@ -601,8 +601,18 @@ export type VolumeBreakdownLine = {
   lineVolumeM3: number | null;
 };
 
+/** A budget line that is not inventory: access surcharges, helpers, extra m³. */
+export type VolumeBreakdownCharge = {
+  name: string;
+  pricingUnit: "fixed" | "m3";
+  /** m³ for `m3` lines, units otherwise. */
+  quantity: number;
+};
+
 export type VolumeBreakdown = {
   lines: VolumeBreakdownLine[];
+  /** Charges shown without prices, so operators can see them too. */
+  charges: VolumeBreakdownCharge[];
   catalogM3: number;
   /** m³ billed on the budget (m³ lines), or the quote estimate when none. */
   chargedM3: number | null;
@@ -699,6 +709,7 @@ export function buildVolumeBreakdown(input: {
   const resolve = createUnitVolumeResolver(input.catalog, input.boxVolumeM3);
 
   const lines: VolumeBreakdownLine[] = [];
+  const charges: VolumeBreakdownCharge[] = [];
   let catalogM3 = 0;
   let totalItems = 0;
   let m3Lines = 0;
@@ -708,9 +719,24 @@ export function buildVolumeBreakdown(input: {
     if (item.pricingUnit === "m3") {
       hasM3Line = true;
       m3Lines += item.quantity;
+      if (!isPrimaryM3Estimate(item.description, item.pricingUnit)) {
+        charges.push({
+          name: item.description,
+          pricingUnit: "m3",
+          quantity: item.quantity,
+        });
+      }
       continue;
     }
-    if (item.pricingUnit !== "unit" || item.quantity <= 0) continue;
+    if (item.pricingUnit === "fixed") {
+      charges.push({
+        name: item.description,
+        pricingUnit: "fixed",
+        quantity: item.quantity > 0 ? item.quantity : 1,
+      });
+      continue;
+    }
+    if (item.quantity <= 0) continue;
 
     const isPackingBox = isPackingBoxItem(item.description);
     const unit = resolve(item);
@@ -737,6 +763,7 @@ export function buildVolumeBreakdown(input: {
 
   return {
     lines,
+    charges,
     catalogM3: Number(catalogM3.toFixed(2)),
     chargedM3,
     unexplainedM3,

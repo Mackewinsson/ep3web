@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   GridCard,
   GridEmptyRow,
+  GridSectionRow,
   gridCell,
   type GridStat,
 } from "@/components/panel/data-grid";
@@ -9,6 +10,8 @@ import { pluralizeEs } from "@/lib/format";
 import { formatM3, type VolumeBreakdown } from "@/lib/quote-pricing";
 
 const COLUMNS = 5;
+
+const dash = <span className="text-ep3-navy/30">—</span>;
 
 /** Read-only item table. Never renders prices — shared by admin and driver. */
 export function QuoteItemsGrid({
@@ -25,7 +28,8 @@ export function QuoteItemsGrid({
   title?: string;
   description?: string;
 }) {
-  const { lines, catalogM3, chargedM3, unexplainedM3, totalItems } = breakdown;
+  const { lines, charges, catalogM3, chargedM3, unexplainedM3, totalItems } =
+    breakdown;
 
   const stats: GridStat[] = [
     {
@@ -75,6 +79,11 @@ export function QuoteItemsGrid({
           </tr>
         </thead>
         <tbody>
+          <GridSectionRow
+            label="Inventario del cliente"
+            hint="lo que eligió en el cotizador + lo que agregó el equipo"
+            colSpan={COLUMNS}
+          />
           {lines.length === 0 ? (
             <GridEmptyRow
               colSpan={COLUMNS}
@@ -99,11 +108,7 @@ export function QuoteItemsGrid({
                 </td>
                 <td className={gridCell.num}>{line.quantity}</td>
                 <td className={gridCell.num}>
-                  {line.unitVolumeM3 == null ? (
-                    <span className="text-ep3-navy/30">—</span>
-                  ) : (
-                    formatM3(line.unitVolumeM3)
-                  )}
+                  {line.unitVolumeM3 == null ? dash : formatM3(line.unitVolumeM3)}
                 </td>
                 <td className={`${gridCell.num} pr-4 font-semibold`}>
                   {line.lineVolumeM3 == null ? (
@@ -111,6 +116,34 @@ export function QuoteItemsGrid({
                   ) : (
                     formatM3(line.lineVolumeM3)
                   )}
+                </td>
+              </tr>
+            ))
+          )}
+
+          <GridSectionRow
+            label="Cargos y servicios"
+            hint="incluidos en el precio, sin montos"
+            colSpan={COLUMNS}
+          />
+          {charges.length === 0 ? (
+            <GridEmptyRow colSpan={COLUMNS} message="Sin cargos." />
+          ) : (
+            charges.map((charge, i) => (
+              <tr
+                key={`${charge.name}-${i}`}
+                className="border-t border-ep3-navy/10 hover:bg-ep3-yellow/[0.07]"
+              >
+                <td className="px-3 py-2 text-right text-xs tabular-nums text-ep3-navy/35">
+                  {lines.length + i + 1}
+                </td>
+                <td className={`${gridCell.body} font-medium`}>{charge.name}</td>
+                <td className={gridCell.num}>
+                  {charge.pricingUnit === "fixed" ? charge.quantity : dash}
+                </td>
+                <td className={gridCell.num}>{dash}</td>
+                <td className={`${gridCell.num} pr-4 font-semibold`}>
+                  {charge.pricingUnit === "m3" ? formatM3(charge.quantity) : dash}
                 </td>
               </tr>
             ))
