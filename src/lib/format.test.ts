@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { adminJobBadge, driverJobBadge, formatClientPackagePrice, formatClpPlusIva, trimDecimals } from "./format";
+import { adminJobBadge, driverJobBadge, formatClientPackagePrice, formatClpPlusIva, pluralizeEs, trimDecimals } from "./format";
 
 describe("adminJobBadge", () => {
   it("splits assigned into waiting vs accepted", () => {
@@ -87,5 +87,13 @@ describe("trimDecimals", () => {
     assert.equal(trimDecimals(null), "");
     assert.equal(trimDecimals(""), "");
     assert.equal(trimDecimals("abc"), "abc");
+  });
+});
+
+describe("pluralizeEs", () => {
+  it("uses the singular only for exactly one", () => {
+    assert.equal(pluralizeEs(0, "línea", "líneas"), "0 líneas");
+    assert.equal(pluralizeEs(1, "línea", "líneas"), "1 línea");
+    assert.equal(pluralizeEs(6, "línea", "líneas"), "6 líneas");
   });
 });

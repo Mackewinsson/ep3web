@@ -18,6 +18,10 @@ export function trimDecimals(value: string | number | null | undefined) {
     : text;
 }
 
+export function pluralizeEs(count: number, singular: string, plural: string) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 /** Shown on client quotes: stored totals are net; IVA is added later. */
 export const CLIENT_PRICE_IVA_SUFFIX = "+ IVA";
 

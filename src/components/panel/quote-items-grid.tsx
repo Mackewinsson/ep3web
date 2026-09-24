@@ -5,6 +5,7 @@ import {
   gridCell,
   type GridStat,
 } from "@/components/panel/data-grid";
+import { pluralizeEs } from "@/lib/format";
 import { formatM3, type VolumeBreakdown } from "@/lib/quote-pricing";
 
 const COLUMNS = 5;
@@ -26,7 +27,7 @@ export function QuoteItemsGrid({
     {
       label: "Ítems",
       value: String(totalItems),
-      hint: `${lines.length} líneas`,
+      hint: pluralizeEs(lines.length, "línea", "líneas"),
     },
     {
       label: "m³ inventario",

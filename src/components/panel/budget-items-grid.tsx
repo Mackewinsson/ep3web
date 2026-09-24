@@ -11,7 +11,12 @@ import {
   deleteBudgetItem,
   updateBudgetItem,
 } from "@/lib/actions/budgets";
-import { formatClp, formatClpPlusIva, trimDecimals } from "@/lib/format";
+import {
+  formatClp,
+  formatClpPlusIva,
+  pluralizeEs,
+  trimDecimals,
+} from "@/lib/format";
 import { formatM3 } from "@/lib/quote-pricing";
 
 export type BudgetItemRow = {
@@ -192,7 +197,7 @@ export function BudgetItemsGrid({
     {
       label: "Ítems",
       value: String(unitCount),
-      hint: `${inventory.length} líneas de inventario`,
+      hint: `${pluralizeEs(inventory.length, "línea", "líneas")} de inventario`,
     },
     {
       label: "m³ inventario",
@@ -352,7 +357,8 @@ export function BudgetItemsGrid({
         <tfoot>
           <tr className="border-t-2 border-ep3-navy/15 bg-ep3-navy/[0.03]">
             <td colSpan={5} className="px-3 py-2.5 text-sm text-ep3-navy/60">
-              {items.length} líneas · {formatM3(inventoryM3)} m³ de inventario
+              {pluralizeEs(items.length, "línea", "líneas")} ·{" "}
+              {formatM3(inventoryM3)} m³ de inventario
             </td>
             <td className={`${gridCell.num} pr-4 font-semibold`}>
               {billedM3 == null ? "—" : `${formatM3(billedM3)}`}
