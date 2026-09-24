@@ -100,7 +100,7 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 | `src/components/panel/accept-service-modal.tsx` | Accept UI (chofer / RUT / patente) |
 | `src/components/panel/data-grid.tsx` | Shared spreadsheet primitives (card, stat strip, cell/button tokens) |
 | `src/components/panel/budget-items-grid.tsx` | Presupuesto: editable full-width item table (inline rows + add row) |
-| `src/components/panel/quote-items-grid.tsx` | Cotización: read-only full-width item table |
+| `src/components/panel/quote-items-grid.tsx` | Read-only full-width item table (cotización, trabajo admin, mis-trabajos). No prices |
 | `src/components/panel/service-details-card.tsx` | Read-only «Detalles del servicio» (acceso, ayudantes, delicados, hora) |
 | `src/components/panel/quote-volume-sync-fields.tsx` | Admin cotización: sync m³ ↔ Estimación auto notes |
 | `src/db/schema.ts` | Tables; `crewDriverRut`; acceptance timestamp on assignment |
