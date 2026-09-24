@@ -30,6 +30,7 @@ export async function getQuoteItemsView(input: {
       breakdown: await getBudgetVolumeBreakdown(
         input.budgetId,
         input.estimatedM3,
+        input.volumeNotes,
       ),
     };
   }
