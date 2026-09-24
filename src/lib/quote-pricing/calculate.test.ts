@@ -350,6 +350,26 @@ describe("buildVolumeBreakdown", () => {
     assert.equal(result.chargedM3, 4);
     assert.equal(result.unexplainedM3, 4);
   });
+
+  it("lists charges without prices and skips the billed m³ line", () => {
+    const result = buildVolumeBreakdown({
+      catalog,
+      boxVolumeM3: 0.08,
+      items: [
+        { description: "Sofá 3 cuerpos", pricingUnit: "unit", quantity: 1 },
+        { description: "Mudanza estimada (2 m³)", pricingUnit: "m3", quantity: 2 },
+        { description: "Recargo acceso origen", pricingUnit: "fixed", quantity: 1 },
+        { description: "Ayuda chofer", pricingUnit: "fixed", quantity: 1 },
+        { description: "m³ adicionales", pricingUnit: "m3", quantity: 0.5 },
+      ],
+    });
+    assert.deepEqual(
+      result.charges.map((c) => c.name),
+      ["Recargo acceso origen", "Ayuda chofer", "m³ adicionales"],
+    );
+    assert.equal(result.chargedM3, 2.5);
+    assert.equal(result.lines.length, 1);
+  });
 });
 
 describe("createUnitVolumeResolver", () => {
