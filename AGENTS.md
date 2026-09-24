@@ -94,8 +94,14 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 | `src/lib/job-rules.ts` | Pure status / ready-for-en-camino checks (unit-tested) |
 | `src/lib/job-lifecycle.ts` | Open assignment DB helpers; re-exports job-rules |
 | `src/lib/jobs-view.ts` | Operator queries, ownership, payout helpers, safe notes; `getOpenAssignmentSummaries` for admin accepted badges |
-| `src/lib/format.ts` | Labels + `adminJobBadge` / `driverJobBadge` + `formatClpPlusIva` |
+| `src/lib/format.ts` | Labels + `adminJobBadge` / `driverJobBadge` + `formatClpPlusIva` + `trimDecimals` |
+| `src/lib/quote-items.ts` | Resolve a cotización's item breakdown from its budget, else from notes |
+| `src/lib/quote-pricing/notes-sections.ts` | Split notes into client wizard answers vs the admin's message; drop lines the item table shows |
 | `src/components/panel/accept-service-modal.tsx` | Accept UI (chofer / RUT / patente) |
+| `src/components/panel/data-grid.tsx` | Shared spreadsheet primitives (card, stat strip, cell/button tokens) |
+| `src/components/panel/budget-items-grid.tsx` | Presupuesto: editable full-width item table (inline rows + add row) |
+| `src/components/panel/quote-items-grid.tsx` | Read-only full-width item table (cotización, trabajo admin, mis-trabajos). No prices |
+| `src/components/panel/service-details-card.tsx` | Read-only «Detalles del servicio» (acceso, ayudantes, delicados, hora) |
 | `src/components/panel/quote-volume-sync-fields.tsx` | Admin cotización: sync m³ ↔ Estimación auto notes |
 | `src/db/schema.ts` | Tables; `crewDriverRut`; acceptance timestamp on assignment |
 
@@ -106,6 +112,7 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 ## Agents must NOT
 
 - Show **client price / budget total** to operators (payout + stripped notes only).
+- Write generated item lines (`Inventario:` / `Cajas:` / `Cargos:` / `Estimación auto:`) into `budgets.notes` — that field is the **message emailed to the client**. The machine-readable snapshot lives in `quote_requests.volumeNotes`.
 - Duplicate volume / box / price formulas outside `src/lib/quote-pricing/`.
 - Keep a second inventory list in notes that can drift from `budget_items` — notes Inventario/Cargos come from the budget lines, **merged** with the client wizard list still in notes so adding a manual line cannot wipe what the client chose.
 - Copy volume/inventory into **Notas del trabajo** — that field is operational only; volume stays in `quote_requests.volumeNotes`.

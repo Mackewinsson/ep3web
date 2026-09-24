@@ -20,6 +20,7 @@ export {
   sumInventory,
   syncAutoEstimateInNotes,
   syncBudgetItemsInNotes,
+  parseCajasCount,
   parseInventarioEntries,
   inventoryItemsMissingFromBudget,
   type AccessSurchargeInput,
@@ -35,3 +36,11 @@ export {
   type VolumeCatalogEntry,
   type VolumeItem,
 } from "./calculate";
+
+export {
+  clientMessageFromNotes,
+  parseNotesSections,
+  serviceDetailsFromNotes,
+  type NotesSections,
+  type ServiceDetail,
+} from "./notes-sections";

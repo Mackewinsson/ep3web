@@ -283,6 +283,15 @@ export function parseInventarioEntries(
   return [...byName.values()];
 }
 
+/** Parse the `Cajas: 12` summary line from notes. */
+export function parseCajasCount(notes: string | null | undefined): number {
+  if (!notes) return 0;
+  const match = notes.match(/^Cajas:\s*(\d+)/im);
+  if (!match) return 0;
+  const value = Number(match[1]);
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
 export function inventoryItemsMissingFromBudget(
   notes: string | null | undefined,
   items: NotesBudgetItem[],

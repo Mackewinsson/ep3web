@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { budgetItems, budgets, jobs, quoteRequests } from "@/db/schema";
 import { notesContentEqual } from "@/lib/job-notes";
 import {
+  clientMessageFromNotes,
   extractAutoEstimateM3,
   formatM3,
   inventoryItemsMissingFromBudget,
@@ -51,8 +52,10 @@ export type SyncLinkedNotesOptions = {
 /**
  * budget_items is the source of truth for volume details, plus any client
  * Inventario still living only in notes (wizard summary).
- * Push Inventario / Cargos / Cajas / Estimación auto into quote.volumeNotes
- * and budget.notes. jobs.notes stay operational (empty unless admin writes).
+ * Push Inventario / Cargos / Cajas / Estimación auto into quote.volumeNotes,
+ * which stays the machine-readable snapshot. budget.notes is reduced to the
+ * admin's message for the client. jobs.notes stay operational (empty unless
+ * admin writes).
  */
 export async function syncLinkedNotesFromBudgetItems(
   budgetId: string,
@@ -133,7 +136,12 @@ export async function syncLinkedNotesFromBudgetItems(
     mergeInventory,
   };
 
-  const nextBudgetNotes = syncBudgetItemsInNotes(budget.notes, items, opts);
+  // The item table now shows inventory, boxes, charges and the estimate, so
+  // budget.notes keeps only what the admin wrote for the client (it is the
+  // text appended to the quote email). The machine-readable snapshot stays in
+  // quote_requests.volumeNotes below.
+  const generatedBudgetNotes = syncBudgetItemsInNotes(budget.notes, items, opts);
+  const nextBudgetNotes = clientMessageFromNotes(budget.notes);
   if (nextBudgetNotes !== (budget.notes ?? "").trim()) {
     await db
       .update(budgets)
@@ -185,7 +193,7 @@ export async function syncLinkedNotesFromBudgetItems(
     }
   }
 
-  const volumeSnapshot = nextQuoteNotes || nextBudgetNotes;
+  const volumeSnapshot = nextQuoteNotes || generatedBudgetNotes;
 
   const jobRows = await db
     .select({ id: jobs.id, notes: jobs.notes })
@@ -195,7 +203,7 @@ export async function syncLinkedNotesFromBudgetItems(
   for (const job of jobRows) {
     const isVolumeCopy =
       notesContentEqual(job.notes, volumeSnapshot) ||
-      notesContentEqual(job.notes, nextBudgetNotes) ||
+      notesContentEqual(job.notes, generatedBudgetNotes) ||
       notesContentEqual(job.notes, budget.notes);
     if (job.notes && isVolumeCopy) {
       await db
