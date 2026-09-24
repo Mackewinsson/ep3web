@@ -145,12 +145,14 @@ export function TextArea({
   defaultValue,
   rows = 3,
   required,
+  placeholder,
 }: {
   label: string;
   name: string;
   defaultValue?: string | null;
   rows?: number;
   required?: boolean;
+  placeholder?: string;
 }) {
   return (
     <label className="block text-sm">
@@ -159,6 +161,7 @@ export function TextArea({
         name={name}
         rows={rows}
         required={required}
+        placeholder={placeholder}
         defaultValue={defaultValue ?? undefined}
         className={inputClassName}
       />

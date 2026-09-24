@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { QuoteItemsGrid } from "@/components/panel/quote-items-grid";
 import { QuoteVolumeSyncFields } from "@/components/panel/quote-volume-sync-fields";
+import { ServiceDetailsCard } from "@/components/panel/service-details-card";
 import {
   BackLink,
   Field,
@@ -165,6 +166,8 @@ export default async function CotizacionDetailPage({ params }: Props) {
         }
       />
 
+      <ServiceDetailsCard notes={quote.volumeNotes} />
+
       <form
         // Volume and notes are rewritten server-side from the linked budget;
         // remount so the uncontrolled fields pick up the new values.
@@ -227,11 +230,10 @@ export default async function CotizacionDetailPage({ params }: Props) {
           </PanelCard>
 
           <PanelCard>
-            <h2 className="mb-1 font-semibold text-ep3-navy">
-              Volumen y notas
-            </h2>
+            <h2 className="mb-1 font-semibold text-ep3-navy">Volumen</h2>
             <p className="mb-3 text-sm text-ep3-navy/60">
-              Los m³ y la estimación se mantienen sincronizados con el texto.
+              Los m³ y la estimación se mantienen sincronizados con el texto
+              del cotizador.
             </p>
             <div className="space-y-4">
               <QuoteVolumeSyncFields
@@ -239,6 +241,7 @@ export default async function CotizacionDetailPage({ params }: Props) {
                 initialItems={quote.estimatedItems}
                 initialNotes={quote.volumeNotes}
                 pricePerM3={pricing.pricePerM3}
+                notesSummary="Ver texto del cotizador"
               />
             </div>
           </PanelCard>

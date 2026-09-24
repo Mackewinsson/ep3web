@@ -16,12 +16,18 @@ export function QuoteVolumeSyncFields({
   initialItems,
   initialNotes,
   pricePerM3,
+  notesSummary,
 }: {
   initialM3?: string | number | null;
   initialItems?: string | number | null;
   initialNotes?: string | null;
   /** Used when notes have no prior amount to scale from. */
   pricePerM3: number;
+  /**
+   * When set, the raw snapshot textarea is collapsed behind this summary.
+   * The readable version of the same text is shown elsewhere on the page.
+   */
+  notesSummary?: string;
 }) {
   const [m3, setM3] = useState(() => trimDecimals(initialM3));
   const [notes, setNotes] = useState(() => {
@@ -50,6 +56,21 @@ export function QuoteVolumeSyncFields({
     }
     setM3(formatM3(fromNotes));
   }
+
+  const notesTextArea = (
+    <label className="block text-sm">
+      <span className="mb-1 block font-medium text-ep3-navy">
+        Volumen / notas
+      </span>
+      <textarea
+        name="volumeNotes"
+        rows={10}
+        value={notes}
+        onChange={(e) => applyNotes(e.target.value)}
+        className={inputClassName}
+      />
+    </label>
+  );
 
   return (
     <>
@@ -82,18 +103,16 @@ export function QuoteVolumeSyncFields({
           />
         </label>
       </div>
-      <label className="block text-sm">
-        <span className="mb-1 block font-medium text-ep3-navy">
-          Volumen / notas
-        </span>
-        <textarea
-          name="volumeNotes"
-          rows={10}
-          value={notes}
-          onChange={(e) => applyNotes(e.target.value)}
-          className={inputClassName}
-        />
-      </label>
+      {notesSummary ? (
+        <details className="rounded-md border border-ep3-navy/15 bg-ep3-navy/[0.02]">
+          <summary className="cursor-pointer px-3 py-2.5 text-sm font-medium text-ep3-navy">
+            {notesSummary}
+          </summary>
+          <div className="px-3 pb-3">{notesTextArea}</div>
+        </details>
+      ) : (
+        notesTextArea
+      )}
     </>
   );
 }
