@@ -8,7 +8,7 @@ import {
   PanelCard,
   StatusBadge,
 } from "@/components/panel/ui";
-import { VolumeBreakdownList } from "@/components/panel/volume-breakdown-list";
+import { QuoteItemsGrid } from "@/components/panel/quote-items-grid";
 import { db } from "@/db";
 import { drivers, trucks } from "@/db/schema";
 import { driverAdvanceJob, operatorDeclineJob } from "@/lib/actions/jobs";
@@ -86,7 +86,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
     .orderBy(asc(drivers.name));
 
   return (
-    <div className="mx-auto max-w-lg space-y-4">
+    <div className="space-y-6">
       <div>
         <BackLink href="/panel/mis-trabajos" label="Volver a mis trabajos" />
         <PageHeader
@@ -180,14 +180,6 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 <dd className="text-right font-medium text-ep3-navy">{volume}</dd>
               </div>
             ) : null}
-            {volumeBreakdown ? (
-              <div>
-                <dt className="mb-2 text-ep3-navy/55">Inventario y m³</dt>
-                <dd>
-                  <VolumeBreakdownList breakdown={volumeBreakdown} />
-                </dd>
-              </div>
-            ) : null}
             {volumeNotes ? (
               <div>
                 <dt className="text-ep3-navy/55">Detalle volumen</dt>
@@ -213,6 +205,15 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
           </dl>
         </div>
       </PanelCard>
+
+      {volumeBreakdown ? (
+        <QuoteItemsGrid
+          breakdown={volumeBreakdown}
+          source="budget"
+          title="Ítems de la mudanza"
+          description="Cantidad y volumen de cada ítem. Sin precios."
+        />
+      ) : null}
 
       <PanelCard>
         <div className="space-y-2">
