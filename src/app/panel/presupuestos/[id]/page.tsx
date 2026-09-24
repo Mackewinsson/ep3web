@@ -2,6 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BudgetItemsGrid } from "@/components/panel/budget-items-grid";
+import { ServiceDetailsCard } from "@/components/panel/service-details-card";
 import {
   BackLink,
   Field,
@@ -12,7 +13,7 @@ import {
   TextArea,
 } from "@/components/panel/ui";
 import { db } from "@/db";
-import { budgetItems, budgets, clients, jobs } from "@/db/schema";
+import { budgetItems, budgets, clients, jobs, quoteRequests } from "@/db/schema";
 import { setBudgetStatus, updateBudgetMeta } from "@/lib/actions/budgets";
 import { ensureClientInventoryFromNotes } from "@/lib/budget-notes";
 import {
@@ -21,6 +22,7 @@ import {
   formatClpPlusIva,
   JOB_STATUS_LABELS,
 } from "@/lib/format";
+import { clientMessageFromNotes } from "@/lib/quote-pricing";
 import { loadUnitVolumeResolver, parseStoredVolume } from "@/lib/volume-breakdown";
 
 type Props = { params: Promise<{ id: string }> };
@@ -33,6 +35,8 @@ const budgetColumns = {
   validUntil: budgets.validUntil,
   notes: budgets.notes,
   clientName: clients.name,
+  /** Wizard snapshot: the only record of access, helpers and fragile items. */
+  volumeNotes: quoteRequests.volumeNotes,
 };
 
 function loadBudget(id: string) {
@@ -40,6 +44,7 @@ function loadBudget(id: string) {
     .select(budgetColumns)
     .from(budgets)
     .innerJoin(clients, eq(budgets.clientId, clients.id))
+    .leftJoin(quoteRequests, eq(budgets.quoteRequestId, quoteRequests.id))
     .where(eq(budgets.id, id))
     .limit(1);
 }
@@ -89,6 +94,9 @@ export default async function PresupuestoDetailPage({ params }: Props) {
     : null;
 
   const editable = row.status === "draft" || row.status === "sent";
+  // Older budgets still hold the wizard dump here; show only the message part.
+  // Saving (or sending) persists the cleaned value.
+  const clientMessage = clientMessageFromNotes(row.notes);
 
   return (
     <div className="space-y-6">
@@ -176,15 +184,18 @@ export default async function PresupuestoDetailPage({ params }: Props) {
         billedM3={billedM3}
       />
 
+      <ServiceDetailsCard notes={row.volumeNotes} />
+
       <PanelCard>
         <h2 className="mb-1 font-semibold text-ep3-navy">Datos del presupuesto</h2>
         <p className="mb-4 text-sm text-ep3-navy/60">
-          Las notas se regeneran desde los ítems (inventario, cajas, cargos).
+          El mensaje se envía al cliente junto con el total. Los ítems y el
+          volumen van en la tabla.
         </p>
         <form
-          // Notes are rewritten server-side when items change; remount so the
-          // uncontrolled fields do not keep showing the previous text.
-          key={`${row.title}|${row.validUntil ?? ""}|${row.notes ?? ""}`}
+          // Saved values can change server-side; remount so the uncontrolled
+          // fields do not keep showing the previous text.
+          key={`${row.title}|${row.validUntil ?? ""}|${clientMessage}`}
           action={updateBudgetMeta.bind(null, id)}
           className="space-y-4"
         >
@@ -204,10 +215,11 @@ export default async function PresupuestoDetailPage({ params }: Props) {
               />
             </div>
             <TextArea
-              label="Notas"
+              label="Mensaje para el cliente"
               name="notes"
               rows={9}
-              defaultValue={row.notes}
+              placeholder="Ej.: Coordinamos el horario por WhatsApp. El equipo llega con mantas y film."
+              defaultValue={clientMessage}
             />
           </div>
           <SubmitButton label="Guardar datos" />

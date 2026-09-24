@@ -10,16 +10,20 @@ import { formatM3, type VolumeBreakdown } from "@/lib/quote-pricing";
 
 const COLUMNS = 5;
 
-/** Read-only item list for a quote: same numbers as the budget, no prices. */
+/** Read-only item table. Never renders prices — shared by admin and driver. */
 export function QuoteItemsGrid({
   breakdown,
   source,
   actions,
+  title = "Ítems de la cotización",
+  description,
 }: {
   breakdown: VolumeBreakdown;
   /** Where the rows come from, so the admin knows what they are editing. */
   source: "budget" | "notes";
   actions?: ReactNode;
+  title?: string;
+  description?: string;
 }) {
   const { lines, catalogM3, chargedM3, unexplainedM3, totalItems } = breakdown;
 
@@ -52,9 +56,10 @@ export function QuoteItemsGrid({
     <GridCard
       title="Ítems de la cotización"
       description={
-        source === "budget"
+        description ??
+        (source === "budget"
           ? "Reflejan el presupuesto vinculado. Para editarlos, abre el presupuesto."
-          : "Leídos del texto de volumen / notas. Al crear el presupuesto quedan editables."
+          : "Leídos del texto de volumen / notas. Al crear el presupuesto quedan editables.")
       }
       actions={actions}
       stats={stats}

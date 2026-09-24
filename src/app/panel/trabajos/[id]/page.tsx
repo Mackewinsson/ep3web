@@ -13,7 +13,7 @@ import {
   SubmitButton,
   TextArea,
 } from "@/components/panel/ui";
-import { VolumeBreakdownList } from "@/components/panel/volume-breakdown-list";
+import { QuoteItemsGrid } from "@/components/panel/quote-items-grid";
 import { db } from "@/db";
 import { drivers, jobAssignments, staffUsers, trucks } from "@/db/schema";
 import {
@@ -131,7 +131,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
   const jobNotes = operationalJobNotes(job.notes, job.volumeNotes);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="space-y-6">
       <div>
         <BackLink href="/panel/trabajos" label="Volver a trabajos" />
         <PageHeader
@@ -298,14 +298,6 @@ export default async function TrabajoDetailPage({ params }: Props) {
               <dd className="text-ep3-navy">{volume}</dd>
             </div>
           ) : null}
-          {volumeBreakdown ? (
-            <div className="sm:col-span-2">
-              <dt className="mb-2 text-ep3-navy/60">Inventario y m³</dt>
-              <dd>
-                <VolumeBreakdownList breakdown={volumeBreakdown} />
-              </dd>
-            </div>
-          ) : null}
           {job.volumeNotes ? (
             <div className="sm:col-span-2">
               <dt className="text-ep3-navy/60">Detalle volumen</dt>
@@ -361,6 +353,15 @@ export default async function TrabajoDetailPage({ params }: Props) {
           ) : null}
         </div>
       </PanelCard>
+
+      {volumeBreakdown ? (
+        <QuoteItemsGrid
+          breakdown={volumeBreakdown}
+          source="budget"
+          title="Ítems de la mudanza"
+          description="El mismo desglose que ve el operador. Esta tabla no muestra precios."
+        />
+      ) : null}
 
       <PanelCard>
         <h2 className="mb-3 font-semibold text-ep3-navy">Fecha y hora</h2>
