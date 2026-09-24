@@ -167,14 +167,16 @@ export default async function CotizacionDetailPage({ params }: Props) {
                     Cerrar
                   </button>
                 </form>
-                <form action={convertQuoteToBudget.bind(null, id)}>
-                  <button
-                    type="submit"
-                    className={`${actionButton} bg-ep3-yellow font-semibold text-ep3-navy`}
-                  >
-                    Crear presupuesto
-                  </button>
-                </form>
+                {primaryBudget ? null : (
+                  <form action={convertQuoteToBudget.bind(null, id)}>
+                    <button
+                      type="submit"
+                      className={`${actionButton} bg-ep3-yellow font-semibold text-ep3-navy`}
+                    >
+                      Crear presupuesto
+                    </button>
+                  </form>
+                )}
               </>
             ) : null}
             {quote.status === "closed" ? (
