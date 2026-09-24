@@ -1,6 +1,7 @@
 import { eq, or } from "drizzle-orm";
 import { db } from "@/db";
 import { clients } from "@/db/schema";
+import { findReusableClient, missingContactFields } from "@/lib/client-match";
 
 export async function upsertClientByContact(input: {
   name: string;
@@ -17,21 +18,25 @@ export async function upsertClientByContact(input: {
   if (email) matchConditions.push(eq(clients.email, email));
 
   if (matchConditions.length > 0) {
-    const [existing] = await db
-      .select()
+    const candidates = await db
+      .select({
+        id: clients.id,
+        name: clients.name,
+        phone: clients.phone,
+        email: clients.email,
+      })
       .from(clients)
-      .where(or(...matchConditions))
-      .limit(1);
+      .where(or(...matchConditions));
+
+    const existing = findReusableClient(candidates, { name, phone, email });
     if (existing) {
-      await db
-        .update(clients)
-        .set({
-          name,
-          phone,
-          email,
-          updatedAt: new Date(),
-        })
-        .where(eq(clients.id, existing.id));
+      const patch = missingContactFields(existing, { phone, email });
+      if (Object.keys(patch).length > 0) {
+        await db
+          .update(clients)
+          .set({ ...patch, updatedAt: new Date() })
+          .where(eq(clients.id, existing.id));
+      }
       return existing.id;
     }
   }
