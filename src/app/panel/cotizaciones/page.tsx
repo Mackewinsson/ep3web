@@ -109,7 +109,7 @@ function quotedItem(row: Row): RecordItem {
       <Link
         href={`/panel/cotizaciones/${row.id}`}
         aria-label={`Ver cotización de ${row.clientName}`}
-        className="text-sm font-medium text-ep3-navy underline"
+        className="whitespace-nowrap text-sm font-medium text-ep3-navy underline"
       >
         Ver cotización
       </Link>

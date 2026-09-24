@@ -109,6 +109,9 @@ test("cotización: los ítems se editan sin salir de la pantalla", async ({
     .locator('input[form="add-budget-item"][name="description"]')
     .fill("Sillón E2E");
   await page
+    .locator('input[form="add-budget-item"][name="quantity"]')
+    .fill("2");
+  await page
     .locator('input[form="add-budget-item"][name="unitVolumeM3"]')
     .fill("0.8");
   await page
@@ -118,20 +121,21 @@ test("cotización: los ítems se editan sin salir de la pantalla", async ({
 
   const row = page.getByRole("row", { name: /Sillón E2E/ });
   await expect(row).toBeVisible({ timeout: 30_000 });
+  await expect(row).toContainText("$10.000");
+  // The blank row is clear again, so the page finished re-rendering.
+  await expect(
+    page.locator('input[form="add-budget-item"][name="description"]'),
+  ).toHaveValue("");
   expect(page.url()).toBe(quoteUrl);
 
-  await row.locator('input[name="quantity"]').fill("2");
+  await row.locator('input[name="quantity"]').fill("3");
   await row.getByRole("button", { name: "Guardar" }).click();
-  await expect(page.getByRole("row", { name: /Sillón E2E/ })).toContainText(
-    "$10.000",
-    { timeout: 30_000 },
-  );
+  const edited = page.getByRole("row", { name: /Sillón E2E/ });
+  await expect(edited).toContainText("$15.000", { timeout: 30_000 });
+  await expect(edited).toContainText("2.4");
   expect(page.url()).toBe(quoteUrl);
 
-  await page
-    .getByRole("row", { name: /Sillón E2E/ })
-    .getByRole("button", { name: /Quitar/ })
-    .click();
+  await edited.getByRole("button", { name: /Quitar/ }).click();
   await expect(page.getByRole("row", { name: /Sillón E2E/ })).toHaveCount(0, {
     timeout: 30_000,
   });
