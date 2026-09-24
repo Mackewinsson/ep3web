@@ -54,7 +54,7 @@ export function QuoteItemsGrid({
 
   return (
     <GridCard
-      title="Ítems de la cotización"
+      title={title}
       description={
         description ??
         (source === "budget"
