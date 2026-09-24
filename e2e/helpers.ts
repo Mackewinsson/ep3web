@@ -47,6 +47,20 @@ export async function openRecordByTitle(page: Page, title: string) {
   await link.click();
 }
 
+/**
+ * Quotes that already have a budget open the budget from the list, so the
+ * quote itself is reached through its secondary link.
+ */
+export async function openQuoteByClient(page: Page, clientName: string) {
+  await page.goto("/panel/cotizaciones");
+  const link = page.getByRole("link", {
+    name: `Ver cotización de ${clientName}`,
+  });
+  await expect(link).toBeVisible({ timeout: 30_000 });
+  await link.click();
+  await page.waitForURL(/\/panel\/cotizaciones\/[^/]+$/, { timeout: 30_000 });
+}
+
 export async function selectByName(
   page: Page,
   name: string,

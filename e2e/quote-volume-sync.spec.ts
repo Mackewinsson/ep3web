@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   completePublicQuote,
   login,
-  openRecordByTitle,
+  openQuoteByClient,
   requireAdminCreds,
   uniqueSuffix,
 } from "./helpers";
@@ -18,8 +18,7 @@ test("cotización: m³ estimados sincroniza Estimación auto en notas", async ({
   await completePublicQuote(page, clientName);
   await login(page, admin.email, admin.password);
 
-  await page.goto("/panel/cotizaciones");
-  await openRecordByTitle(page, clientName);
+  await openQuoteByClient(page, clientName);
 
   // The raw cotizador text is collapsed: the readable version lives in
   // «Detalles del servicio» and in the item table.
