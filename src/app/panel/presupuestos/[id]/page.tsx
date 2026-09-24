@@ -13,9 +13,9 @@ import {
   TextArea,
 } from "@/components/panel/ui";
 import { db } from "@/db";
-import { budgetItems, budgets, clients, jobs, quoteRequests } from "@/db/schema";
+import { budgets, clients, jobs, quoteRequests } from "@/db/schema";
 import { setBudgetStatus, updateBudgetMeta } from "@/lib/actions/budgets";
-import { ensureClientInventoryFromNotes } from "@/lib/budget-notes";
+import { loadBudgetItemsView } from "@/lib/budget-items-view";
 import {
   BUDGET_STATUS_LABELS,
   budgetStatusTone,
@@ -23,7 +23,6 @@ import {
   JOB_STATUS_LABELS,
 } from "@/lib/format";
 import { clientMessageFromNotes } from "@/lib/quote-pricing";
-import { loadUnitVolumeResolver, parseStoredVolume } from "@/lib/volume-breakdown";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -34,6 +33,7 @@ const budgetColumns = {
   totalAmount: budgets.totalAmount,
   validUntil: budgets.validUntil,
   notes: budgets.notes,
+  quoteRequestId: budgets.quoteRequestId,
   clientName: clients.name,
   /** Wizard snapshot: the only record of access, helpers and fragile items. */
   volumeNotes: quoteRequests.volumeNotes,
@@ -55,43 +55,15 @@ export default async function PresupuestoDetailPage({ params }: Props) {
   const [budget] = await loadBudget(id);
   if (!budget) notFound();
 
-  const { hydrated } = await ensureClientInventoryFromNotes(id);
+  const { rows: gridRows, billedM3, hydrated } = await loadBudgetItemsView(id);
   const [synced] = hydrated ? await loadBudget(id) : [null];
   const row = synced ?? budget;
 
-  const [items, linkedJobs, resolveVolume] = await Promise.all([
-    db
-      .select()
-      .from(budgetItems)
-      .where(eq(budgetItems.budgetId, id))
-      .orderBy(asc(budgetItems.sortOrder), asc(budgetItems.description)),
-    db
-      .select({ id: jobs.id, status: jobs.status })
-      .from(jobs)
-      .where(eq(jobs.budgetId, id))
-      .orderBy(asc(jobs.createdAt)),
-    loadUnitVolumeResolver(),
-  ]);
-
-  const gridRows = items.map((item) => ({
-    id: item.id,
-    description: item.description,
-    pricingUnit: item.pricingUnit,
-    quantity: item.quantity,
-    unitPrice: item.unitPrice,
-    resolvedVolumeM3:
-      item.pricingUnit === "unit"
-        ? resolveVolume({
-            description: item.description,
-            unitVolumeM3: parseStoredVolume(item.unitVolumeM3),
-          })
-        : null,
-  }));
-
-  const m3Lines = items.filter((i) => i.pricingUnit === "m3");
-  const billedM3 = m3Lines.length
-    ? m3Lines.reduce((sum, i) => sum + Number(i.quantity), 0)
-    : null;
+  const linkedJobs = await db
+    .select({ id: jobs.id, status: jobs.status })
+    .from(jobs)
+    .where(eq(jobs.budgetId, id))
+    .orderBy(asc(jobs.createdAt));
 
   const editable = row.status === "draft" || row.status === "sent";
   // Older budgets still hold the wizard dump here; show only the message part.
@@ -157,8 +129,21 @@ export default async function PresupuestoDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {linkedJobs.length > 0 ? (
+        {linkedJobs.length > 0 || row.quoteRequestId ? (
           <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-ep3-navy/10 pt-4 text-sm">
+            {row.quoteRequestId ? (
+              <li>
+                <Link
+                  href={`/panel/cotizaciones/${row.quoteRequestId}`}
+                  className="font-medium text-ep3-navy underline"
+                >
+                  Ver cotización
+                </Link>
+                <span className="text-ep3-navy/60">
+                  {" · "}lo que pidió el cliente
+                </span>
+              </li>
+            ) : null}
             {linkedJobs.map((job) => (
               <li key={job.id}>
                 <Link

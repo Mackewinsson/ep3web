@@ -55,12 +55,27 @@ function calcTotal(
   return total.toFixed(2);
 }
 
-function revalidateBudgetItemPaths(budgetId: string, jobIds: string[]) {
+/**
+ * The item table is rendered both on the budget and on its quote, so each grid
+ * says where the admin was editing and we send them back there.
+ */
+function budgetItemReturnPath(budgetId: string, returnTo: string | null) {
+  return returnTo?.startsWith("/panel/")
+    ? returnTo
+    : `/panel/presupuestos/${budgetId}`;
+}
+
+function revalidateBudgetItemPaths(
+  budgetId: string,
+  jobIds: string[],
+  returnTo?: string | null,
+) {
   revalidatePath(`/panel/presupuestos/${budgetId}`);
   revalidatePath("/panel/presupuestos");
   revalidatePath("/panel/cotizaciones");
   revalidatePath("/panel/trabajos");
   revalidatePath("/panel/mis-trabajos");
+  if (returnTo?.startsWith("/panel/")) revalidatePath(returnTo);
   for (const jobId of jobIds) {
     revalidatePath(`/panel/trabajos/${jobId}`);
     revalidatePath(`/panel/mis-trabajos/${jobId}`);
@@ -144,7 +159,11 @@ async function recalcBudgetTotalAndNotes(
   return syncLinkedNotesFromBudgetItems(budgetId, notesOptions);
 }
 
-export async function addBudgetItem(budgetId: string, formData: FormData) {
+export async function addBudgetItem(
+  budgetId: string,
+  returnTo: string | null,
+  formData: FormData,
+) {
   await requireAdmin();
   const item = parseItemForm(formData);
   const resolve = await loadUnitVolumeResolver();
@@ -174,11 +193,15 @@ export async function addBudgetItem(budgetId: string, formData: FormData) {
   );
   const { jobIds } = await recalcBudgetTotalAndNotes(budgetId);
 
-  revalidateBudgetItemPaths(budgetId, jobIds);
-  redirect(`/panel/presupuestos/${budgetId}`);
+  revalidateBudgetItemPaths(budgetId, jobIds, returnTo);
+  redirect(budgetItemReturnPath(budgetId, returnTo));
 }
 
-export async function updateBudgetItem(itemId: string, formData: FormData) {
+export async function updateBudgetItem(
+  itemId: string,
+  returnTo: string | null,
+  formData: FormData,
+) {
   await requireAdmin();
   const item = parseItemForm(formData);
 
@@ -233,11 +256,11 @@ export async function updateBudgetItem(itemId: string, formData: FormData) {
   await applyInventoryVolumeDelta(existing.budgetId, after - before);
   const { jobIds } = await recalcBudgetTotalAndNotes(existing.budgetId);
 
-  revalidateBudgetItemPaths(existing.budgetId, jobIds);
-  redirect(`/panel/presupuestos/${existing.budgetId}`);
+  revalidateBudgetItemPaths(existing.budgetId, jobIds, returnTo);
+  redirect(budgetItemReturnPath(existing.budgetId, returnTo));
 }
 
-export async function deleteBudgetItem(itemId: string) {
+export async function deleteBudgetItem(itemId: string, returnTo: string | null) {
   await requireAdmin();
 
   const [existing] = await db
@@ -268,8 +291,8 @@ export async function deleteBudgetItem(itemId: string) {
     mergeInventory: false,
   });
 
-  revalidateBudgetItemPaths(existing.budgetId, jobIds);
-  redirect(`/panel/presupuestos/${existing.budgetId}`);
+  revalidateBudgetItemPaths(existing.budgetId, jobIds, returnTo);
+  redirect(budgetItemReturnPath(existing.budgetId, returnTo));
 }
 
 export async function setBudgetStatus(

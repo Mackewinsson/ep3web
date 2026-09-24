@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   GridCard,
   GridEmptyRow,
@@ -11,6 +12,7 @@ import {
   deleteBudgetItem,
   updateBudgetItem,
 } from "@/lib/actions/budgets";
+import type { BudgetItemRow } from "@/lib/budget-items-view";
 import {
   formatClp,
   formatClpPlusIva,
@@ -19,15 +21,7 @@ import {
 } from "@/lib/format";
 import { formatM3 } from "@/lib/quote-pricing";
 
-export type BudgetItemRow = {
-  id: string;
-  description: string;
-  pricingUnit: "fixed" | "m3" | "unit";
-  quantity: string;
-  unitPrice: string;
-  /** m³ per unit already resolved (stored value or catalog match). */
-  resolvedVolumeM3: number | null;
-};
+export type { BudgetItemRow };
 
 const COLUMNS = 9;
 
@@ -65,7 +59,15 @@ function lineVolume(row: BudgetItemRow) {
   return row.resolvedVolumeM3 * qty;
 }
 
-function ItemRow({ row, index }: { row: BudgetItemRow; index: number }) {
+function ItemRow({
+  row,
+  index,
+  returnTo,
+}: {
+  row: BudgetItemRow;
+  index: number;
+  returnTo: string | null;
+}) {
   const formId = rowFormId(row.id);
   const qty = Number(row.quantity);
   const subtotal = qty * Number(row.unitPrice);
@@ -168,7 +170,7 @@ function ItemRow({ row, index }: { row: BudgetItemRow; index: number }) {
           </button>
           <button
             form={formId}
-            formAction={deleteBudgetItem.bind(null, row.id)}
+            formAction={deleteBudgetItem.bind(null, row.id, returnTo)}
             type="submit"
             aria-label={`Quitar ${row.description}`}
             title="Quitar ítem"
@@ -191,12 +193,17 @@ export function BudgetItemsGrid({
   items,
   totalAmount,
   billedM3,
+  returnTo = null,
+  actions,
 }: {
   budgetId: string;
   items: BudgetItemRow[];
   totalAmount: string;
   /** m³ charged on `m3` lines, used to flag mismatches with the inventory. */
   billedM3: number | null;
+  /** Panel path to land on after saving, so editing never changes screen. */
+  returnTo?: string | null;
+  actions?: ReactNode;
 }) {
   const inventory = items.filter((i) => i.pricingUnit === "unit");
   const charges = items.filter((i) => i.pricingUnit !== "unit");
@@ -241,6 +248,7 @@ export function BudgetItemsGrid({
     <GridCard
       title="Ítems del presupuesto"
       description="Edita cualquier celda y guarda la fila (Enter también guarda). Al cambiar m³ se ajustan «Mudanza estimada» y el precio."
+      actions={actions}
       stats={stats}
     >
       <table className="w-full min-w-[60rem] border-collapse text-sm">
@@ -271,7 +279,12 @@ export function BudgetItemsGrid({
             />
           ) : (
             inventory.map((row, i) => (
-              <ItemRow key={rowRevision(row)} row={row} index={i + 1} />
+              <ItemRow
+                key={rowRevision(row)}
+                row={row}
+                index={i + 1}
+                returnTo={returnTo}
+              />
             ))
           )}
 
@@ -288,6 +301,7 @@ export function BudgetItemsGrid({
                 key={rowRevision(row)}
                 row={row}
                 index={inventory.length + i + 1}
+                returnTo={returnTo}
               />
             ))
           )}
@@ -402,12 +416,15 @@ export function BudgetItemsGrid({
 
       {/* Row forms live outside the table: <form> cannot be a child of <tbody>. */}
       <div className="hidden">
-        <form id="add-budget-item" action={addBudgetItem.bind(null, budgetId)} />
+        <form
+          id="add-budget-item"
+          action={addBudgetItem.bind(null, budgetId, returnTo)}
+        />
         {items.map((item) => (
           <form
             key={item.id}
             id={rowFormId(item.id)}
-            action={updateBudgetItem.bind(null, item.id)}
+            action={updateBudgetItem.bind(null, item.id, returnTo)}
           />
         ))}
       </div>
