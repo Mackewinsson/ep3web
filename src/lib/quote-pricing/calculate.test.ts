@@ -12,6 +12,7 @@ import {
   formatM3,
   inventoryItemsMissingFromBudget,
   operatorPayoutFromClientTotal,
+  parseCajasCount,
   operatorPayoutFromQuoteSources,
   parseInventarioEntries,
   resolveQuotedClientTotal,
@@ -443,5 +444,17 @@ describe("buildQuoteEstimate volumes", () => {
     const boxes = estimate.budgetLines.find((l) => l.description === "Caja de mudanza");
     assert.equal(sofa?.unitVolumeM3, 1.5);
     assert.equal(boxes?.unitVolumeM3, estimate.config.boxVolumeM3);
+  });
+});
+
+describe("parseCajasCount", () => {
+  it("reads the Cajas summary line", () => {
+    assert.equal(parseCajasCount("Inventario: 1× Sofá\nCajas: 12\nCargos: x"), 12);
+  });
+
+  it("returns 0 when absent or not a positive number", () => {
+    assert.equal(parseCajasCount("Inventario: 1× Sofá"), 0);
+    assert.equal(parseCajasCount("Cajas: 0"), 0);
+    assert.equal(parseCajasCount(null), 0);
   });
 });

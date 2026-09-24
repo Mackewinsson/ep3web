@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { adminJobBadge, driverJobBadge, formatClientPackagePrice, formatClpPlusIva } from "./format";
+import { adminJobBadge, driverJobBadge, formatClientPackagePrice, formatClpPlusIva, trimDecimals } from "./format";
 
 describe("adminJobBadge", () => {
   it("splits assigned into waiting vs accepted", () => {
@@ -70,5 +70,22 @@ describe("formatClientPackagePrice", () => {
   it("puts + IVA after the unit for m³ prices", () => {
     const out = formatClientPackagePrice(25000, "m3");
     assert.match(out, /m³ \+ IVA$/);
+  });
+});
+
+describe("trimDecimals", () => {
+  it("drops trailing zeros from DB numerics", () => {
+    assert.equal(trimDecimals("3.00"), "3");
+    assert.equal(trimDecimals("20.00"), "20");
+    assert.equal(trimDecimals("3.50"), "3.5");
+    assert.equal(trimDecimals("0.080"), "0.08");
+    assert.equal(trimDecimals("0.00"), "0");
+    assert.equal(trimDecimals(25000), "25000");
+  });
+
+  it("passes through empty and non-numeric values", () => {
+    assert.equal(trimDecimals(null), "");
+    assert.equal(trimDecimals(""), "");
+    assert.equal(trimDecimals("abc"), "abc");
   });
 });

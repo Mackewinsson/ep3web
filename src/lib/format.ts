@@ -8,6 +8,16 @@ export function formatClp(amount: string | number) {
   }).format(value);
 }
 
+/** Numeric DB values in editable inputs: `3.00` → `3`, `3.50` → `3.5`. */
+export function trimDecimals(value: string | number | null | undefined) {
+  if (value == null || value === "") return "";
+  const text = String(value).trim();
+  if (!/^-?\d+(\.\d+)?$/.test(text)) return text;
+  return text.includes(".")
+    ? text.replace(/\.?0+$/, "") || "0"
+    : text;
+}
+
 /** Shown on client quotes: stored totals are net; IVA is added later. */
 export const CLIENT_PRICE_IVA_SUFFIX = "+ IVA";
 
