@@ -94,8 +94,12 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 | `src/lib/job-rules.ts` | Pure status / ready-for-en-camino checks (unit-tested) |
 | `src/lib/job-lifecycle.ts` | Open assignment DB helpers; re-exports job-rules |
 | `src/lib/jobs-view.ts` | Operator queries, ownership, payout helpers, safe notes; `getOpenAssignmentSummaries` for admin accepted badges |
-| `src/lib/format.ts` | Labels + `adminJobBadge` / `driverJobBadge` + `formatClpPlusIva` |
+| `src/lib/format.ts` | Labels + `adminJobBadge` / `driverJobBadge` + `formatClpPlusIva` + `trimDecimals` |
+| `src/lib/quote-items.ts` | Resolve a cotización's item breakdown from its budget, else from notes |
 | `src/components/panel/accept-service-modal.tsx` | Accept UI (chofer / RUT / patente) |
+| `src/components/panel/data-grid.tsx` | Shared spreadsheet primitives (card, stat strip, cell/button tokens) |
+| `src/components/panel/budget-items-grid.tsx` | Presupuesto: editable full-width item table (inline rows + add row) |
+| `src/components/panel/quote-items-grid.tsx` | Cotización: read-only full-width item table |
 | `src/components/panel/quote-volume-sync-fields.tsx` | Admin cotización: sync m³ ↔ Estimación auto notes |
 | `src/db/schema.ts` | Tables; `crewDriverRut`; acceptance timestamp on assignment |
 

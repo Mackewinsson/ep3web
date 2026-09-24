@@ -20,6 +20,7 @@ export {
   sumInventory,
   syncAutoEstimateInNotes,
   syncBudgetItemsInNotes,
+  parseCajasCount,
   parseInventarioEntries,
   inventoryItemsMissingFromBudget,
   type AccessSurchargeInput,

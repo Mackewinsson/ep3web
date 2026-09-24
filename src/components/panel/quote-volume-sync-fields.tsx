@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trimDecimals } from "@/lib/format";
 import {
   extractAutoEstimateM3,
   formatM3,
@@ -22,9 +23,7 @@ export function QuoteVolumeSyncFields({
   /** Used when notes have no prior amount to scale from. */
   pricePerM3: number;
 }) {
-  const [m3, setM3] = useState(
-    initialM3 != null && initialM3 !== "" ? String(initialM3) : "",
-  );
+  const [m3, setM3] = useState(() => trimDecimals(initialM3));
   const [notes, setNotes] = useState(() => {
     const seed = initialNotes ?? "";
     const value = Number(String(initialM3 ?? "").replace(",", "."));
