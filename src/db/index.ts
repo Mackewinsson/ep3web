@@ -4,10 +4,28 @@ import * as schema from "./schema";
 
 type Db = ReturnType<typeof drizzle<typeof schema>>;
 
+/** Neon HTTP only speaks to neon.tech. CI and local Postgres use node-postgres. */
+function useNodePostgres(url: string) {
+  if (process.env.DATABASE_DRIVER === "neon") return false;
+  if (process.env.DATABASE_DRIVER === "pg") return true;
+  try {
+    return !new URL(url).hostname.endsWith("neon.tech");
+  } catch {
+    return false;
+  }
+}
+
 function createDb(): Db {
   const url = process.env.DATABASE_URL;
   if (!url) {
     throw new Error("DATABASE_URL is not set");
+  }
+  if (useNodePostgres(url)) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Pool } = require("pg") as typeof import("pg");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { drizzle: drizzlePg } = require("drizzle-orm/node-postgres");
+    return drizzlePg(new Pool({ connectionString: url }), { schema }) as Db;
   }
   return drizzle(neon(url), { schema });
 }

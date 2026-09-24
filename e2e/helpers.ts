@@ -20,6 +20,14 @@ export function uniqueSuffix() {
   return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
+/** A fresh Chilean mobile so quotes never share a client by phone. */
+export function uniquePhone() {
+  const digits = Math.floor(Math.random() * 1e8)
+    .toString()
+    .padStart(8, "0");
+  return `+569${digits}`;
+}
+
 export async function login(page: Page, email: string, password: string) {
   await page.goto("/sign-in");
   await page.locator('input[name="email"]').fill(email);
@@ -211,7 +219,7 @@ export async function completePublicQuote(page: Page, clientName: string) {
     .locator("label")
     .filter({ hasText: /^Teléfono$/ })
     .locator("input")
-    .fill("+56912345678");
+    .fill(uniquePhone());
   await page
     .locator("label")
     .filter({ hasText: /^Correo$/ })
@@ -222,6 +230,8 @@ export async function completePublicQuote(page: Page, clientName: string) {
   await expect(page.getByRole("heading", { name: "¡Gracias!" })).toBeVisible({
     timeout: 60_000,
   });
+  // The public wizard never shows a price or a volume.
+  await expect(page.getByText(/\+ IVA|\$\s?\d|\bm³\b/)).toHaveCount(0);
 }
 
 export async function approveBudgetCreateJob(page: Page, clientName: string) {

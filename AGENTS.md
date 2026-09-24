@@ -105,7 +105,7 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 | `src/components/panel/quote-volume-sync-fields.tsx` | Admin cotización: sync m³ ↔ Estimación auto notes |
 | `src/db/schema.ts` | Tables; `crewDriverRut`; acceptance timestamp on assignment |
 
-**Tests:** `npm run test:unit` (pricing + job rules + job notes vs volume + admin badges + quote IVA). E2E: `npm run test:e2e`.
+**Tests:** `npm run test:unit` (pricing + job rules + job notes vs volume + admin badges + quote IVA). E2E: `npm run test:e2e` (quote → presupuesto → trabajo → operador → En camino, plus decline/cancel). Both run in `.github/workflows/ci.yml`. Bootstrap an empty Postgres with `npm run db:prepare`.
 
 ---
 
