@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   completePublicQuote,
   login,
+  openQuoteByClient,
   openRecordByTitle,
   requireAdminCreds,
   uniqueSuffix,
@@ -79,4 +80,64 @@ test("presupuesto: agregar, editar y quitar ítems en la tabla", async ({
   await expect(billed.locator('input[name="description"]')).toHaveValue(
     `Mudanza estimada (${billedAfterDelete} m³)`,
   );
+});
+
+test("cotización: los ítems se editan sin salir de la pantalla", async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+
+  const admin = requireAdminCreds();
+  const clientName = `E2E Quote Grid ${uniqueSuffix()}`;
+
+  await completePublicQuote(page, clientName);
+  await login(page, admin.email, admin.password);
+
+  // The list sends an already priced quote to its budget…
+  await page.goto("/panel/cotizaciones");
+  await openRecordByTitle(page, clientName);
+  await page.waitForURL(/\/panel\/presupuestos\/[^/]+$/, { timeout: 30_000 });
+
+  // …and the quote itself stays reachable, with the same editable table.
+  await openQuoteByClient(page, clientName);
+  const quoteUrl = page.url();
+  await expect(
+    page.getByRole("heading", { name: "Ítems del presupuesto" }),
+  ).toBeVisible({ timeout: 30_000 });
+
+  await page
+    .locator('input[form="add-budget-item"][name="description"]')
+    .fill("Sillón E2E");
+  await page
+    .locator('input[form="add-budget-item"][name="quantity"]')
+    .fill("2");
+  await page
+    .locator('input[form="add-budget-item"][name="unitVolumeM3"]')
+    .fill("0.8");
+  await page
+    .locator('input[form="add-budget-item"][name="unitPrice"]')
+    .fill("5000");
+  await page.getByRole("button", { name: "Agregar" }).click();
+
+  const row = page.getByRole("row", { name: /Sillón E2E/ });
+  await expect(row).toBeVisible({ timeout: 30_000 });
+  await expect(row).toContainText("$10.000");
+  // The blank row is clear again, so the page finished re-rendering.
+  await expect(
+    page.locator('input[form="add-budget-item"][name="description"]'),
+  ).toHaveValue("");
+  expect(page.url()).toBe(quoteUrl);
+
+  await row.locator('input[name="quantity"]').fill("3");
+  await row.getByRole("button", { name: "Guardar" }).click();
+  const edited = page.getByRole("row", { name: /Sillón E2E/ });
+  await expect(edited).toContainText("$15.000", { timeout: 30_000 });
+  await expect(edited).toContainText("2.4");
+  expect(page.url()).toBe(quoteUrl);
+
+  await edited.getByRole("button", { name: /Quitar/ }).click();
+  await expect(page.getByRole("row", { name: /Sillón E2E/ })).toHaveCount(0, {
+    timeout: 30_000,
+  });
+  expect(page.url()).toBe(quoteUrl);
 });

@@ -1,6 +1,7 @@
 import { asc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BudgetItemsGrid } from "@/components/panel/budget-items-grid";
 import { QuoteItemsGrid } from "@/components/panel/quote-items-grid";
 import { QuoteVolumeSyncFields } from "@/components/panel/quote-volume-sync-fields";
 import { ServiceDetailsCard } from "@/components/panel/service-details-card";
@@ -21,6 +22,7 @@ import {
   setQuoteStatus,
   updateQuoteRequest,
 } from "@/lib/actions/quotes";
+import { loadBudgetItemsView } from "@/lib/budget-items-view";
 import { QUOTE_STATUS_LABELS, quoteStatusTone } from "@/lib/format";
 import { getPricingConfig } from "@/lib/moving-catalog-db";
 import { getQuoteItemsView } from "@/lib/quote-items";
@@ -33,16 +35,31 @@ const inputClassName =
 const actionButton =
   "inline-flex min-h-11 w-full items-center justify-center rounded-md px-3 py-2 text-sm sm:w-auto";
 
-export default async function CotizacionDetailPage({ params }: Props) {
-  const { id } = await params;
+function OpenBudgetLink({ budgetId }: { budgetId: string }) {
+  return (
+    <Link
+      href={`/panel/presupuestos/${budgetId}`}
+      className="inline-flex min-h-9 items-center justify-center rounded-md bg-ep3-navy px-3 text-xs font-semibold text-white hover:bg-ep3-navy/90"
+    >
+      Abrir presupuesto
+    </Link>
+  );
+}
 
-  const [quote] = await db
+function loadQuote(id: string) {
+  return db
     .select()
     .from(quoteRequests)
     .where(eq(quoteRequests.id, id))
     .limit(1);
+}
 
-  if (!quote) notFound();
+export default async function CotizacionDetailPage({ params }: Props) {
+  const { id } = await params;
+
+  const [loaded] = await loadQuote(id);
+
+  if (!loaded) notFound();
 
   const [clientRows, packageRows, linkedBudgets, pricing] = await Promise.all([
     db
@@ -55,7 +72,12 @@ export default async function CotizacionDetailPage({ params }: Props) {
       .where(eq(servicePackages.active, true))
       .orderBy(asc(servicePackages.sortOrder)),
     db
-      .select({ id: budgets.id, title: budgets.title, status: budgets.status })
+      .select({
+        id: budgets.id,
+        title: budgets.title,
+        status: budgets.status,
+        totalAmount: budgets.totalAmount,
+      })
       .from(budgets)
       .where(eq(budgets.quoteRequestId, id))
       .orderBy(asc(budgets.createdAt)),
@@ -63,11 +85,29 @@ export default async function CotizacionDetailPage({ params }: Props) {
   ]);
 
   const primaryBudget = linkedBudgets[0] ?? null;
-  const { breakdown, source } = await getQuoteItemsView({
-    budgetId: primaryBudget?.id ?? null,
-    volumeNotes: quote.volumeNotes,
-    estimatedM3: quote.estimatedM3,
-  });
+  // Items are editable here while the offer is still open, so the admin never
+  // has to jump to the budget screen to fix the inventory.
+  const editableBudget =
+    primaryBudget &&
+    (primaryBudget.status === "draft" || primaryBudget.status === "sent")
+      ? primaryBudget
+      : null;
+
+  const budgetItemsView = editableBudget
+    ? await loadBudgetItemsView(editableBudget.id)
+    : null;
+
+  // Hydrating a legacy budget rewrites the volume snapshot on the quote.
+  const [refreshed] = budgetItemsView?.hydrated ? await loadQuote(id) : [null];
+  const quote = refreshed ?? loaded;
+
+  const readOnlyItems = budgetItemsView
+    ? null
+    : await getQuoteItemsView({
+        budgetId: primaryBudget?.id ?? null,
+        volumeNotes: quote.volumeNotes,
+        estimatedM3: quote.estimatedM3,
+      });
 
   const open = quote.status !== "converted" && quote.status !== "closed";
 
@@ -127,14 +167,16 @@ export default async function CotizacionDetailPage({ params }: Props) {
                     Cerrar
                   </button>
                 </form>
-                <form action={convertQuoteToBudget.bind(null, id)}>
-                  <button
-                    type="submit"
-                    className={`${actionButton} bg-ep3-yellow font-semibold text-ep3-navy`}
-                  >
-                    Crear presupuesto
-                  </button>
-                </form>
+                {primaryBudget ? null : (
+                  <form action={convertQuoteToBudget.bind(null, id)}>
+                    <button
+                      type="submit"
+                      className={`${actionButton} bg-ep3-yellow font-semibold text-ep3-navy`}
+                    >
+                      Crear presupuesto
+                    </button>
+                  </form>
+                )}
               </>
             ) : null}
             {quote.status === "closed" ? (
@@ -151,20 +193,26 @@ export default async function CotizacionDetailPage({ params }: Props) {
         </div>
       </PanelCard>
 
-      <QuoteItemsGrid
-        breakdown={breakdown}
-        source={source}
-        actions={
-          primaryBudget ? (
-            <Link
-              href={`/panel/presupuestos/${primaryBudget.id}`}
-              className="inline-flex min-h-9 items-center justify-center rounded-md bg-ep3-navy px-3 text-xs font-semibold text-white hover:bg-ep3-navy/90"
-            >
-              Editar ítems en el presupuesto
-            </Link>
-          ) : null
-        }
-      />
+      {budgetItemsView && editableBudget ? (
+        <BudgetItemsGrid
+          budgetId={editableBudget.id}
+          items={budgetItemsView.rows}
+          totalAmount={editableBudget.totalAmount}
+          billedM3={budgetItemsView.billedM3}
+          returnTo={`/panel/cotizaciones/${id}`}
+          actions={<OpenBudgetLink budgetId={editableBudget.id} />}
+        />
+      ) : readOnlyItems ? (
+        <QuoteItemsGrid
+          breakdown={readOnlyItems.breakdown}
+          source={readOnlyItems.source}
+          actions={
+            primaryBudget ? (
+              <OpenBudgetLink budgetId={primaryBudget.id} />
+            ) : null
+          }
+        />
+      ) : null}
 
       <ServiceDetailsCard notes={quote.volumeNotes} />
 
