@@ -41,6 +41,23 @@ function rowFormId(itemId: string) {
   return `budget-item-${itemId}`;
 }
 
+/**
+ * React keeps the DOM value of an uncontrolled input across re-renders, so a
+ * row whose stored values changed server-side (e.g. «Mudanza estimada» after
+ * an inventory edit) would keep showing — and re-submit — the old numbers.
+ * Keying rows on their contents remounts only the rows that actually changed.
+ */
+function rowRevision(row: BudgetItemRow) {
+  return [
+    row.id,
+    row.description,
+    row.pricingUnit,
+    row.quantity,
+    row.unitPrice,
+    row.resolvedVolumeM3 ?? "",
+  ].join("|");
+}
+
 function lineVolume(row: BudgetItemRow) {
   const qty = Number(row.quantity);
   if (row.pricingUnit === "m3") return qty;
@@ -254,7 +271,7 @@ export function BudgetItemsGrid({
             />
           ) : (
             inventory.map((row, i) => (
-              <ItemRow key={row.id} row={row} index={i + 1} />
+              <ItemRow key={rowRevision(row)} row={row} index={i + 1} />
             ))
           )}
 
@@ -267,11 +284,18 @@ export function BudgetItemsGrid({
             <GridEmptyRow colSpan={COLUMNS} message="Sin cargos." />
           ) : (
             charges.map((row, i) => (
-              <ItemRow key={row.id} row={row} index={inventory.length + i + 1} />
+              <ItemRow
+                key={rowRevision(row)}
+                row={row}
+                index={inventory.length + i + 1}
+              />
             ))
           )}
 
-          <tr className="border-t border-ep3-navy/10 bg-ep3-yellow/[0.09]">
+          <tr
+            key={`add-${items.length}`}
+            className="border-t border-ep3-navy/10 bg-ep3-yellow/[0.09]"
+          >
             <td className="px-3 py-2 text-right text-sm font-semibold text-ep3-navy/40">
               +
             </td>

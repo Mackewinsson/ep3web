@@ -181,7 +181,13 @@ export default async function PresupuestoDetailPage({ params }: Props) {
         <p className="mb-4 text-sm text-ep3-navy/60">
           Las notas se regeneran desde los ítems (inventario, cajas, cargos).
         </p>
-        <form action={updateBudgetMeta.bind(null, id)} className="space-y-4">
+        <form
+          // Notes are rewritten server-side when items change; remount so the
+          // uncontrolled fields do not keep showing the previous text.
+          key={`${row.title}|${row.validUntil ?? ""}|${row.notes ?? ""}`}
+          action={updateBudgetMeta.bind(null, id)}
+          className="space-y-4"
+        >
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="space-y-4">
               <Field

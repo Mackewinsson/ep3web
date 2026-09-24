@@ -44,6 +44,11 @@ test("presupuesto: agregar, editar y quitar ítems en la tabla", async ({
   await expect(row).toContainText("$20.000");
   await expect(row.locator('input[name="unitVolumeM3"]')).toHaveValue("0.5");
 
+  // The blank row is ready for the next item.
+  await expect(
+    page.locator('input[form="add-budget-item"][name="description"]'),
+  ).toHaveValue("");
+
   // Inline edit: quantity 2 → 3 updates the line volume and subtotal.
   await row.locator('input[name="quantity"]').fill("3");
   await row.getByRole("button", { name: "Guardar" }).click();
@@ -51,11 +56,27 @@ test("presupuesto: agregar, editar y quitar ítems en la tabla", async ({
   await expect(edited).toContainText("$30.000", { timeout: 30_000 });
   await expect(edited).toContainText("1.5");
 
-  // The m³ line and the client total follow the inventory.
-  await expect(page.getByText("m³ cobrados", { exact: false })).toBeVisible();
+  // The billed m³ line follows the inventory, and its editable cells must show
+  // the stored values — not stale DOM state left over from the last render.
+  const billed = page.getByRole("row", { name: /Mudanza estimada/ });
+  const billedAfterEdit = Number(
+    await billed.locator('input[name="quantity"]').inputValue(),
+  );
+  await expect(billed.locator('input[name="description"]')).toHaveValue(
+    `Mudanza estimada (${billedAfterEdit} m³)`,
+  );
 
   await edited.getByRole("button", { name: /Quitar/ }).click();
   await expect(page.getByRole("row", { name: /Piano E2E/ })).toHaveCount(0, {
     timeout: 30_000,
   });
+
+  // Removing 1.5 m³ of inventory must be reflected in the inputs too.
+  const billedAfterDelete = Number((billedAfterEdit - 1.5).toFixed(2));
+  await expect(billed.locator('input[name="quantity"]')).toHaveValue(
+    String(billedAfterDelete),
+  );
+  await expect(billed.locator('input[name="description"]')).toHaveValue(
+    `Mudanza estimada (${billedAfterDelete} m³)`,
+  );
 });

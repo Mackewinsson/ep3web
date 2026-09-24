@@ -165,7 +165,13 @@ export default async function CotizacionDetailPage({ params }: Props) {
         }
       />
 
-      <form action={updateQuoteRequest.bind(null, id)} className="space-y-4">
+      <form
+        // Volume and notes are rewritten server-side from the linked budget;
+        // remount so the uncontrolled fields pick up the new values.
+        key={`${quote.estimatedM3 ?? ""}|${quote.estimatedItems ?? ""}|${quote.volumeNotes ?? ""}`}
+        action={updateQuoteRequest.bind(null, id)}
+        className="space-y-4"
+      >
         <div className="grid gap-6 lg:grid-cols-2">
           <PanelCard>
             <h2 className="mb-3 font-semibold text-ep3-navy">
