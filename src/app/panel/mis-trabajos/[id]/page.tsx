@@ -9,6 +9,7 @@ import {
   StatusBadge,
 } from "@/components/panel/ui";
 import { QuoteItemsGrid } from "@/components/panel/quote-items-grid";
+import { ServiceDetailsCard } from "@/components/panel/service-details-card";
 import { db } from "@/db";
 import { drivers, trucks } from "@/db/schema";
 import { driverAdvanceJob, operatorDeclineJob } from "@/lib/actions/jobs";
@@ -59,7 +60,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
 
   const volume = formatVolume(job.estimatedM3, job.estimatedItems);
   const volumeBreakdown = job.budgetId
-    ? await getBudgetVolumeBreakdown(job.budgetId, job.estimatedM3)
+    ? await getBudgetVolumeBreakdown(job.budgetId, job.estimatedM3, volumeNotes)
     : null;
   const when = [formatDate(job.scheduledDate), job.scheduledTime]
     .filter(Boolean)
@@ -180,14 +181,6 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 <dd className="text-right font-medium text-ep3-navy">{volume}</dd>
               </div>
             ) : null}
-            {volumeNotes ? (
-              <div>
-                <dt className="text-ep3-navy/55">Detalle volumen</dt>
-                <dd className="mt-1 whitespace-pre-line text-ep3-navy">
-                  {volumeNotes}
-                </dd>
-              </div>
-            ) : null}
             {job.assignment?.notes ? (
               <div>
                 <dt className="text-ep3-navy/55">Notas para ti</dt>
@@ -214,6 +207,8 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
           description="Cantidad y volumen de cada ítem. Sin precios."
         />
       ) : null}
+
+      <ServiceDetailsCard notes={volumeNotes} />
 
       <PanelCard>
         <div className="space-y-2">

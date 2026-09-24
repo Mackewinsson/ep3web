@@ -14,6 +14,7 @@ import {
   TextArea,
 } from "@/components/panel/ui";
 import { QuoteItemsGrid } from "@/components/panel/quote-items-grid";
+import { ServiceDetailsCard } from "@/components/panel/service-details-card";
 import { db } from "@/db";
 import { drivers, jobAssignments, staffUsers, trucks } from "@/db/schema";
 import {
@@ -122,7 +123,11 @@ export default async function TrabajoDetailPage({ params }: Props) {
   const scheduleAction = updateJobSchedule.bind(null, id);
   const volume = formatVolume(job.estimatedM3, job.estimatedItems);
   const volumeBreakdown = job.budgetId
-    ? await getBudgetVolumeBreakdown(job.budgetId, job.estimatedM3)
+    ? await getBudgetVolumeBreakdown(
+        job.budgetId,
+        job.estimatedM3,
+        job.volumeNotes,
+      )
     : null;
   const when = [formatDate(job.scheduledDate), job.scheduledTime]
     .filter(Boolean)
@@ -298,14 +303,6 @@ export default async function TrabajoDetailPage({ params }: Props) {
               <dd className="text-ep3-navy">{volume}</dd>
             </div>
           ) : null}
-          {job.volumeNotes ? (
-            <div className="sm:col-span-2">
-              <dt className="text-ep3-navy/60">Detalle volumen</dt>
-              <dd className="whitespace-pre-line text-ep3-navy">
-                {job.volumeNotes}
-              </dd>
-            </div>
-          ) : null}
         </dl>
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -362,6 +359,8 @@ export default async function TrabajoDetailPage({ params }: Props) {
           description="El mismo desglose que ve el operador. Esta tabla no muestra precios."
         />
       ) : null}
+
+      <ServiceDetailsCard notes={job.volumeNotes} />
 
       <PanelCard>
         <h2 className="mb-3 font-semibold text-ep3-navy">Fecha y hora</h2>

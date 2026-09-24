@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import {
   buildTestFleet,
   createOperatorFleet,
@@ -11,6 +11,23 @@ import {
   selectByName,
   uniqueSuffix,
 } from "./helpers";
+
+/**
+ * The wizard answers live in the «Detalles del servicio» panel and the items
+ * live in the table; the old raw notes dump duplicated both.
+ */
+async function assertItemsAndServiceDetails(page: Page) {
+  await expect(
+    page.getByRole("heading", { name: "Ítems de la mudanza" }),
+  ).toBeVisible();
+  await expect(page.getByRole("row", { name: /Caja E2E/ })).toBeVisible();
+  await expect(page.getByText("Cargos y servicios")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Detalles del servicio" }),
+  ).toBeVisible();
+  await expect(page.getByText("Detalle volumen")).toHaveCount(0);
+  await expect(page.getByText(/^Inventario:/)).toHaveCount(0);
+}
 
 test("cotización web → aprobar → operador → aceptar → En camino", async ({
   page,
@@ -83,6 +100,7 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
   await expect(
     page.getByRole("button", { name: "Aceptar servicio" }),
   ).toBeVisible();
+  await assertItemsAndServiceDetails(page);
   await expect(page.getByText("Tu pago por este servicio")).toBeVisible();
   await expect(page.getByText(/Monto neto para tu flota/)).toBeVisible();
   await expect(page.getByText(clientPrice)).toHaveCount(0);
@@ -134,6 +152,7 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
 
   await page.goto("/panel/trabajos");
   await openRecordByTitle(page, clientName);
+  await assertItemsAndServiceDetails(page);
   await expect(page.getByText("Aceptado").first()).toBeVisible();
   await expect(page.getByText(/Servicio aceptado/)).toBeVisible();
   await expect(page.getByText(pickCrew.crewName).first()).toBeVisible();
