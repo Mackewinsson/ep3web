@@ -58,11 +58,25 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
     page.getByText(new RegExp(`Operador:\\s*${operatorName}`)),
   ).toBeVisible({ timeout: 30_000 });
 
+  const clientPrice = (
+    await page
+      .locator("dt", { hasText: "Presupuesto cliente" })
+      .locator("xpath=following-sibling::dd[1]")
+      .innerText()
+  ).trim();
+  expect(clientPrice).toMatch(/\+ IVA/);
+
   await logout(page);
 
   // --- 3. Operador: aceptar (chofer, RUT, patente) + En camino ---
   await login(page, operatorEmail, operatorPassword);
   await expect(page).toHaveURL(/\/panel\/mis-trabajos/);
+
+  // A driver session cannot open admin routes.
+  await page.goto("/panel/presupuestos");
+  await expect(page).toHaveURL(/\/panel\/mis-trabajos\/?$/);
+  await page.goto("/panel/cotizaciones");
+  await expect(page).toHaveURL(/\/panel\/mis-trabajos\/?$/);
 
   await openRecordByTitle(page, clientName);
   await page.waitForURL(/\/panel\/mis-trabajos\/[^/]+$/, { timeout: 30_000 });
@@ -71,6 +85,9 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
   ).toBeVisible();
   await expect(page.getByText("Tu pago por este servicio")).toBeVisible();
   await expect(page.getByText(/Monto neto para tu flota/)).toBeVisible();
+  await expect(page.getByText(clientPrice)).toHaveCount(0);
+  await expect(page.getByText(/\+ IVA/)).toHaveCount(0);
+  await expect(page.getByText("Presupuesto cliente")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Rechazar trabajo" })).toBeVisible();
 
   await page.getByRole("button", { name: "Aceptar servicio" }).click();
