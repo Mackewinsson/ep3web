@@ -21,9 +21,15 @@ test("cotización: m³ estimados sincroniza Estimación auto en notas", async ({
   await page.goto("/panel/cotizaciones");
   await openRecordByTitle(page, clientName);
 
+  // The raw cotizador text is collapsed: the readable version lives in
+  // «Detalles del servicio» and in the item table.
+  const openRawNotes = () =>
+    page.getByRole("group").getByText("Ver texto del cotizador").click();
+
   const m3Input = page.locator('input[name="estimatedM3"]');
   const notes = page.locator('textarea[name="volumeNotes"]');
   await expect(m3Input).toBeVisible({ timeout: 30_000 });
+  await openRawNotes();
   await expect(notes).toBeVisible();
 
   await expect(notes).toContainText(/Estimación auto:/i);
@@ -44,6 +50,7 @@ test("cotización: m³ estimados sincroniza Estimación auto en notas", async ({
     timeout: 30_000,
   });
   await expect(page.locator('input[name="estimatedM3"]')).toHaveValue(/15\.5/);
+  await openRawNotes();
   await expect(page.locator('textarea[name="volumeNotes"]')).toContainText(
     /Estimación auto:\s*15\.5\s*m³/i,
   );
