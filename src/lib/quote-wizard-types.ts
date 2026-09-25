@@ -16,6 +16,9 @@ export type AddressBlock = {
   floor: string;
   /** Only used when propertyType === "departamento" */
   hasElevator: boolean | null;
+  /** Set when the address can be placed on the map. Not sent to the server. */
+  lat: number | null;
+  lon: number | null;
 };
 
 export type CustomInventoryItem = {
@@ -83,12 +86,16 @@ export function createInitialQuoteState(): QuoteWizardState {
       address: "",
       floor: "",
       hasElevator: null,
+      lat: null,
+      lon: null,
     },
     destination: {
       propertyType: "",
       address: "",
       floor: "",
       hasElevator: null,
+      lat: null,
+      lon: null,
     },
     quantities: {},
     customItems: [],

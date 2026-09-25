@@ -44,6 +44,8 @@ function normalizeAddress(block: Partial<AddressBlock> | undefined): AddressBloc
     floor: block?.floor ?? "",
     hasElevator:
       typeof block?.hasElevator === "boolean" ? block.hasElevator : null,
+    lat: typeof block?.lat === "number" && Number.isFinite(block.lat) ? block.lat : null,
+    lon: typeof block?.lon === "number" && Number.isFinite(block.lon) ? block.lon : null,
   };
 }
 
@@ -305,7 +307,6 @@ export function QuoteWizard({
                 onChange={(destination) =>
                   setState((s) => ({ ...s, destination }))
                 }
-                showMapPlaceholder
               />
             ) : null}
 

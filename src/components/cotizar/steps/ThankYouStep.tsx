@@ -21,8 +21,18 @@ export function ThankYouStep({ state, onDone }: Props) {
 
     startTransition(async () => {
       const result = await submitWizardQuote({
-        origin: state.origin,
-        destination: state.destination,
+        origin: {
+          propertyType: state.origin.propertyType,
+          address: state.origin.address,
+          floor: state.origin.floor,
+          hasElevator: state.origin.hasElevator,
+        },
+        destination: {
+          propertyType: state.destination.propertyType,
+          address: state.destination.address,
+          floor: state.destination.floor,
+          hasElevator: state.destination.hasElevator,
+        },
         quantities: state.quantities,
         customItems: state.customItems,
         packingBoxes: state.packingBoxes,

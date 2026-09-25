@@ -1,5 +1,6 @@
 "use client";
 
+import { AddressMap } from "@/components/cotizar/AddressMap";
 import { ChileAddressAutocomplete } from "@/components/cotizar/ChileAddressAutocomplete";
 import type { AddressBlock, PropertyType } from "@/lib/quote-wizard-types";
 import { PROPERTY_TYPE_LABELS } from "@/lib/quote-wizard-types";
@@ -11,7 +12,6 @@ type Props = {
   title: string;
   value: AddressBlock;
   onChange: (next: AddressBlock) => void;
-  showMapPlaceholder?: boolean;
 };
 
 function Choice({
@@ -48,12 +48,7 @@ function Choice({
   );
 }
 
-export function AddressStep({
-  title,
-  value,
-  onChange,
-  showMapPlaceholder = false,
-}: Props) {
+export function AddressStep({ title, value, onChange }: Props) {
   const isApartment = value.propertyType === "departamento";
 
   function setPropertyType(propertyType: PropertyType | "") {
@@ -75,14 +70,7 @@ export function AddressStep({
         {title}
       </h2>
 
-      {showMapPlaceholder ? (
-        <div
-          className="flex h-36 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-sm text-slate-500 sm:h-44"
-          aria-hidden
-        >
-          Mapa (próximamente)
-        </div>
-      ) : null}
+      <AddressMap lat={value.lat} lon={value.lon} />
 
       <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
         <label className="block text-sm">
@@ -106,7 +94,24 @@ export function AddressStep({
           <span className="mb-1 block font-medium text-slate-800">Dirección</span>
           <ChileAddressAutocomplete
             value={value.address}
-            onChange={(address) => onChange({ ...value, address })}
+            onChange={(address) =>
+              onChange({ ...value, address, lat: null, lon: null })
+            }
+            onSelect={(suggestion) =>
+              onChange({
+                ...value,
+                address: suggestion.label,
+                lat: suggestion.lat ?? null,
+                lon: suggestion.lon ?? null,
+              })
+            }
+            onPin={(pin) =>
+              onChange({
+                ...value,
+                lat: pin?.lat ?? null,
+                lon: pin?.lon ?? null,
+              })
+            }
             placeholder="Ej: Morandé 707, Santiago"
           />
         </label>

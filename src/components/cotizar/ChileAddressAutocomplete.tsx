@@ -1,7 +1,22 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import type { AddressSuggestion } from "@/lib/places/chile-address";
+import {
+  pinFromSuggestions,
+  type AddressSuggestion,
+} from "@/lib/places/chile-address";
+
+async function fetchSuggestions(query: string, nominatimOnly = false) {
+  const provider = nominatimOnly ? "&provider=nominatim" : "";
+  const res = await fetch(
+    `/api/places/autocomplete?q=${encodeURIComponent(query)}${provider}`,
+  );
+  return (await res.json()) as {
+    suggestions: AddressSuggestion[];
+    provider?: string;
+    error?: string;
+  };
+}
 
 const fieldClass =
   "w-full rounded-md border border-slate-300 px-3 py-2.5 text-base outline-none focus:border-ep3-navy md:text-sm";
@@ -9,12 +24,18 @@ const fieldClass =
 type Props = {
   value: string;
   onChange: (address: string) => void;
+  /** Fired when the user picks a suggestion, including its coordinates. */
+  onSelect?: (suggestion: AddressSuggestion) => void;
+  /** First result that can be drawn, or null when the query has no pin. */
+  onPin?: (pin: { lat: number; lon: number } | null) => void;
   placeholder?: string;
 };
 
 export function ChileAddressAutocomplete({
   value,
   onChange,
+  onSelect,
+  onPin,
   placeholder = "Calle, número, comuna…",
 }: Props) {
   const listId = useId();
@@ -24,7 +45,10 @@ export function ChileAddressAutocomplete({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const skipSearch = useRef(false);
+  const requestId = useRef(0);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const onPinRef = useRef(onPin);
+  onPinRef.current = onPin;
 
   useEffect(() => {
     setQuery(value);
@@ -40,28 +64,35 @@ export function ChileAddressAutocomplete({
     if (q.length < 3) {
       setSuggestions([]);
       setError(null);
+      onPinRef.current?.(null);
       return;
     }
 
+    const id = ++requestId.current;
     const timer = window.setTimeout(async () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(
-          `/api/places/autocomplete?q=${encodeURIComponent(q)}`,
-        );
-        const data = (await res.json()) as {
-          suggestions: AddressSuggestion[];
-          error?: string;
-        };
-        setSuggestions(data.suggestions ?? []);
+        const data = await fetchSuggestions(q);
+        if (id !== requestId.current) return;
+        let suggestions = data.suggestions ?? [];
+        let pin = pinFromSuggestions(suggestions);
+        if (!pin && data.provider !== "nominatim") {
+          const fallback = await fetchSuggestions(q, true);
+          if (id !== requestId.current) return;
+          pin = pinFromSuggestions(fallback.suggestions ?? []);
+        }
+        setSuggestions(suggestions);
         setOpen(true);
+        onPinRef.current?.(pin);
         if (data.error) setError(data.error);
       } catch {
+        if (id !== requestId.current) return;
         setError("No se pudo buscar direcciones.");
         setSuggestions([]);
+        onPinRef.current?.(null);
       } finally {
-        setLoading(false);
+        if (id === requestId.current) setLoading(false);
       }
     }, 350);
 
@@ -78,10 +109,14 @@ export function ChileAddressAutocomplete({
 
   function pick(s: AddressSuggestion) {
     skipSearch.current = true;
+    requestId.current += 1;
     setQuery(s.label);
-    onChange(s.label);
     setSuggestions([]);
     setOpen(false);
+    const pin = pinFromSuggestions([s]);
+    if (pin) onPinRef.current?.(pin);
+    if (onSelect) onSelect(s);
+    else onChange(s.label);
   }
 
   return (
