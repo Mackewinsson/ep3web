@@ -5,6 +5,20 @@ export type AddressSuggestion = {
   lon?: number;
 };
 
+export function pinFromSuggestions(
+  suggestions: AddressSuggestion[],
+): { lat: number; lon: number } | null {
+  const hit = suggestions.find(
+    (s) =>
+      typeof s.lat === "number" &&
+      Number.isFinite(s.lat) &&
+      typeof s.lon === "number" &&
+      Number.isFinite(s.lon),
+  );
+  if (!hit || hit.lat == null || hit.lon == null) return null;
+  return { lat: hit.lat, lon: hit.lon };
+}
+
 export type AddressSearchResult = {
   suggestions: AddressSuggestion[];
   provider: "nominatim" | "google";
@@ -34,7 +48,7 @@ export async function searchChileAddresses(
   return searchNominatim(q);
 }
 
-async function searchNominatim(query: string): Promise<AddressSearchResult> {
+export async function searchNominatim(query: string): Promise<AddressSearchResult> {
   const url = new URL(NOMINATIM_URL);
   url.searchParams.set("q", query);
   url.searchParams.set("format", "json");

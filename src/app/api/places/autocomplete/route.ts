@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { searchChileAddresses } from "@/lib/places/chile-address";
+import {
+  searchChileAddresses,
+  searchNominatim,
+} from "@/lib/places/chile-address";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,6 +12,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ suggestions: [], provider: "nominatim" });
   }
 
-  const result = await searchChileAddresses(q);
+  const forceNominatim = searchParams.get("provider") === "nominatim";
+  const result = forceNominatim
+    ? await searchNominatim(q)
+    : await searchChileAddresses(q);
   return NextResponse.json(result);
 }
