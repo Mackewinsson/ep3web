@@ -8,6 +8,7 @@ import {
   PanelCard,
   StatusBadge,
 } from "@/components/panel/ui";
+import { RouteMap } from "@/components/panel/route-map";
 import { QuoteItemsGrid } from "@/components/panel/quote-items-grid";
 import { ServiceDetailsCard } from "@/components/panel/service-details-card";
 import { db } from "@/db";
@@ -29,6 +30,7 @@ import {
   operatorFacingAmounts,
   operatorSafeNotes,
 } from "@/lib/jobs-view";
+import { drivingRoute } from "@/lib/places/driving-route";
 import { getBudgetVolumeBreakdown } from "@/lib/volume-breakdown";
 
 type Props = { params: Promise<{ id: string }> };
@@ -59,6 +61,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
   );
 
   const volume = formatVolume(job.estimatedM3, job.estimatedItems);
+  const route = await drivingRoute(job.originAddress, job.destinationAddress);
   const volumeBreakdown = job.budgetId
     ? await getBudgetVolumeBreakdown(job.budgetId, job.estimatedM3, volumeNotes)
     : null;
@@ -119,6 +122,8 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
           ) : (
             <p className="text-sm text-ep3-navy/60">Sin teléfono del cliente</p>
           )}
+
+          {route ? <RouteMap route={route} /> : null}
 
           <div className="grid gap-3">
             <a
