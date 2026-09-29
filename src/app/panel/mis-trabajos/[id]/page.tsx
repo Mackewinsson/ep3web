@@ -241,9 +241,6 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
               <p className="mt-1 text-2xl font-bold tabular-nums text-ep3-navy">
                 {formatClp(operatorPayout)}
               </p>
-              <p className="mt-1 text-xs text-ep3-navy/55">
-                Monto neto para tu flota. No incluye el precio que ve el cliente.
-              </p>
             </div>
           ) : canAccept ? (
             <p className="rounded-lg bg-amber-50 px-4 py-3 text-center text-sm font-medium text-amber-900">

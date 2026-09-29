@@ -102,7 +102,7 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
   ).toBeVisible();
   await assertItemsAndServiceDetails(page);
   await expect(page.getByText("Tu pago por este servicio")).toBeVisible();
-  await expect(page.getByText(/Monto neto para tu flota/)).toBeVisible();
+  await expect(page.getByText(/Monto neto para tu flota/)).toHaveCount(0);
   await expect(page.getByText(clientPrice)).toHaveCount(0);
   await expect(page.getByText(/\+ IVA/)).toHaveCount(0);
   await expect(page.getByText("Presupuesto cliente")).toHaveCount(0);
