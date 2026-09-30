@@ -12,6 +12,10 @@ import { RouteMap } from "@/components/panel/route-map";
 import { QuoteItemsGrid } from "@/components/panel/quote-items-grid";
 import { ServiceDetailsCard } from "@/components/panel/service-details-card";
 import { db } from "@/db";
+import {
+  CLIENT_EN_CAMINO_CONFIRM_HINT,
+  clientEnCaminoStatusCopy,
+} from "@/lib/email/client-en-camino";
 import { drivers, trucks } from "@/db/schema";
 import { driverAdvanceJob, operatorDeclineJob } from "@/lib/actions/jobs";
 import { requireDriver } from "@/lib/auth";
@@ -272,7 +276,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
                 En camino
               </button>
               <p className="mt-2 text-center text-xs text-ep3-navy/55">
-                Al confirmar se avisa al cliente por correo (simulado).
+                {CLIENT_EN_CAMINO_CONFIRM_HINT}
               </p>
             </form>
           ) : null}
@@ -292,9 +296,7 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
           {job.status === "in_progress" ? (
             <>
               <p className="rounded-lg bg-sky-50 px-4 py-3 text-center text-sm font-medium text-sky-950">
-                Aviso al cliente (simulado): se envió correo de que su mudanza
-                va en camino
-                {job.clientEmail ? ` a ${job.clientEmail}` : " (sin correo)"}.
+                {clientEnCaminoStatusCopy(job.clientEmail)}
               </p>
               <form action={driverAdvanceJob.bind(null, id, "completed")}>
                 <button

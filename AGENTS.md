@@ -43,9 +43,9 @@ Step order (`QuoteWizard`):
 
 ## Admin ops flow
 
-1. Review presupuesto at `/panel/presupuestos` (edit lines, send, approve, reject, expire). Client-facing totals use `formatClpPlusIva` (`$X + IVA`); the stored amount stays net — do **not** bake IVA into pricing formulas. **Enviar al cliente** emails the total with `+ IVA` (`notifyClientQuote`). Adding/editing budget lines updates **Notas** and `quote_requests.volumeNotes` from `budget_items` **merged with the client Inventario still in notes** (`syncBudgetItemsInNotes`). Missing client items are inserted as unit rows. Volume details live there — **Notas del trabajo** (`jobs.notes`) stays empty so admin can write operational notes.
-2. **Approve** → creates `jobs` with status `pending_assignment` (linked to budget) and `notes: null`; redirects to `/panel/trabajos/[id]`.
-3. **Assign operador** (`assignJob`) → ends prior open assignment as `reassigned` if any; new open `job_assignments`; job → **`assigned`**; notifies operador.
+1. Review presupuesto at `/panel/presupuestos` (edit lines, send, approve, reject, expire). Client-facing totals use `formatClpPlusIva` (`$X + IVA`); the stored amount stays net — do **not** bake IVA into pricing formulas. **Enviar al cliente** emails the total with `+ IVA` (`notifyClientQuote` via `deliverEmail`). A missing address or a Resend error does **not** mark the presupuesto sent; **Reenviar al cliente** retries. Adding/editing budget lines updates **Notas** and `quote_requests.volumeNotes` from `budget_items` **merged with the client Inventario still in notes** (`syncBudgetItemsInNotes`). Missing client items are inserted as unit rows. Volume details live there — **Notas del trabajo** (`jobs.notes`) stays empty so admin can write operational notes.
+2. **Approve** → creates `jobs` with status `pending_assignment` (linked to budget) and `notes: null`; redirects to `/panel/trabajos/[id]`. Approving a **draft** that was never sent also emails the client. Approving an already **sent** presupuesto does not send a second copy.
+3. **Assign operador** (`assignJob`) → ends prior open assignment as `reassigned` if any; new open `job_assignments`; job → **`assigned`**; notifies operador in the panel and by email (`sendDriverAssignmentEmail`). The operator email omits the client total. `emailSentAt` is set only when Resend accepts the message. Admins get a notice for sent, simulated, missing address, or failure.
 4. Operator **Aceptar servicio** — job stays `assigned` (no new status enum). Admin list/detail/dashboard show **Por aceptar** vs **Aceptado** via `adminJobBadge` + `isReadyForEnCamino`. Operator list/detail show **Por aceptar** vs **Por iniciar** via `driverJobBadge`. `notifyAdmins` type `job_accepted` (“Servicio aceptado”). The panel bell polls (~3s) and `router.refresh()` when unread increases so status updates without a full reload.
 
 Admin can cancel / reassign while unlocked. Changing fecha/hora/notas on an assigned job notifies the operador (`job_updated`). Locked statuses: `completed`, `cancelled`.
@@ -62,7 +62,7 @@ While `assigned` and **not** yet accepted:
 
 After accept (`isReadyForEnCamino`):
 
-4. **En camino** → `in_progress` (client email simulated + admin notice).
+4. **En camino** → `in_progress`. Client email goes through Resend when `RESEND_API_KEY` is set; otherwise it is logged as a mock. Admins are notified with sent, simulated, missing address, or failure (`client_en_camino_email`).
 5. **Finalizar** → `completed`.
 
 Acceptance marker: sets `salvoConductoCompletedAt = now()`. Legacy salvoconducto columns (folio, date, communes, notes) are **nulled** on accept — do **not** rebuild that form.
@@ -87,7 +87,8 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 |---|---|
 | `src/lib/quote-pricing/` | Volume, boxes, budget math, operator margin |
 | `src/lib/actions/submit-wizard-quote.ts` | Public wizard persist |
-| `src/lib/actions/budgets.ts` | Approve → create job; item add/edit/delete syncs notes from `budget_items` |
+| `src/lib/actions/budgets.ts` | Approve → create job; send/resend client quote; item add/edit/delete syncs notes from `budget_items` |
+| `src/lib/email/deliver.ts` | Shared Resend sender (mock when `RESEND_API_KEY` is unset) |
 | `src/lib/budget-notes.ts` | Push budget lines into budget notes + `quote_requests.volumeNotes`; clear volume copies from `jobs.notes` |
 | `src/lib/job-notes.ts` | Hide job notes that duplicate volume (`operationalJobNotes`) |
 | `src/lib/actions/jobs.ts` | Assign, accept, decline, advance |

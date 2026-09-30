@@ -295,6 +295,98 @@ export async function deleteBudgetItem(itemId: string, returnTo: string | null) 
   redirect(budgetItemReturnPath(existing.budgetId, returnTo));
 }
 
+async function deliverBudgetQuoteEmail(budget: {
+  clientId: string;
+  title: string;
+  totalAmount: string | number;
+  validUntil: string | null;
+  notes: string | null;
+}) {
+  const [client] = await db
+    .select({
+      name: clients.name,
+      email: clients.email,
+    })
+    .from(clients)
+    .where(eq(clients.id, budget.clientId))
+    .limit(1);
+  const { notifyClientQuote } = await import("@/lib/email/client-quote");
+  return notifyClientQuote({
+    clientName: client?.name ?? "Cliente",
+    clientEmail: client?.email ?? null,
+    title: budget.title,
+    totalAmount: budget.totalAmount,
+    validUntil: budget.validUntil,
+    notes: budget.notes,
+  });
+}
+
+async function notifyBudgetQuoteEmail(
+  budgetId: string,
+  detail: string,
+  result: Awaited<ReturnType<typeof deliverBudgetQuoteEmail>>,
+) {
+  const { emailDeliveryNotice } = await import("@/lib/email/deliver");
+  const { notifyAdmins } = await import("@/lib/notifications");
+  const notice = emailDeliveryNotice("quote", result, detail);
+  await notifyAdmins({
+    type: notice.type,
+    title: notice.title,
+    body: notice.body,
+    href: `/panel/presupuestos/${budgetId}`,
+  });
+}
+
+/** Send or resend the quote. A draft becomes sent only when delivery is accepted. */
+export async function sendBudgetToClient(budgetId: string) {
+  await requireAdmin();
+
+  const [budget] = await db
+    .select()
+    .from(budgets)
+    .where(eq(budgets.id, budgetId))
+    .limit(1);
+  if (!budget) {
+    throw new Error("Presupuesto no encontrado");
+  }
+  if (budget.status === "rejected" || budget.status === "expired") {
+    throw new Error("No se puede enviar un presupuesto rechazado o expirado");
+  }
+
+  await syncLinkedNotesFromBudgetItems(budgetId);
+  const [fresh] = await db
+    .select()
+    .from(budgets)
+    .where(eq(budgets.id, budgetId))
+    .limit(1);
+  const current = fresh ?? budget;
+  const result = await deliverBudgetQuoteEmail(current);
+  await notifyBudgetQuoteEmail(budgetId, current.title, result);
+
+  const { emailWasDelivered, quoteEmailBlockedReason } = await import(
+    "@/lib/email/deliver"
+  );
+  const blocked = quoteEmailBlockedReason(result);
+  if (!emailWasDelivered(result) && blocked) {
+    revalidatePath(`/panel/presupuestos/${budgetId}`);
+    revalidatePath("/panel/presupuestos");
+    revalidatePath("/panel");
+    redirect(`/panel/presupuestos/${budgetId}?aviso=${blocked}`);
+  }
+
+  if (current.status === "draft") {
+    await db
+      .update(budgets)
+      .set({ status: "sent", updatedAt: new Date() })
+      .where(eq(budgets.id, budgetId));
+  }
+
+  revalidatePath(`/panel/presupuestos/${budgetId}`);
+  revalidatePath("/panel/presupuestos");
+  revalidatePath("/panel");
+  redirect(`/panel/presupuestos/${budgetId}`);
+}
+
 export async function setBudgetStatus(
   budgetId: string,
   status: "draft" | "sent" | "approved" | "rejected" | "expired",
@@ -332,30 +424,34 @@ export async function setBudgetStatus(
   const notes = fresh?.notes ?? budget.notes;
   const totalAmount = fresh?.totalAmount ?? budget.totalAmount;
 
-  await db
-    .update(budgets)
-    .set({ status, updatedAt: new Date() })
-    .where(eq(budgets.id, budgetId));
-
-  if (status === "sent") {
-    const [client] = await db
-      .select({
-        name: clients.name,
-        email: clients.email,
-      })
-      .from(clients)
-      .where(eq(clients.id, budget.clientId))
-      .limit(1);
-    const { notifyClientQuote } = await import("@/lib/email/client-quote");
-    await notifyClientQuote({
-      clientName: client?.name ?? "Cliente",
-      clientEmail: client?.email ?? null,
+  const { shouldEmailQuoteToClient } = await import("@/lib/email/client-quote");
+  if (shouldEmailQuoteToClient(budget.status, status)) {
+    const result = await deliverBudgetQuoteEmail({
+      clientId: budget.clientId,
       title: budget.title,
       totalAmount,
       validUntil: budget.validUntil,
       notes,
     });
+    await notifyBudgetQuoteEmail(budgetId, budget.title, result);
+    if (status === "sent") {
+      const { emailWasDelivered, quoteEmailBlockedReason } = await import(
+        "@/lib/email/deliver"
+      );
+      const blocked = quoteEmailBlockedReason(result);
+      if (!emailWasDelivered(result) && blocked) {
+        revalidatePath(`/panel/presupuestos/${budgetId}`);
+        revalidatePath("/panel/presupuestos");
+        revalidatePath("/panel");
+        redirect(`/panel/presupuestos/${budgetId}?aviso=${blocked}`);
+      }
+    }
   }
+
+  await db
+    .update(budgets)
+    .set({ status, updatedAt: new Date() })
+    .where(eq(budgets.id, budgetId));
 
   if (status === "approved") {
     let origin = "Por definir";

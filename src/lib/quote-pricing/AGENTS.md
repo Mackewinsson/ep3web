@@ -48,7 +48,7 @@ Catalog categories/items: tables `moving_categories` / `moving_catalog_items`, s
    - One **unit** line per inventory item (+ packing boxes) for ops editing, with `unitVolumeM3` stored
    - Adding / editing / removing unit lines in the admin (`src/lib/actions/budgets.ts` → `applyInventoryVolumeDelta`) moves the m³ line and price by the volume change
    - Separate **m3/fixed** charge lines for internal price estimate
-4. Admin reviews/adjusts presupuesto (`budget_items` is source of truth) → mark sent / email client (**total is net**, shown as `$X + IVA`) → approve → `jobs` (`notes` empty)
+4. Admin reviews/adjusts presupuesto (`budget_items` is source of truth) → mark sent / email client (**total is net**, shown as `$X + IVA`) → approve → `jobs` (`notes` empty). Approving a draft that was never sent also emails the client.
    - `quote_requests.volumeNotes` is the machine-readable snapshot kept in sync via `syncBudgetItemsInNotes`; parsers and payout fallbacks read it. **Do not** copy it into `jobs.notes`
    - `budgets.notes` is the **client message** appended to the quote email. Never write generated item lines into it — the item table shows those
 5. Operator sees **Tu pago** via `operatorPayoutFromClientTotal` only — never the client total

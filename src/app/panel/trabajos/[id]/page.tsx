@@ -16,6 +16,7 @@ import {
 import { QuoteItemsGrid } from "@/components/panel/quote-items-grid";
 import { ServiceDetailsCard } from "@/components/panel/service-details-card";
 import { db } from "@/db";
+import { clientEnCaminoStatusCopy } from "@/lib/email/client-en-camino";
 import { drivers, jobAssignments, staffUsers, trucks } from "@/db/schema";
 import {
   assignJob,
@@ -169,9 +170,7 @@ export default async function TrabajoDetailPage({ params }: Props) {
         ) : null}
         {job.status === "in_progress" ? (
           <p className="mb-4 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-950">
-            Aviso al cliente (simulado): se envió correo de que su mudanza va en
-            camino
-            {job.clientEmail ? ` a ${job.clientEmail}` : " (sin correo)"}.
+            {clientEnCaminoStatusCopy(job.clientEmail)}
           </p>
         ) : null}
         <dl className="grid gap-3 text-sm sm:grid-cols-2">

@@ -220,14 +220,17 @@ export async function assignJob(jobId: string, formData: FormData) {
 
   const previous = await endOpenAssignment(jobId, "reassigned");
 
-  await db.insert(jobAssignments).values({
-    jobId,
-    driverId: parsed.driverId,
-    truckId: null,
-    crewDriverId: null,
-    notes: parsed.notes,
-    emailSentAt: null,
-  });
+  const [created] = await db
+    .insert(jobAssignments)
+    .values({
+      jobId,
+      driverId: parsed.driverId,
+      truckId: null,
+      crewDriverId: null,
+      notes: parsed.notes,
+      emailSentAt: null,
+    })
+    .returning({ id: jobAssignments.id });
 
   await db
     .update(jobs)
@@ -265,6 +268,38 @@ export async function assignJob(jobId: string, formData: FormData) {
       href: `/panel/conductores/${operator.id}`,
     });
   }
+
+  const { sendDriverAssignmentEmail } = await import("@/lib/email/resend");
+  const { emailDeliveryNotice, emailWasSent } = await import(
+    "@/lib/email/deliver"
+  );
+  const emailResult = await sendDriverAssignmentEmail({
+    driverName: operator.name,
+    driverEmail: operator.email,
+    clientName: client.name,
+    originAddress: job.originAddress,
+    destinationAddress: job.destinationAddress,
+    scheduledDate: job.scheduledDate,
+    scheduledTime: parsed.scheduledTime || job.scheduledTime,
+    notes: parsed.notes,
+  });
+  if (emailWasSent(emailResult)) {
+    await db
+      .update(jobAssignments)
+      .set({ emailSentAt: new Date() })
+      .where(eq(jobAssignments.id, created.id));
+  }
+  const assignmentNotice = emailDeliveryNotice(
+    "assignment",
+    emailResult,
+    `${operator.name}: ${job.originAddress} → ${job.destinationAddress}`,
+  );
+  await notifyAdmins({
+    type: assignmentNotice.type,
+    title: assignmentNotice.title,
+    body: assignmentNotice.body,
+    href: `/panel/trabajos/${jobId}`,
+  });
 
   revalidateJobPaths(jobId);
   redirect(`/panel/trabajos/${jobId}`);
@@ -527,15 +562,17 @@ async function notifyClientEnCaminoForJob(
     truckPlate,
   });
 
+  const { emailDeliveryNotice } = await import("@/lib/email/deliver");
+  const notice = emailDeliveryNotice(
+    "en_camino",
+    result,
+    `${job.clientName}: ${job.originAddress} → ${job.destinationAddress}`,
+  );
   const { notifyAdmins } = await import("@/lib/notifications");
   await notifyAdmins({
-    type: "client_en_camino_email",
-    title: result.skipped
-      ? "En camino — cliente sin correo (aviso no enviado)"
-      : "En camino — aviso al cliente (simulado)",
-    body: result.skipped
-      ? `${job.clientName}: ${job.originAddress} → ${job.destinationAddress}`
-      : `Mock a ${result.to}: ${job.clientName} · ${job.originAddress} → ${job.destinationAddress}`,
+    type: notice.type,
+    title: notice.title,
+    body: notice.body,
     href: `/panel/trabajos/${jobId}`,
   });
 }
