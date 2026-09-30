@@ -14,7 +14,11 @@ import {
 } from "@/components/panel/ui";
 import { db } from "@/db";
 import { budgets, clients, jobs, quoteRequests } from "@/db/schema";
-import { setBudgetStatus, updateBudgetMeta } from "@/lib/actions/budgets";
+import {
+  sendBudgetToClient,
+  setBudgetStatus,
+  updateBudgetMeta,
+} from "@/lib/actions/budgets";
 import { loadBudgetItemsView } from "@/lib/budget-items-view";
 import {
   BUDGET_STATUS_LABELS,
@@ -24,7 +28,10 @@ import {
 } from "@/lib/format";
 import { clientMessageFromNotes } from "@/lib/quote-pricing";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ aviso?: string }>;
+};
 
 const budgetColumns = {
   id: budgets.id,
@@ -49,8 +56,12 @@ function loadBudget(id: string) {
     .limit(1);
 }
 
-export default async function PresupuestoDetailPage({ params }: Props) {
+export default async function PresupuestoDetailPage({
+  params,
+  searchParams,
+}: Props) {
   const { id } = await params;
+  const { aviso } = await searchParams;
 
   const [budget] = await loadBudget(id);
   if (!budget) notFound();
@@ -81,6 +92,18 @@ export default async function PresupuestoDetailPage({ params }: Props) {
       </div>
 
       <PanelCard>
+        {aviso === "sin-correo" ? (
+          <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-950">
+            No se envió la cotización: el cliente no tiene correo. Agrégalo en
+            el cliente y vuelve a enviar.
+          </p>
+        ) : null}
+        {aviso === "fallo" ? (
+          <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-950">
+            No se pudo enviar la cotización. El detalle está en las
+            notificaciones. Puedes intentarlo de nuevo.
+          </p>
+        ) : null}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-3">
             <StatusBadge
@@ -91,18 +114,29 @@ export default async function PresupuestoDetailPage({ params }: Props) {
               {formatClpPlusIva(row.totalAmount)}
             </p>
             <p className="text-sm text-ep3-navy/55">
-              El cliente ve este monto + IVA (no incluido).
+              El cliente ve este monto + IVA (no incluido). Enviar lo manda por
+              correo. Aprobar un borrador también lo envía si aún no se mandó.
             </p>
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {row.status === "draft" ? (
-              <form action={setBudgetStatus.bind(null, id, "sent")}>
+              <form action={sendBudgetToClient.bind(null, id)}>
                 <button
                   type="submit"
                   className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-ep3-navy px-3 py-2 text-sm text-white sm:w-auto"
                 >
                   Enviar al cliente
+                </button>
+              </form>
+            ) : null}
+            {row.status === "sent" || row.status === "approved" ? (
+              <form action={sendBudgetToClient.bind(null, id)}>
+                <button
+                  type="submit"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-ep3-navy/20 px-3 py-2 text-sm text-ep3-navy sm:w-auto"
+                >
+                  Reenviar al cliente
                 </button>
               </form>
             ) : null}

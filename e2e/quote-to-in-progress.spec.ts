@@ -170,6 +170,6 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
     timeout: 30_000,
   });
   await expect(
-    page.getByText(/Aviso al cliente \(simulado\): se envió correo/),
+    page.getByText(/Se avisó al cliente por correo/),
   ).toBeVisible();
 });

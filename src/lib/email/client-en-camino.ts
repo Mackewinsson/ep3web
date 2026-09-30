@@ -1,7 +1,9 @@
 /**
  * Client “en camino” notice.
- * Real Resend delivery is not wired yet — always logs a mock payload.
+ * Uses Resend when RESEND_API_KEY is set; otherwise logs a mock payload.
  */
+
+import { deliverEmail, type EmailDeliveryResult } from "./deliver";
 
 export type ClientEnCaminoEmailPayload = {
   clientName: string;
@@ -12,15 +14,21 @@ export type ClientEnCaminoEmailPayload = {
   truckPlate?: string | null;
 };
 
-export type ClientEnCaminoEmailResult = {
-  mocked: true;
-  skipped: boolean;
-  to: string | null;
-  subject: string;
-};
+export type ClientEnCaminoEmailResult = EmailDeliveryResult;
 
 export const CLIENT_EN_CAMINO_SUBJECT =
   "Tu mudanza va en camino — Transportes EP3";
+
+export const CLIENT_EN_CAMINO_CONFIRM_HINT =
+  "Al confirmar se avisa al cliente por correo.";
+
+export function clientEnCaminoStatusCopy(clientEmail: string | null | undefined) {
+  const to = clientEmail?.trim();
+  if (!to) {
+    return "El cliente no tiene correo; no se envió el aviso de que la mudanza va en camino.";
+  }
+  return `Se avisó al cliente por correo (${to}) de que su mudanza va en camino.`;
+}
 
 export function buildClientEnCaminoEmail(
   payload: ClientEnCaminoEmailPayload,
@@ -48,20 +56,5 @@ export function buildClientEnCaminoEmail(
 export async function notifyClientEnCamino(
   payload: ClientEnCaminoEmailPayload,
 ): Promise<ClientEnCaminoEmailResult> {
-  const email = buildClientEnCaminoEmail(payload);
-  const skipped = !email.to;
-
-  console.info("[email:mock] client en camino", {
-    to: email.to,
-    subject: email.subject,
-    skipped,
-    text: email.text,
-  });
-
-  return {
-    mocked: true,
-    skipped,
-    to: email.to,
-    subject: email.subject,
-  };
+  return deliverEmail(buildClientEnCaminoEmail(payload));
 }
