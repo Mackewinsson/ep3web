@@ -66,6 +66,7 @@ export async function deliverEmail(email: {
   to: string | null;
   subject: string;
   text: string;
+  html?: string;
 }): Promise<EmailDeliveryResult> {
   const to = email.to?.trim() || null;
   if (!to) {
@@ -105,7 +106,7 @@ export async function deliverEmail(email: {
       to,
       subject: email.subject,
       text: email.text,
-      html: textToHtml(email.text),
+      html: email.html ?? textToHtml(email.text),
     });
     if (error) {
       console.error("[email] failed", error.message);

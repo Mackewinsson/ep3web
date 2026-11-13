@@ -7,7 +7,7 @@ import {
 } from "./new-quote";
 
 describe("buildNewQuoteClientEmail", () => {
-  it("formats client confirmation email with summary and + IVA", () => {
+  it("formats client confirmation email with summary, + IVA and brand colors", () => {
     const email = buildNewQuoteClientEmail({
       quoteId: "q-123",
       clientName: "Carolina Gómez",
@@ -29,11 +29,19 @@ describe("buildNewQuoteClientEmail", () => {
     assert.match(email.text, /15\.5 m³/);
     assert.match(email.text, /\+ IVA/);
     assert.match(email.text, /2026-12-01 a las 10:00/);
+
+    // HTML contains EP3 brand colors & content
+    assert.match(email.html, /#001F54/);
+    assert.match(email.html, /#FFCC00/);
+    assert.match(email.html, /TRANSPORTES/);
+    assert.match(email.html, /Carolina Gómez/);
+    assert.match(email.html, /15\.5/);
+    assert.match(email.html, /wa\.me\/56984898375/);
   });
 });
 
 describe("buildNewQuoteAdminEmail", () => {
-  it("formats admin alert with all client details and link to panel", () => {
+  it("formats admin alert with all client details, link to panel and brand colors", () => {
     const email = buildNewQuoteAdminEmail(
       {
         quoteId: "q-123",
@@ -59,5 +67,12 @@ describe("buildNewQuoteAdminEmail", () => {
     assert.match(email.text, /Correo: carolina@example\.com/);
     assert.match(email.text, /Notas cliente: Edificio con conserjería/);
     assert.match(email.text, /https:\/\/www\.transportesep3\.cl\/panel\/presupuestos\/b-456/);
+
+    // HTML checks
+    assert.match(email.html, /#001F54/);
+    assert.match(email.html, /#FFCC00/);
+    assert.match(email.html, /PANEL DE OPERACIONES/);
+    assert.match(email.html, /Carolina Gómez/);
+    assert.match(email.html, /https:\/\/www\.transportesep3\.cl\/panel\/presupuestos\/b-456/);
   });
 });
