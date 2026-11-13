@@ -246,5 +246,21 @@ export async function submitWizardQuote(
     href: `/panel/presupuestos/${budget.id}`,
   });
 
+  const { notifyNewQuoteSubmitted } = await import("@/lib/email/new-quote");
+  await notifyNewQuoteSubmitted({
+    quoteId: quote.id,
+    budgetId: budget.id,
+    clientName: data.contact.name,
+    clientEmail: data.contact.email,
+    clientPhone: data.contact.phone,
+    originAddress: data.origin.address,
+    destinationAddress: data.destination.address,
+    totalM3: estimate.totalM3,
+    estimatedAmount: estimate.totalAmount,
+    preferredDate: data.contact.preferredDate,
+    preferredTime: data.contact.preferredTime,
+    notes: data.contact.notes,
+  });
+
   return { ok: true, budgetId: budget.id, quoteId: quote.id };
 }

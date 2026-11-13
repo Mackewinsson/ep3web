@@ -3,6 +3,7 @@ import { PanelShell } from "@/components/panel/panel-sidebar";
 import { getSession } from "@/lib/auth";
 import { logoutAction } from "@/lib/actions/auth";
 import {
+  countNewQuotes,
   countUnreadNotifications,
   listNotificationsForStaff,
 } from "@/lib/notifications";
@@ -25,6 +26,8 @@ export default async function PanelLayout({
   const unreadCount = session
     ? await countUnreadNotifications(session.sub)
     : 0;
+  const newQuotesCount =
+    session && session.role === "admin" ? await countNewQuotes() : 0;
 
   return (
     <PanelShell
@@ -33,6 +36,7 @@ export default async function PanelLayout({
       logoutAction={logoutAction}
       notifications={notifications}
       unreadCount={unreadCount}
+      newQuotesCount={newQuotesCount}
     >
       {children}
     </PanelShell>

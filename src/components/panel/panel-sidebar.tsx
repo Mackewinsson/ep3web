@@ -29,9 +29,11 @@ const DRIVER_NAV = [
 
 function NavLinks({
   role,
+  newQuotesCount = 0,
   onNavigate,
 }: {
   role: StaffRole;
+  newQuotesCount?: number;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -44,18 +46,30 @@ function NavLinks({
           item.href === "/panel"
             ? pathname === "/panel"
             : pathname.startsWith(item.href);
+        const isQuotesLink = item.href === "/panel/cotizaciones";
         return (
           <Link
             key={item.href}
             href={item.href}
             onClick={onNavigate}
-            className={`flex min-h-11 items-center rounded-md px-3 py-2 text-sm transition ${
+            className={`flex min-h-11 items-center justify-between gap-2 rounded-md px-3 py-2 text-sm transition ${
               active
                 ? "bg-ep3-yellow font-semibold text-ep3-navy"
                 : "text-white/85 hover:bg-white/10"
             }`}
           >
-            {item.label}
+            <span>{item.label}</span>
+            {isQuotesLink && newQuotesCount > 0 ? (
+              <span
+                className={`inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-bold ${
+                  active
+                    ? "bg-ep3-navy text-white"
+                    : "bg-ep3-yellow text-ep3-navy"
+                }`}
+              >
+                {newQuotesCount > 99 ? "99+" : newQuotesCount}
+              </span>
+            ) : null}
           </Link>
         );
       })}
@@ -83,6 +97,7 @@ export function PanelShell({
   logoutAction,
   notifications = [],
   unreadCount = 0,
+  newQuotesCount = 0,
 }: {
   children: React.ReactNode;
   userName?: string | null;
@@ -90,8 +105,15 @@ export function PanelShell({
   logoutAction: () => Promise<void>;
   notifications?: NotificationDto[];
   unreadCount?: number;
+  newQuotesCount?: number;
 }) {
   const [open, setOpen] = useState(false);
+  const [quotesCount, setQuotesCount] = useState(newQuotesCount);
+  const [syncedQuotesCount, setSyncedQuotesCount] = useState(newQuotesCount);
+  if (syncedQuotesCount !== newQuotesCount) {
+    setSyncedQuotesCount(newQuotesCount);
+    setQuotesCount(newQuotesCount);
+  }
   const pathname = usePathname();
   const [menuPath, setMenuPath] = useState(pathname);
   const closeMenu = useCallback(() => setOpen(false), []);
@@ -115,7 +137,7 @@ export function PanelShell({
       <aside className="hidden w-56 shrink-0 flex-col border-r border-ep3-navy/20 bg-ep3-navy text-white shadow-[8px_0_28px_-12px_rgb(0_31_84_/_0.45)] md:flex">
         <SidebarBrand role={role} />
         <nav className="flex flex-1 flex-col gap-1 p-3">
-          <NavLinks role={role} />
+          <NavLinks role={role} newQuotesCount={quotesCount} />
         </nav>
         <div className="border-t border-white/10 p-3">
           <Link
@@ -155,7 +177,11 @@ export function PanelShell({
               </button>
             </div>
             <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
-              <NavLinks role={role} onNavigate={closeMenu} />
+              <NavLinks
+                role={role}
+                newQuotesCount={quotesCount}
+                onNavigate={closeMenu}
+              />
             </nav>
             <div className="border-t border-white/10 p-3">
               <Link
@@ -193,6 +219,7 @@ export function PanelShell({
             <NotificationBell
               initialItems={notifications}
               unreadCount={unreadCount}
+              onNewQuotesCountChange={setQuotesCount}
             />
             {firstName ? (
               <span className="hidden max-w-[7rem] truncate text-sm text-ep3-navy/80 sm:inline">

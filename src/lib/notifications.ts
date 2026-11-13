@@ -1,6 +1,6 @@
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, count, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { drivers, notifications, staffUsers } from "@/db/schema";
+import { drivers, notifications, quoteRequests, staffUsers } from "@/db/schema";
 
 export type NotificationDto = {
   id: string;
@@ -136,4 +136,12 @@ export async function notifyDriver(input: {
     href: input.href ?? null,
   });
   return true;
+}
+
+export async function countNewQuotes(): Promise<number> {
+  const [row] = await db
+    .select({ value: count() })
+    .from(quoteRequests)
+    .where(eq(quoteRequests.status, "new"));
+  return Number(row?.value ?? 0);
 }

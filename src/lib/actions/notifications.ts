@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { notifications } from "@/db/schema";
 import { requireStaff } from "@/lib/auth";
 import {
+  countNewQuotes,
   countUnreadNotifications,
   listNotificationsForStaff,
 } from "@/lib/notifications";
@@ -42,5 +43,6 @@ export async function getPanelNotifications() {
   const session = await requireStaff();
   const items = await listNotificationsForStaff(session.sub);
   const unreadCount = await countUnreadNotifications(session.sub);
-  return { items, unreadCount };
+  const newQuotesCount = session.role === "admin" ? await countNewQuotes() : 0;
+  return { items, unreadCount, newQuotesCount };
 }

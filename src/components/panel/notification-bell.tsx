@@ -27,9 +27,11 @@ function relativeTime(date: Date | string) {
 export function NotificationBell({
   initialItems,
   unreadCount,
+  onNewQuotesCountChange,
 }: {
   initialItems: NotificationDto[];
   unreadCount: number;
+  onNewQuotesCountChange?: (count: number) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState(initialItems);
@@ -65,6 +67,9 @@ export function NotificationBell({
         setItems(next.items);
         setUnread(next.unreadCount);
         unreadRef.current = next.unreadCount;
+        if (typeof next.newQuotesCount === "number") {
+          onNewQuotesCountChange?.(next.newQuotesCount);
+        }
         if (next.unreadCount > previousUnread) {
           router.refresh();
         }
@@ -141,7 +146,7 @@ export function NotificationBell({
           <path d="M10 19a2 2 0 0 0 4 0" />
         </svg>
         {unread > 0 ? (
-          <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-ep3-yellow px-1 text-[10px] font-bold text-ep3-navy">
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-ep3-yellow px-1 text-[11px] font-bold text-ep3-navy shadow-sm ring-2 ring-white">
             {unread > 9 ? "9+" : unread}
           </span>
         ) : null}
@@ -169,6 +174,7 @@ export function NotificationBell({
               </li>
             ) : (
               items.map((n) => {
+                const isQuote = n.type === "new_quote";
                 const content = (
                   <div className="flex gap-2">
                     {!n.readAt ? (
@@ -180,15 +186,22 @@ export function NotificationBell({
                       <span className="mt-1.5 h-2 w-2 shrink-0" aria-hidden />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p
-                        className={`text-sm ${
-                          n.readAt
-                            ? "font-medium text-slate-700"
-                            : "font-semibold text-ep3-navy"
-                        }`}
-                      >
-                        {n.title}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p
+                          className={`text-sm ${
+                            n.readAt
+                              ? "font-medium text-slate-700"
+                              : "font-semibold text-ep3-navy"
+                          }`}
+                        >
+                          {n.title}
+                        </p>
+                        {isQuote ? (
+                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
+                            Cotización
+                          </span>
+                        ) : null}
+                      </div>
                       {n.body ? (
                         <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">
                           {n.body}
