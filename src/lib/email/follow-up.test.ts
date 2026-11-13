@@ -25,3 +25,4 @@ describe("buildFollowUpClientEmail", () => {
     assert.match(email.html, /wa\.me\/56984898375/);
   });
 });
+
