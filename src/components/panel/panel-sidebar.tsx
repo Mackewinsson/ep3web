@@ -18,7 +18,7 @@ const ADMIN_NAV = [
   { href: "/panel/trabajos", label: "Trabajos" },
   { href: "/panel/cotizador", label: "Cotizador web" },
   { href: "/panel/paquetes", label: "Paquetes" },
-  { href: "/panel/clientes", label: "Clientes" },
+  { href: "/panel/clientes", label: "Clientes & Leads" },
   { href: "/panel/conductores", label: "Operadores" },
   { href: "/panel/camiones", label: "Camiones" },
 ] as const;
