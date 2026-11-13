@@ -137,7 +137,6 @@ export default async function ClientesPage({
               {row.phone ? (
                 <a
                   href={`tel:${row.phone}`}
-                  onClick={(e) => e.stopPropagation()}
                   className="font-medium text-ep3-navy hover:underline"
                 >
                   {row.phone}
@@ -150,7 +149,6 @@ export default async function ClientesPage({
                   href={`https://wa.me/${waPhone}?text=${waText}`}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={(e) => e.stopPropagation()}
                   className="inline-flex items-center gap-1 rounded bg-emerald-600 px-2 py-0.5 text-xs font-bold text-white hover:bg-emerald-700"
                   title="Abrir chat en WhatsApp"
                 >
@@ -165,7 +163,6 @@ export default async function ClientesPage({
           value: row.email ? (
             <a
               href={`mailto:${row.email}`}
-              onClick={(e) => e.stopPropagation()}
               className="text-ep3-navy hover:underline"
             >
               {row.email}
@@ -205,7 +202,6 @@ export default async function ClientesPage({
       action: row.budgetId ? (
         <Link
           href={`/panel/presupuestos/${row.budgetId}`}
-          onClick={(e) => e.stopPropagation()}
           className="inline-flex min-h-8 items-center rounded-md border border-ep3-navy/20 bg-white px-2.5 py-1 text-xs font-semibold text-ep3-navy hover:bg-ep3-navy/5"
         >
           Ver presupuesto →
