@@ -337,7 +337,7 @@ async function notifyBudgetQuoteEmail(
   });
 }
 
-/** Send or resend the quote. A draft becomes sent only when delivery is accepted. */
+/** Resend the quote after the presupuesto was approved. */
 export async function sendBudgetToClient(budgetId: string) {
   await requireAdmin();
 
@@ -349,8 +349,10 @@ export async function sendBudgetToClient(budgetId: string) {
   if (!budget) {
     throw new Error("Presupuesto no encontrado");
   }
-  if (budget.status === "rejected" || budget.status === "expired") {
-    throw new Error("No se puede enviar un presupuesto rechazado o expirado");
+  if (budget.status !== "approved") {
+    throw new Error(
+      "La cotización se envía al cliente al aprobar el presupuesto.",
+    );
   }
 
   await syncLinkedNotesFromBudgetItems(budgetId);
@@ -372,13 +374,6 @@ export async function sendBudgetToClient(budgetId: string) {
     revalidatePath("/panel/presupuestos");
     revalidatePath("/panel");
     redirect(`/panel/presupuestos/${budgetId}?aviso=${blocked}`);
-  }
-
-  if (current.status === "draft") {
-    await db
-      .update(budgets)
-      .set({ status: "sent", updatedAt: new Date() })
-      .where(eq(budgets.id, budgetId));
   }
 
   revalidatePath(`/panel/presupuestos/${budgetId}`);
@@ -434,18 +429,6 @@ export async function setBudgetStatus(
       notes,
     });
     await notifyBudgetQuoteEmail(budgetId, budget.title, result);
-    if (status === "sent") {
-      const { emailWasDelivered, quoteEmailBlockedReason } = await import(
-        "@/lib/email/deliver"
-      );
-      const blocked = quoteEmailBlockedReason(result);
-      if (!emailWasDelivered(result) && blocked) {
-        revalidatePath(`/panel/presupuestos/${budgetId}`);
-        revalidatePath("/panel/presupuestos");
-        revalidatePath("/panel");
-        redirect(`/panel/presupuestos/${budgetId}?aviso=${blocked}`);
-      }
-    }
   }
 
   await db

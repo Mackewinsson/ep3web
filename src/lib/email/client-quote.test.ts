@@ -33,10 +33,11 @@ describe("buildClientQuoteEmail", () => {
 });
 
 describe("shouldEmailQuoteToClient", () => {
-  it("emails on send, and on approve only when the quote was never sent", () => {
-    assert.equal(shouldEmailQuoteToClient("draft", "sent"), true);
+  it("emails the client only when the presupuesto is approved", () => {
+    assert.equal(shouldEmailQuoteToClient("draft", "sent"), false);
     assert.equal(shouldEmailQuoteToClient("draft", "approved"), true);
-    assert.equal(shouldEmailQuoteToClient("sent", "approved"), false);
+    assert.equal(shouldEmailQuoteToClient("sent", "approved"), true);
+    assert.equal(shouldEmailQuoteToClient("approved", "approved"), false);
     assert.equal(shouldEmailQuoteToClient("draft", "rejected"), false);
   });
 });

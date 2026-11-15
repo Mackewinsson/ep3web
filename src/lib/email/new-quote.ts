@@ -1,5 +1,7 @@
 /**
- * New quote submission email notices (Client confirmation + Admin notification).
+ * New quote submission email notices.
+ * The client is not emailed when they submit. Only the admin is notified.
+ * The client receives the quote later, when the presupuesto is approved.
  * Uses Resend via deliverEmail with branded EP3 HTML templates (#001F54 navy, #FFCC00 yellow, #c4863a kraft).
  */
 
@@ -376,6 +378,7 @@ export function renderAdminQuoteEmailHtml(
 </html>`;
 }
 
+/** Receipt layout. Not sent when the quote is submitted; the client is emailed on approval. */
 export function buildNewQuoteClientEmail(payload: NewQuoteEmailPayload): {
   to: string;
   subject: string;
@@ -469,24 +472,18 @@ export function buildNewQuoteAdminEmail(
 export async function notifyNewQuoteSubmitted(
   payload: NewQuoteEmailPayload,
 ): Promise<{
-  clientResult: EmailDeliveryResult;
   adminResult: EmailDeliveryResult | null;
 }> {
-  // 1. Send confirmation to client
-  const clientEmailData = buildNewQuoteClientEmail(payload);
-  const clientResult = await deliverEmail(clientEmailData);
-
-  // 2. Send alert to admin
   const adminEmail =
     process.env.ADMIN_NOTIFICATION_EMAIL ||
     process.env.ADMIN_EMAIL ||
     "admin@transportesep3.cl";
 
-  let adminResult: EmailDeliveryResult | null = null;
-  if (adminEmail) {
-    const adminEmailData = buildNewQuoteAdminEmail(payload, adminEmail);
-    adminResult = await deliverEmail(adminEmailData);
+  if (!adminEmail) {
+    return { adminResult: null };
   }
 
-  return { clientResult, adminResult };
+  const adminEmailData = buildNewQuoteAdminEmail(payload, adminEmail);
+  const adminResult = await deliverEmail(adminEmailData);
+  return { adminResult };
 }
