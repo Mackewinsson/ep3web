@@ -1,7 +1,8 @@
 /**
  * New quote submission email notices.
- * The client is not emailed when they submit. Only the admin is notified.
- * The client receives the quote later, when the presupuesto is approved.
+ * On submit, the client gets an acknowledgment titled "Cotización recibida"
+ * with no price, totals, or item details. The admin gets the operations notice.
+ * The priced quote is emailed later, when the presupuesto is approved.
  * Uses Resend via deliverEmail with branded EP3 HTML templates (#001F54 navy, #FFCC00 yellow, #c4863a kraft).
  */
 
@@ -26,19 +27,13 @@ export type NewQuoteEmailPayload = {
 };
 
 export const NEW_QUOTE_CLIENT_SUBJECT =
-  "Hemos recibido tu solicitud de cotización — Transportes EP3";
+  "Cotización recibida — Transportes EP3";
 
 const BRAND_NAVY = "#001F54";
 const BRAND_YELLOW = "#FFCC00";
 const BRAND_KRAFT = "#c4863a";
 
 export function renderClientQuoteEmailHtml(payload: NewQuoteEmailPayload): string {
-  const formattedM3 = formatM3(payload.totalM3);
-  const formattedEstimate = formatClpPlusIva(Math.round(payload.estimatedAmount));
-  const dateFormatted = payload.preferredDate
-    ? `${escapeHtml(payload.preferredDate)}${payload.preferredTime ? ` a las ${escapeHtml(payload.preferredTime)}` : ""}`
-    : "Por coordinar";
-
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -73,7 +68,7 @@ export function renderClientQuoteEmailHtml(payload: NewQuoteEmailPayload): strin
                   </td>
                   <td align="right" style="vertical-align: middle;">
                     <span style="display: inline-block; background-color: rgba(255, 204, 0, 0.15); border: 1px solid ${BRAND_YELLOW}; color: ${BRAND_YELLOW}; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 20px;">
-                      ✓ Solicitud Recibida
+                      Cotización recibida
                     </span>
                   </td>
                 </tr>
@@ -85,75 +80,21 @@ export function renderClientQuoteEmailHtml(payload: NewQuoteEmailPayload): strin
           <tr>
             <td style="padding: 32px;">
               <h1 style="margin: 0 0 12px; font-size: 22px; color: ${BRAND_NAVY}; font-weight: 800;">
-                ¡Hola ${escapeHtml(payload.clientName)}! 👋
+                Cotización recibida
               </h1>
-              <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.6; color: #475569;">
-                Hemos recibido tu solicitud de cotización. Nuestro equipo de operaciones ya está revisando los detalles para coordinar tu servicio y enviarte la confirmación formal.
+              <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #475569;">
+                Hola ${escapeHtml(payload.clientName)}, recibimos tu solicitud.
               </p>
-
-              <!-- Route Card -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; margin-bottom: 24px;">
-                <tr>
-                  <td style="padding: 20px;">
-                    <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: ${BRAND_KRAFT}; margin-bottom: 12px;">
-                      📍 Trayecto de la Mudanza
-                    </div>
-                    
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                      <tr>
-                        <td style="padding-bottom: 12px; vertical-align: top;">
-                          <div style="font-size: 12px; color: #64748B; font-weight: 600;">ORIGEN</div>
-                          <div style="font-size: 15px; color: ${BRAND_NAVY}; font-weight: 700; margin-top: 2px;">
-                            ${escapeHtml(payload.originAddress)}
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="border-top: 1px dashed #CBD5E1; padding-top: 12px; vertical-align: top;">
-                          <div style="font-size: 12px; color: #64748B; font-weight: 600;">DESTINO</div>
-                          <div style="font-size: 15px; color: ${BRAND_NAVY}; font-weight: 700; margin-top: 2px;">
-                            ${escapeHtml(payload.destinationAddress)}
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Quote Stats Grid -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
-                <tr>
-                  <td width="50%" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; vertical-align: top;">
-                    <div style="font-size: 12px; color: #64748B; font-weight: 600; text-transform: uppercase;">Volumen Estimado</div>
-                    <div style="font-size: 22px; font-weight: 800; color: ${BRAND_NAVY}; margin-top: 4px;">
-                      ${formattedM3} <span style="font-size: 14px; font-weight: 600; color: #64748B;">m³</span>
-                    </div>
-                  </td>
-                  <td width="16" style="font-size: 0; line-height: 0;">&nbsp;</td>
-                  <td width="50%" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 16px; vertical-align: top;">
-                    <div style="font-size: 12px; color: #64748B; font-weight: 600; text-transform: uppercase;">Estimación Inicial</div>
-                    <div style="font-size: 20px; font-weight: 800; color: ${BRAND_NAVY}; margin-top: 4px;">
-                      ${formattedEstimate}
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td colspan="3" style="padding-top: 12px;">
-                    <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px 16px;">
-                      <span style="font-size: 13px; color: #64748B; font-weight: 600;">Fecha solicitada:</span>
-                      <strong style="font-size: 14px; color: ${BRAND_NAVY}; margin-left: 6px;">${dateFormatted}</strong>
-                    </div>
-                  </td>
-                </tr>
-              </table>
+              <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.6; color: #475569;">
+                Nuestro equipo la está revisando. Te enviaremos la cotización formal cuando esté lista.
+              </p>
 
               <!-- Notice Box -->
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #FFFBEB; border-left: 4px solid ${BRAND_YELLOW}; border-radius: 4px; margin-bottom: 28px;">
                 <tr>
                   <td style="padding: 14px 16px;">
                     <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #92400E;">
-                      <strong>¿Qué sigue?</strong> Te contactaremos para confirmar inventario, detalles de accesos (ascensor, piso) y fijar la reserva final.
+                      Este mensaje solo confirma que llegó tu solicitud. No incluye precio ni detalle de ítems.
                     </p>
                   </td>
                 </tr>
@@ -378,41 +319,28 @@ export function renderAdminQuoteEmailHtml(
 </html>`;
 }
 
-/** Receipt layout. Not sent when the quote is submitted; the client is emailed on approval. */
+/** Acknowledgment sent when the quote is submitted. No price, totals, or items. */
 export function buildNewQuoteClientEmail(payload: NewQuoteEmailPayload): {
   to: string;
   subject: string;
   text: string;
   html: string;
 } {
-  const formattedM3 = formatM3(payload.totalM3);
-  const formattedEstimate = formatClpPlusIva(Math.round(payload.estimatedAmount));
-  const dateLine = payload.preferredDate
-    ? `Fecha solicitada: ${payload.preferredDate}${payload.preferredTime ? ` a las ${payload.preferredTime}` : ""}`
-    : "";
-
   const text = [
+    "Cotización recibida",
+    "",
     `Hola ${payload.clientName},`,
     "",
-    "¡Hemos recibido tu solicitud de cotización con éxito!",
+    "Recibimos tu solicitud. Nuestro equipo la está revisando y te enviaremos la cotización formal cuando esté lista.",
     "",
-    "Resumen de tu mudanza:",
-    `• Origen: ${payload.originAddress}`,
-    `• Destino: ${payload.destinationAddress}`,
-    `• Volumen estimado: ${formattedM3} m³`,
-    `• Estimación inicial: ${formattedEstimate}`,
-    dateLine,
+    "Este mensaje solo confirma que llegó tu solicitud. No incluye precio ni detalle de ítems.",
     "",
-    "Nuestro equipo de operaciones está revisando los detalles para enviarte una cotización formal y coordinar la disponibilidad.",
-    "",
-    "Si necesitas ajustar algún detalle o tienes dudas urgentes, puedes responder a este correo o contactarnos directamente por WhatsApp o teléfono al +56 9 8489 8375.",
+    "Si tienes dudas, escríbenos por WhatsApp o llama al +56 9 8489 8375.",
     "",
     "Saludos cordiales,",
     "Equipo de Transportes EP3",
     "https://www.transportesep3.cl",
-  ]
-    .filter(Boolean)
-    .join("\n");
+  ].join("\n");
 
   return {
     to: payload.clientEmail.trim(),
@@ -472,18 +400,22 @@ export function buildNewQuoteAdminEmail(
 export async function notifyNewQuoteSubmitted(
   payload: NewQuoteEmailPayload,
 ): Promise<{
+  clientResult: EmailDeliveryResult;
   adminResult: EmailDeliveryResult | null;
 }> {
+  const clientResult = await deliverEmail(buildNewQuoteClientEmail(payload));
+
   const adminEmail =
     process.env.ADMIN_NOTIFICATION_EMAIL ||
     process.env.ADMIN_EMAIL ||
     "admin@transportesep3.cl";
 
   if (!adminEmail) {
-    return { adminResult: null };
+    return { clientResult, adminResult: null };
   }
 
-  const adminEmailData = buildNewQuoteAdminEmail(payload, adminEmail);
-  const adminResult = await deliverEmail(adminEmailData);
-  return { adminResult };
+  const adminResult = await deliverEmail(
+    buildNewQuoteAdminEmail(payload, adminEmail),
+  );
+  return { clientResult, adminResult };
 }

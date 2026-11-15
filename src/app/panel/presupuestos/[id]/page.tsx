@@ -114,8 +114,8 @@ export default async function PresupuestoDetailPage({
               {formatClpPlusIva(row.totalAmount)}
             </p>
             <p className="text-sm text-ep3-navy/55">
-              El cliente ve este monto + IVA (no incluido). Lo recibe por
-              correo al aprobar el presupuesto.
+              Al cotizar, el cliente recibe un acuse sin precio. Este monto +
+              IVA (no incluido) se envía por correo al aprobar el presupuesto.
             </p>
           </div>
 
