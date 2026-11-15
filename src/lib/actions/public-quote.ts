@@ -66,23 +66,44 @@ export async function submitPublicQuote(
     notes: "Lead desde sitio web",
   });
 
-  await db.insert(quoteRequests).values({
-    clientId,
-    packageId: data.packageId || null,
+  const [quote] = await db
+    .insert(quoteRequests)
+    .values({
+      clientId,
+      packageId: data.packageId || null,
+      originAddress: data.originAddress,
+      destinationAddress: data.destinationAddress,
+      preferredDate: data.preferredDate || null,
+      volumeNotes: data.volumeNotes,
+      estimatedM3:
+        data.estimatedM3 === "" || data.estimatedM3 == null
+          ? null
+          : String(data.estimatedM3),
+      estimatedItems:
+        data.estimatedItems === "" || data.estimatedItems == null
+          ? null
+          : Number(data.estimatedItems),
+      source: "website",
+      status: "new",
+    })
+    .returning({ id: quoteRequests.id });
+
+  const quoteHref = `/panel/cotizaciones/${quote.id}`;
+  const { notifyAdmins } = await import("@/lib/notifications");
+  await notifyAdmins({
+    type: "new_quote",
+    title: "Nueva cotización web",
+    body: `${data.name}: ${data.originAddress} → ${data.destinationAddress}`,
+    href: quoteHref,
+  });
+  const { emailAdminsAboutNewQuote } = await import("@/lib/email/admin-new-quote");
+  await emailAdminsAboutNewQuote({
+    clientName: data.name,
+    clientEmail: data.email || null,
+    clientPhone: data.phone,
     originAddress: data.originAddress,
     destinationAddress: data.destinationAddress,
-    preferredDate: data.preferredDate || null,
-    volumeNotes: data.volumeNotes,
-    estimatedM3:
-      data.estimatedM3 === "" || data.estimatedM3 == null
-        ? null
-        : String(data.estimatedM3),
-    estimatedItems:
-      data.estimatedItems === "" || data.estimatedItems == null
-        ? null
-        : Number(data.estimatedItems),
-    source: "website",
-    status: "new",
+    href: quoteHref,
   });
 
   revalidatePath("/panel/cotizaciones");

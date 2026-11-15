@@ -239,11 +239,25 @@ export async function submitWizardQuote(
   revalidatePath("/panel/clientes");
 
   const { notifyAdmins } = await import("@/lib/notifications");
+  const quoteHref = `/panel/presupuestos/${budget.id}`;
+  const quoteSummary = `${formatM3(estimate.totalM3)} m³ · estimado $${Math.round(estimate.totalAmount).toLocaleString("es-CL")}`;
   await notifyAdmins({
     type: "new_quote",
     title: "Nueva cotización web",
-    body: `${data.contact.name} · ${formatM3(estimate.totalM3)} m³ · estimado $${Math.round(estimate.totalAmount).toLocaleString("es-CL")}`,
-    href: `/panel/presupuestos/${budget.id}`,
+    body: `${data.contact.name} · ${quoteSummary}`,
+    href: quoteHref,
+  });
+
+  const { emailAdminsAboutNewQuote } = await import("@/lib/email/admin-new-quote");
+  const { formatClpPlusIva } = await import("@/lib/format");
+  await emailAdminsAboutNewQuote({
+    clientName: data.contact.name,
+    clientEmail: data.contact.email || null,
+    clientPhone: data.contact.phone,
+    originAddress: data.origin.address,
+    destinationAddress: data.destination.address,
+    summary: `${formatM3(estimate.totalM3)} m³ · ${formatClpPlusIva(estimate.totalAmount)}`,
+    href: quoteHref,
   });
 
   return { ok: true, budgetId: budget.id, quoteId: quote.id };

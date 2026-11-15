@@ -25,12 +25,11 @@ export function clientQuoteTotalLabel(amount: string | number) {
 }
 
 /**
- * Explicit send always emails. Approving emails only when the quote was never
- * marked sent — that is the path that used to create a job with no client mail.
+ * The client receives the quote only when the presupuesto is approved.
+ * Submitting a cotización and marking it sent do not email the client.
  */
 export function shouldEmailQuoteToClient(currentStatus: string, nextStatus: string) {
-  if (nextStatus === "sent") return true;
-  return nextStatus === "approved" && currentStatus !== "sent";
+  return nextStatus === "approved" && currentStatus !== "approved";
 }
 
 export function buildClientQuoteEmail(payload: ClientQuoteEmailPayload): {
