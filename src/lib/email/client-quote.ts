@@ -30,8 +30,9 @@ export function clientQuoteTotalLabel(amount: string | number) {
 }
 
 /**
- * The client receives the quote only when the presupuesto is approved.
- * Submitting a cotización and marking it sent do not email the client.
+ * The priced quote is emailed only when the presupuesto is approved.
+ * Submitting a cotización sends a separate acknowledgment with no price.
+ * Marking a presupuesto sent does not email the priced quote.
  */
 export function shouldEmailQuoteToClient(currentStatus: string, nextStatus: string) {
   return nextStatus === "approved" && currentStatus !== "approved";
