@@ -239,6 +239,11 @@ export async function completePublicQuote(page: Page, clientName: string) {
     .filter({ hasText: /^Correo$/ })
     .locator("input")
     .fill(`cliente.${uniqueSuffix()}@example.com`);
+  await page
+    .locator("label")
+    .filter({ hasText: /^Fecha preferida$/ })
+    .locator("input")
+    .fill("2026-11-28");
   await page.getByRole("button", { name: "Enviar solicitud" }).click();
 
   await expect(page.getByRole("heading", { name: "¡Gracias!" })).toBeVisible({

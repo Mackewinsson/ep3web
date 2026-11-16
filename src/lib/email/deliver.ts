@@ -57,9 +57,20 @@ export function textToHtml(text: string) {
   return `<div style="font-family: sans-serif; color: #001F54;">${escapeHtml(text).replace(/\n/g, "<br/>")}</div>`;
 }
 
+function isReservedTestDomain(to: string) {
+  const lower = to.toLowerCase();
+  return (
+    lower.endsWith("@example.com") ||
+    lower.endsWith(".example.com") ||
+    lower.endsWith("@example.org") ||
+    lower.endsWith("@example.net") ||
+    lower.endsWith("@test.com")
+  );
+}
+
 /**
  * Sends through Resend when RESEND_API_KEY is set.
- * Without a key, logs the payload and returns mocked (workflow may continue).
+ * Without a key (or for reserved RFC test domains), logs the payload and returns mocked (workflow may continue).
  * Never throws for a missing key or a provider error.
  */
 export async function deliverEmail(email: {
@@ -82,7 +93,7 @@ export async function deliverEmail(email: {
   }
 
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
+  if (!apiKey || isReservedTestDomain(to)) {
     console.info("[email:mock]", {
       to,
       subject: email.subject,

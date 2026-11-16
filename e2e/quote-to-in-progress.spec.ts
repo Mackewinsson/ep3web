@@ -64,6 +64,8 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
   await page.goto("/panel/presupuestos");
   await openRecordByTitle(page, budgetTitle);
   await expect(page.getByRole("heading", { name: budgetTitle })).toBeVisible();
+  await expect(page.getByText("Fecha preferida")).toBeVisible();
+  await expect(page.getByText(/28 nov/i)).toBeVisible();
 
   await page.getByRole("button", { name: "Aprobar y crear trabajo" }).click();
   await page.waitForURL(/\/panel\/trabajos\/[^/]+$/, { timeout: 30_000 });
@@ -176,5 +178,14 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
   });
   await expect(
     page.getByText(/Se avisó al cliente por correo/),
+  ).toBeVisible();
+
+  // Admin checks the in_progress job has the resend button
+  await logout(page);
+  await login(page, admin.email, admin.password);
+  await page.goto("/panel/trabajos");
+  await openRecordByTitle(page, clientName);
+  await expect(
+    page.getByRole("button", { name: "Reenviar aviso al cliente" }),
   ).toBeVisible();
 });
