@@ -42,7 +42,7 @@ Catalog categories/items: tables `moving_categories` / `moving_catalog_items`, s
 
 ## Public → ops flow
 
-1. User completes `/cotizar` (no volume/price on screen). Steps include **helpers** after inventory — preference only in `volumeNotes` (`Ayudantes: …`); **does not** affect price yet.
+1. User completes `/cotizar` (no volume/price on screen). Steps include **helpers** after inventory — preference only in `volumeNotes` (`Ayudantes: …`); **does not** affect price yet. **Fecha preferida** is captured and stored in `quote_requests.volumeNotes` (`Fecha preferida: …`).
 2. Server action recalculates with DB config (never trust client totals).
 3. Creates `clients` + `quote_requests` (source=`website`) + `budgets` (status=**draft**) + `budget_items`
    - One **unit** line per inventory item (+ packing boxes) for ops editing, with `unitVolumeM3` stored
@@ -51,4 +51,4 @@ Catalog categories/items: tables `moving_categories` / `moving_catalog_items`, s
 4. Admin reviews/adjusts presupuesto (`budget_items` is source of truth) → approve → email client (**total is net**, shown as `$X + IVA`) and create `jobs` (`notes` empty). Submitting the website quote emails the admin and sends the client an acknowledgment titled **Cotización recibida** (no price, totals, or items). The priced email waits until approval.
    - `quote_requests.volumeNotes` is the machine-readable snapshot kept in sync via `syncBudgetItemsInNotes`; parsers and payout fallbacks read it. **Do not** copy it into `jobs.notes`
    - `budgets.notes` is the **client message** appended to the quote email. Never write generated item lines into it — the item table shows those
-5. Operator sees **Tu pago** via `operatorPayoutFromClientTotal` only — never the client total
+5. Operator sees **Tu pago** via `operatorPayoutFromClientTotal` only — never the client total. Client phone is strictly hidden from operators until service acceptance.
