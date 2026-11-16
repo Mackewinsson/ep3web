@@ -48,12 +48,15 @@ export function formatClientPackagePrice(
 
 export function formatDate(value: string | Date | null | undefined) {
   if (!value) return "—";
-  const date = typeof value === "string" ? new Date(value) : value;
+  const isIsoDateOnly =
+    typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
+  const date = typeof value === "string" ? new Date(value.trim()) : value;
   if (Number.isNaN(date.getTime())) return String(value);
   return new Intl.DateTimeFormat("es-CL", {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    ...(isIsoDateOnly ? { timeZone: "UTC" } : {}),
   }).format(date);
 }
 

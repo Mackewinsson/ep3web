@@ -83,4 +83,37 @@ describe("parseNotesSections", () => {
   it("accepts the unaccented Estimacion auto spelling", () => {
     assert.equal(clientMessageFromNotes("Estimacion auto: 3 m³"), "");
   });
+
+  it("parses Fecha preferida and Fecha solicitada as service details", () => {
+    const withDate = `${WIZARD_NOTES}\nFecha preferida: 2026-11-25`;
+    const details = serviceDetailsFromNotes(withDate);
+    assert.ok(
+      details.some(
+        (d) => d.label === "Fecha preferida" && d.value === "2026-11-25",
+      ),
+    );
+    const withSolicitada = "Fecha solicitada: 2026-12-01\nHora preferida: 10:00";
+    assert.deepEqual(serviceDetailsFromNotes(withSolicitada), [
+      { label: "Fecha preferida", value: "2026-12-01" },
+      { label: "Hora preferida", value: "10:00" },
+    ]);
+  });
+
+  it("injects preferredDate fallback before Hora preferida when absent from notes", () => {
+    const details = serviceDetailsFromNotes(WIZARD_NOTES, "2026-11-20");
+    assert.deepEqual(
+      details.map((s) => s.label),
+      [
+        "Origen",
+        "Destino",
+        "Ayudantes",
+        "Delicados",
+        "Fecha preferida",
+        "Hora preferida",
+        "Notas cliente",
+      ],
+    );
+    const fecha = details.find((s) => s.label === "Fecha preferida");
+    assert.equal(fecha?.value, "2026-11-20");
+  });
 });

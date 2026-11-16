@@ -24,6 +24,8 @@ const SERVICE_LABELS = [
   "Destino",
   "Ayudantes",
   "Delicados",
+  "Fecha preferida",
+  "Fecha solicitada",
   "Hora preferida",
   "Notas cliente",
 ] as const;
@@ -47,8 +49,12 @@ const SERVICE_RE = labelPattern(SERVICE_LABELS);
 const INVENTARIO_RE = /^Inventario\s*:/i;
 
 function canonicalServiceLabel(raw: string) {
+  const lower = raw.trim().toLowerCase();
+  if (lower === "fecha solicitada" || lower === "fecha preferida") {
+    return "Fecha preferida";
+  }
   const found = SERVICE_LABELS.find(
-    (label) => label.toLowerCase() === raw.trim().toLowerCase(),
+    (label) => label.toLowerCase() === lower,
   );
   return found ?? raw.trim();
 }
@@ -108,8 +114,34 @@ export function parseNotesSections(
 }
 
 /** The client answers, for the read-only «Detalles del servicio» panel. */
-export function serviceDetailsFromNotes(notes: string | null | undefined) {
-  return parseNotesSections(notes).service;
+export function serviceDetailsFromNotes(
+  notes: string | null | undefined,
+  preferredDate?: string | null,
+) {
+  const service = [...parseNotesSections(notes).service];
+  const fallbackDate = preferredDate?.trim();
+  if (
+    fallbackDate &&
+    !service.some((item) => item.label === "Fecha preferida")
+  ) {
+    const horaIndex = service.findIndex(
+      (item) => item.label === "Hora preferida",
+    );
+    const notasIndex = service.findIndex(
+      (item) => item.label === "Notas cliente",
+    );
+    const insertAt =
+      horaIndex !== -1
+        ? horaIndex
+        : notasIndex !== -1
+          ? notasIndex
+          : service.length;
+    service.splice(insertAt, 0, {
+      label: "Fecha preferida",
+      value: fallbackDate,
+    });
+  }
+  return service;
 }
 
 /**

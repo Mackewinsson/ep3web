@@ -44,6 +44,7 @@ const budgetColumns = {
   clientName: clients.name,
   /** Wizard snapshot: the only record of access, helpers and fragile items. */
   volumeNotes: quoteRequests.volumeNotes,
+  preferredDate: quoteRequests.preferredDate,
 };
 
 function loadBudget(id: string) {
@@ -203,7 +204,10 @@ export default async function PresupuestoDetailPage({
         billedM3={billedM3}
       />
 
-      <ServiceDetailsCard notes={row.volumeNotes} />
+      <ServiceDetailsCard
+        notes={row.volumeNotes}
+        preferredDate={row.preferredDate}
+      />
 
       <PanelCard>
         <h2 className="mb-1 font-semibold text-ep3-navy">Datos del presupuesto</h2>

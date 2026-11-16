@@ -174,6 +174,9 @@ export async function submitWizardQuote(
     `Delicados: ${data.hasFragile ? `Sí${data.fragileNotes ? ` — ${data.fragileNotes}` : ""}` : "No"}`,
     `Inventario: ${inventorySummary || "—"}`,
     data.packingBoxes > 0 ? `Cajas: ${data.packingBoxes}` : null,
+    data.contact.preferredDate
+      ? `Fecha preferida: ${data.contact.preferredDate}`
+      : null,
     data.contact.preferredTime
       ? `Hora preferida: ${data.contact.preferredTime}`
       : null,

@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format";
 import { serviceDetailsFromNotes } from "@/lib/quote-pricing";
 
 /**
@@ -5,8 +6,14 @@ import { serviceDetailsFromNotes } from "@/lib/quote-pricing";
  * timing. These only exist inside the notes text, so they are shown read-only
  * here instead of being mixed into the message written to the client.
  */
-export function ServiceDetailsCard({ notes }: { notes: string | null }) {
-  const details = serviceDetailsFromNotes(notes);
+export function ServiceDetailsCard({
+  notes,
+  preferredDate,
+}: {
+  notes: string | null;
+  preferredDate?: string | null;
+}) {
+  const details = serviceDetailsFromNotes(notes, preferredDate);
   if (!details.length) return null;
 
   return (
@@ -22,7 +29,11 @@ export function ServiceDetailsCard({ notes }: { notes: string | null }) {
             <dt className="text-[11px] font-semibold uppercase tracking-wider text-ep3-navy/50">
               {detail.label}
             </dt>
-            <dd className="mt-0.5 text-sm text-ep3-navy">{detail.value}</dd>
+            <dd className="mt-0.5 text-sm text-ep3-navy">
+              {detail.label === "Fecha preferida"
+                ? formatDate(detail.value)
+                : detail.value}
+            </dd>
           </div>
         ))}
       </dl>

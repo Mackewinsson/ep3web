@@ -214,7 +214,10 @@ export default async function CotizacionDetailPage({ params }: Props) {
         />
       ) : null}
 
-      <ServiceDetailsCard notes={quote.volumeNotes} />
+      <ServiceDetailsCard
+        notes={quote.volumeNotes}
+        preferredDate={quote.preferredDate}
+      />
 
       <form
         // Volume and notes are rewritten server-side from the linked budget;

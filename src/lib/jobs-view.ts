@@ -7,6 +7,7 @@ import {
   drivers,
   jobAssignments,
   jobs,
+  notifications,
   quoteRequests,
   trucks,
 } from "@/db/schema";
@@ -154,6 +155,30 @@ export async function getJobOperationalDetail(jobId: string) {
     .orderBy(desc(jobAssignments.assignedAt))
     .limit(1);
 
+  const [enCaminoNotice] = await db
+    .select({
+      title: notifications.title,
+      body: notifications.body,
+      createdAt: notifications.createdAt,
+    })
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.type, "client_en_camino_email"),
+        eq(notifications.href, `/panel/trabajos/${jobId}`),
+      ),
+    )
+    .orderBy(desc(notifications.createdAt))
+    .limit(1);
+
+  const enCaminoEmailOutcome = enCaminoNotice
+    ? {
+        failed: /no enviado/i.test(enCaminoNotice.title),
+        error: null as string | null,
+        sentAt: enCaminoNotice.createdAt,
+      }
+    : null;
+
   return {
     ...job,
     estimatedM3,
@@ -161,6 +186,7 @@ export async function getJobOperationalDetail(jobId: string) {
     volumeNotes,
     clientTotalAmount,
     assignment: assignment ?? null,
+    enCaminoEmailOutcome,
   };
 }
 

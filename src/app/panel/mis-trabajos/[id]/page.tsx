@@ -75,6 +75,8 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
 
   const accepted = isReadyForEnCamino(job.assignment);
   const canAccept = job.status === "assigned" && !accepted;
+  const canSeeClientPhone =
+    accepted || job.status === "in_progress" || job.status === "completed";
   const statusBadge = driverJobBadge(job.status, accepted);
   const showJobFacts = Boolean(
     accepted ||
@@ -116,7 +118,11 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
         />
 
         <div className="mt-4 space-y-4">
-          {job.clientPhone ? (
+          {!canSeeClientPhone ? (
+            <div className="flex min-h-14 items-center justify-center rounded-lg border border-dashed border-ep3-navy/25 bg-ep3-sand/40 px-4 py-3 text-center text-sm font-medium text-ep3-navy/70">
+              El teléfono del cliente estará disponible al aceptar el servicio
+            </div>
+          ) : job.clientPhone ? (
             <a
               href={`tel:${job.clientPhone}`}
               className="flex min-h-14 items-center justify-center rounded-lg bg-ep3-navy px-4 text-base font-semibold text-white"
@@ -227,7 +233,10 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
         />
       ) : null}
 
-      <ServiceDetailsCard notes={volumeNotes} />
+      <ServiceDetailsCard
+        notes={volumeNotes}
+        preferredDate={job.scheduledDate}
+      />
 
       <PanelCard>
         <div className="space-y-2">
@@ -295,8 +304,17 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
 
           {job.status === "in_progress" ? (
             <>
-              <p className="rounded-lg bg-sky-50 px-4 py-3 text-center text-sm font-medium text-sky-950">
-                {clientEnCaminoStatusCopy(job.clientEmail)}
+              <p
+                className={`rounded-lg px-4 py-3 text-center text-sm font-medium ${
+                  job.enCaminoEmailOutcome?.failed
+                    ? "bg-amber-50 text-amber-950"
+                    : "bg-sky-50 text-sky-950"
+                }`}
+              >
+                {clientEnCaminoStatusCopy(
+                  job.clientEmail,
+                  job.enCaminoEmailOutcome,
+                )}
               </p>
               <form action={driverAdvanceJob.bind(null, id, "completed")}>
                 <button

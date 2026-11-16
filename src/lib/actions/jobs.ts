@@ -104,14 +104,17 @@ export async function updateJobStatus(
     redirect(`/panel/trabajos/${jobId}`);
   }
 
+  let openForEnCamino:
+    | Awaited<ReturnType<typeof getOpenAssignment>>
+    | undefined;
   if (status === "in_progress") {
     assertJobStatus(
       job.status,
       ["assigned"],
       "Solo puedes marcar En camino un trabajo asignado",
     );
-    const open = await getOpenAssignment(jobId);
-    if (!isReadyForEnCamino(open)) {
+    openForEnCamino = await getOpenAssignment(jobId);
+    if (!isReadyForEnCamino(openForEnCamino)) {
       throw new Error(
         "El operador debe registrar chofer, RUT y patente primero",
       );
@@ -130,6 +133,33 @@ export async function updateJobStatus(
     .update(jobs)
     .set({ status, updatedAt: new Date() })
     .where(eq(jobs.id, jobId));
+
+  if (status === "in_progress") {
+    await notifyClientEnCaminoForJob(
+      jobId,
+      openForEnCamino?.crewDriverId ?? null,
+      openForEnCamino?.truckId ?? null,
+    );
+  }
+
+  revalidateJobPaths(jobId);
+  redirect(`/panel/trabajos/${jobId}`);
+}
+
+export async function resendClientEnCaminoEmail(jobId: string) {
+  await requireAdmin();
+  const job = await requireJob(jobId);
+  assertJobStatus(
+    job.status,
+    ["in_progress", "completed"],
+    "Solo puedes reenviar el aviso en un trabajo en camino o finalizado",
+  );
+  const open = await getOpenAssignment(jobId);
+  await notifyClientEnCaminoForJob(
+    jobId,
+    open?.crewDriverId ?? null,
+    open?.truckId ?? null,
+  );
   revalidateJobPaths(jobId);
   redirect(`/panel/trabajos/${jobId}`);
 }

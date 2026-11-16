@@ -106,6 +106,10 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
   await expect(page.getByText(clientPrice)).toHaveCount(0);
   await expect(page.getByText(/\+ IVA/)).toHaveCount(0);
   await expect(page.getByText("Presupuesto cliente")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /^Llamar / })).toHaveCount(0);
+  await expect(
+    page.getByText(/teléfono del cliente estará disponible al aceptar/i),
+  ).toBeVisible();
   await expect(page.getByRole("button", { name: "Rechazar trabajo" })).toBeVisible();
 
   await page.getByRole("button", { name: "Aceptar servicio" }).click();
@@ -140,6 +144,7 @@ test("cotización web → aprobar → operador → aceptar → En camino", async
   await expect(page.getByText(pickTruck.plate)).toBeVisible();
   await expect(page.getByText(pickCrew.crewName)).toBeVisible();
   await expect(page.getByRole("button", { name: "En camino" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Llamar / })).toBeVisible();
   await expect(page.getByRole("button", { name: "Rechazar trabajo" })).toHaveCount(0);
   await expect(page.getByText("Tu pago por este servicio")).toBeVisible();
   const operatorJobUrl = page.url();

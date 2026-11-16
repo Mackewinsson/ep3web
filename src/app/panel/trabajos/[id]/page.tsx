@@ -20,6 +20,7 @@ import { clientEnCaminoStatusCopy } from "@/lib/email/client-en-camino";
 import { drivers, jobAssignments, staffUsers, trucks } from "@/db/schema";
 import {
   assignJob,
+  resendClientEnCaminoEmail,
   updateJobSchedule,
   updateJobStatus,
 } from "@/lib/actions/jobs";
@@ -169,8 +170,17 @@ export default async function TrabajoDetailPage({ params }: Props) {
           </p>
         ) : null}
         {job.status === "in_progress" ? (
-          <p className="mb-4 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-950">
-            {clientEnCaminoStatusCopy(job.clientEmail)}
+          <p
+            className={`mb-4 rounded-lg px-3 py-2 text-sm ${
+              job.enCaminoEmailOutcome?.failed
+                ? "bg-amber-50 text-amber-950"
+                : "bg-sky-50 text-sky-950"
+            }`}
+          >
+            {clientEnCaminoStatusCopy(
+              job.clientEmail,
+              job.enCaminoEmailOutcome,
+            )}
           </p>
         ) : null}
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
@@ -324,17 +334,32 @@ export default async function TrabajoDetailPage({ params }: Props) {
             </p>
           ) : null}
           {job.status === "in_progress" ? (
-            <form
-              action={updateJobStatus.bind(null, id, "completed")}
-              className="w-full sm:w-auto"
-            >
-              <button
-                type="submit"
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-emerald-700 px-3 py-2 text-sm text-white sm:w-auto"
+            <>
+              <form
+                action={updateJobStatus.bind(null, id, "completed")}
+                className="w-full sm:w-auto"
               >
-                Finalizar
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-emerald-700 px-3 py-2 text-sm text-white sm:w-auto"
+                >
+                  Finalizar
+                </button>
+              </form>
+              {job.clientEmail ? (
+                <form
+                  action={resendClientEnCaminoEmail.bind(null, id)}
+                  className="w-full sm:w-auto"
+                >
+                  <button
+                    type="submit"
+                    className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-ep3-navy/25 px-3 py-2 text-sm text-ep3-navy sm:w-auto"
+                  >
+                    Reenviar aviso al cliente
+                  </button>
+                </form>
+              ) : null}
+            </>
           ) : null}
           {!locked ? (
             <ConfirmActionForm
@@ -359,7 +384,10 @@ export default async function TrabajoDetailPage({ params }: Props) {
         />
       ) : null}
 
-      <ServiceDetailsCard notes={job.volumeNotes} />
+      <ServiceDetailsCard
+        notes={job.volumeNotes}
+        preferredDate={job.scheduledDate}
+      />
 
       <PanelCard>
         <h2 className="mb-3 font-semibold text-ep3-navy">Fecha y hora</h2>
