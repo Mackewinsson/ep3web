@@ -115,23 +115,13 @@ export default async function PresupuestoDetailPage({
               {formatClpPlusIva(row.totalAmount)}
             </p>
             <p className="text-sm text-ep3-navy/55">
-              El cliente ve este monto + IVA (no incluido). Enviar lo manda por
-              correo. Aprobar un borrador también lo envía si aún no se mandó.
+              Al cotizar, el cliente recibe un acuse sin precio. Este monto +
+              IVA (no incluido) se envía por correo al aprobar el presupuesto.
             </p>
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            {row.status === "draft" ? (
-              <form action={sendBudgetToClient.bind(null, id)}>
-                <button
-                  type="submit"
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-ep3-navy px-3 py-2 text-sm text-white sm:w-auto"
-                >
-                  Enviar al cliente
-                </button>
-              </form>
-            ) : null}
-            {row.status === "sent" || row.status === "approved" ? (
+            {row.status === "approved" ? (
               <form action={sendBudgetToClient.bind(null, id)}>
                 <button
                   type="submit"

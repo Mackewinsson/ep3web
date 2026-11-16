@@ -4,10 +4,11 @@ import {
   buildNewQuoteAdminEmail,
   buildNewQuoteClientEmail,
   NEW_QUOTE_CLIENT_SUBJECT,
+  notifyNewQuoteSubmitted,
 } from "./new-quote";
 
 describe("buildNewQuoteClientEmail", () => {
-  it("formats client confirmation email with summary, + IVA and brand colors", () => {
+  it("acknowledges the request with no price, totals, or item details", () => {
     const email = buildNewQuoteClientEmail({
       quoteId: "q-123",
       clientName: "Carolina Gómez",
@@ -19,24 +20,70 @@ describe("buildNewQuoteClientEmail", () => {
       estimatedAmount: 350000,
       preferredDate: "2026-12-01",
       preferredTime: "10:00",
+      notes: "Sofá de 3 cuerpos",
     });
 
     assert.equal(email.to, "carolina@example.com");
     assert.equal(email.subject, NEW_QUOTE_CLIENT_SUBJECT);
+    assert.match(email.subject, /Cotización recibida/);
+    assert.match(email.text, /Cotización recibida/);
     assert.match(email.text, /Hola Carolina Gómez,/);
-    assert.match(email.text, /Providencia 123/);
-    assert.match(email.text, /Las Condes 456/);
-    assert.match(email.text, /15\.5 m³/);
-    assert.match(email.text, /\+ IVA/);
-    assert.match(email.text, /2026-12-01 a las 10:00/);
+    assert.match(email.text, /Recibimos tu solicitud/);
+    assert.doesNotMatch(email.text, /Providencia/);
+    assert.doesNotMatch(email.text, /Las Condes/);
+    assert.doesNotMatch(email.text, /Sofá/);
+    assert.doesNotMatch(email.text, /15\.5/);
+    assert.doesNotMatch(email.text, /m³/);
+    assert.doesNotMatch(email.text, /IVA/);
+    assert.doesNotMatch(email.text, /\$/);
+    assert.doesNotMatch(email.text, /2026-12-01/);
 
-    // HTML contains EP3 brand colors & content
     assert.match(email.html, /#001F54/);
     assert.match(email.html, /#FFCC00/);
     assert.match(email.html, /TRANSPORTES/);
+    assert.match(email.html, /Cotización recibida/);
     assert.match(email.html, /Carolina Gómez/);
-    assert.match(email.html, /15\.5/);
     assert.match(email.html, /wa\.me\/56984898375/);
+    assert.doesNotMatch(email.html, /Providencia/);
+    assert.doesNotMatch(email.html, /Las Condes/);
+    assert.doesNotMatch(email.html, /Sofá/);
+    assert.doesNotMatch(email.html, /15\.5/);
+    assert.doesNotMatch(email.html, /m³/);
+    assert.doesNotMatch(email.html, /IVA/);
+    assert.doesNotMatch(email.html, /\$/);
+  });
+});
+
+describe("notifyNewQuoteSubmitted", () => {
+  it("sends the acknowledgment to the client and the notice to the admin", async () => {
+    const previousKey = process.env.RESEND_API_KEY;
+    const previousAdmin = process.env.ADMIN_NOTIFICATION_EMAIL;
+    delete process.env.RESEND_API_KEY;
+    process.env.ADMIN_NOTIFICATION_EMAIL = "ops@transportesep3.cl";
+    try {
+      const result = await notifyNewQuoteSubmitted({
+        quoteId: "q-123",
+        budgetId: "b-456",
+        clientName: "Carolina Gómez",
+        clientEmail: "carolina@example.com",
+        clientPhone: "+56912345678",
+        originAddress: "Providencia 123",
+        destinationAddress: "Las Condes 456",
+        totalM3: 15.5,
+        estimatedAmount: 350000,
+      });
+
+      assert.equal(result.clientResult.to, "carolina@example.com");
+      assert.equal(result.clientResult.subject, NEW_QUOTE_CLIENT_SUBJECT);
+      assert.equal(result.clientResult.skipped, false);
+      assert.equal(result.adminResult?.to, "ops@transportesep3.cl");
+      assert.match(result.adminResult?.subject ?? "", /Nueva cotización web/);
+    } finally {
+      if (previousKey === undefined) delete process.env.RESEND_API_KEY;
+      else process.env.RESEND_API_KEY = previousKey;
+      if (previousAdmin === undefined) delete process.env.ADMIN_NOTIFICATION_EMAIL;
+      else process.env.ADMIN_NOTIFICATION_EMAIL = previousAdmin;
+    }
   });
 });
 
