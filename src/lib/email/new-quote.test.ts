@@ -55,6 +55,38 @@ describe("buildNewQuoteClientEmail", () => {
 });
 
 describe("notifyNewQuoteSubmitted", () => {
+  it("defaults to transportesep3@gmail.com when ADMIN_NOTIFICATION_EMAIL is unset", async () => {
+    const previousKey = process.env.RESEND_API_KEY;
+    const previousAdmin = process.env.ADMIN_NOTIFICATION_EMAIL;
+    const previousStaffAdmin = process.env.ADMIN_EMAIL;
+    delete process.env.RESEND_API_KEY;
+    delete process.env.ADMIN_NOTIFICATION_EMAIL;
+    process.env.ADMIN_EMAIL = "admin@transportesep3.cl";
+    try {
+      const result = await notifyNewQuoteSubmitted({
+        quoteId: "q-default",
+        budgetId: "b-default",
+        clientName: "Juan Pérez",
+        clientEmail: "juan@example.com",
+        clientPhone: "+56911223344",
+        originAddress: "Providencia 123",
+        destinationAddress: "Las Condes 456",
+        totalM3: 5,
+        estimatedAmount: 80000,
+      });
+
+      assert.equal(result.adminResult?.to, "transportesep3@gmail.com");
+      assert.match(result.adminResult?.subject ?? "", /Nueva cotización web/);
+    } finally {
+      if (previousKey === undefined) delete process.env.RESEND_API_KEY;
+      else process.env.RESEND_API_KEY = previousKey;
+      if (previousAdmin === undefined) delete process.env.ADMIN_NOTIFICATION_EMAIL;
+      else process.env.ADMIN_NOTIFICATION_EMAIL = previousAdmin;
+      if (previousStaffAdmin === undefined) delete process.env.ADMIN_EMAIL;
+      else process.env.ADMIN_EMAIL = previousStaffAdmin;
+    }
+  });
+
   it("sends the acknowledgment to the client and the notice to the admin", async () => {
     const previousKey = process.env.RESEND_API_KEY;
     const previousAdmin = process.env.ADMIN_NOTIFICATION_EMAIL;

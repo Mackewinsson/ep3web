@@ -397,6 +397,14 @@ export function buildNewQuoteAdminEmail(
   };
 }
 
+export const DEFAULT_ADMIN_NOTIFICATION_EMAIL = "transportesep3@gmail.com";
+
+export function getAdminNotificationEmail(): string {
+  const custom = process.env.ADMIN_NOTIFICATION_EMAIL?.trim();
+  if (custom) return custom;
+  return DEFAULT_ADMIN_NOTIFICATION_EMAIL;
+}
+
 export async function notifyNewQuoteSubmitted(
   payload: NewQuoteEmailPayload,
 ): Promise<{
@@ -405,10 +413,7 @@ export async function notifyNewQuoteSubmitted(
 }> {
   const clientResult = await deliverEmail(buildNewQuoteClientEmail(payload));
 
-  const adminEmail =
-    process.env.ADMIN_NOTIFICATION_EMAIL ||
-    process.env.ADMIN_EMAIL ||
-    "admin@transportesep3.cl";
+  const adminEmail = getAdminNotificationEmail();
 
   if (!adminEmail) {
     return { clientResult, adminResult: null };
