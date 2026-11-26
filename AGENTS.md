@@ -59,13 +59,13 @@ While `assigned` and **not** yet accepted:
 
 1. Sees **Tu pago** = quoted price minus `operatorMarginPercent` (default **20%** app commission → operador sees **80%**). If the budget total is $0, payout is derived from *Estimación auto* / m³. Never show client total. Notes via `operatorSafeNotes` / `stripClientPriceLines`.
 2. **Client phone is HIDDEN before accept**: The operator MUST NOT see the client phone number or the `Llamar` button before accepting (`isReadyForEnCamino` = false). The UI shows a notice (*El teléfono del cliente estará disponible al aceptar el servicio*). This prevents operators from calling the client outside the platform to undercut EP3 before confirming the job.
-3. **Aceptar servicio** — only three fields: **nombre chofer** (fleet), **RUT chofer** (`crewDriverRut`), **patente camión** (fleet). Notifies admins (`job_accepted`).
+3. **Aceptar servicio** — only three fields: **nombre chofer** (fleet), **RUT chofer** (`crewDriverRut`), **patente camión** (fleet). On accept, sends a branded responsive HTML confirmation email to the client with the driver name, RUT, truck plate, scheduled date/time, and route (`notifyClientJobAccepted`), and notifies admins (`job_accepted`, `client_job_accepted_email`).
 4. **Rechazar trabajo** — only before accept. Ends assignment `declined`; job → `pending_assignment`; notifies admins. After accept, decline is hidden/blocked (admin must cancel).
 
 After accept (`isReadyForEnCamino`):
 
 5. **Client phone revealed**: The `Llamar {job.clientPhone}` button becomes active.
-6. **En camino** → `in_progress`. Client gets a branded responsive HTML email ("Tu mudanza va en camino — Transportes EP3") with origin, destination, driver, and truck plate. UI verifies actual send status from notifications. Admins are notified (`client_en_camino_email`).
+6. **En camino** → `in_progress`. Client gets a branded responsive HTML email ("Tu mudanza va en camino — Transportes EP3") with origin, destination, driver, driver RUT, and truck plate. UI verifies actual send status from notifications. Admins are notified (`client_en_camino_email`).
 7. **Finalizar** → `completed`.
 
 Acceptance marker: sets `salvoConductoCompletedAt = now()`. Legacy salvoconducto columns (folio, date, communes, notes) are **nulled** on accept — do **not** rebuild that form.
@@ -92,6 +92,8 @@ One open assignment per job (`job_assignments_one_open` unique index where `ende
 | `src/lib/actions/submit-wizard-quote.ts` | Public wizard persist |
 | `src/lib/actions/budgets.ts` | Approve → create job; send/resend client quote; item add/edit/delete syncs notes from `budget_items` |
 | `src/lib/email/deliver.ts` | Shared Resend sender (mock when `RESEND_API_KEY` is unset) |
+| `src/lib/email/client-job-accepted.ts` | Branded client email with driver name, RUT, and truck plate on accept |
+| `src/lib/email/client-en-camino.ts` | Branded client email when driver sets job in camino |
 | `src/lib/budget-notes.ts` | Push budget lines into budget notes + `quote_requests.volumeNotes`; clear volume copies from `jobs.notes` |
 | `src/lib/job-notes.ts` | Hide job notes that duplicate volume (`operationalJobNotes`) |
 | `src/lib/actions/jobs.ts` | Assign, accept, decline, advance |

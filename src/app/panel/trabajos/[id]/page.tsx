@@ -17,10 +17,12 @@ import { QuoteItemsGrid } from "@/components/panel/quote-items-grid";
 import { ServiceDetailsCard } from "@/components/panel/service-details-card";
 import { db } from "@/db";
 import { clientEnCaminoStatusCopy } from "@/lib/email/client-en-camino";
+import { clientJobAcceptedStatusCopy } from "@/lib/email/client-job-accepted";
 import { drivers, jobAssignments, staffUsers, trucks } from "@/db/schema";
 import {
   assignJob,
   resendClientEnCaminoEmail,
+  resendClientJobAcceptedEmail,
   updateJobSchedule,
   updateJobStatus,
 } from "@/lib/actions/jobs";
@@ -167,6 +169,20 @@ export default async function TrabajoDetailPage({ params }: Props) {
               ? ` · RUT ${job.assignment.crewDriverRut}`
               : ""}
             .
+          </p>
+        ) : null}
+        {job.status === "assigned" && readyForEnCamino && job.jobAcceptedEmailOutcome ? (
+          <p
+            className={`mb-4 rounded-lg px-3 py-2 text-sm ${
+              job.jobAcceptedEmailOutcome?.failed
+                ? "bg-amber-50 text-amber-950"
+                : "bg-emerald-50 text-emerald-950"
+            }`}
+          >
+            {clientJobAcceptedStatusCopy(
+              job.clientEmail,
+              job.jobAcceptedEmailOutcome,
+            )}
           </p>
         ) : null}
         {job.status === "in_progress" ? (
@@ -316,17 +332,32 @@ export default async function TrabajoDetailPage({ params }: Props) {
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           {job.status === "assigned" && readyForEnCamino ? (
-            <form
-              action={updateJobStatus.bind(null, id, "in_progress")}
-              className="w-full sm:w-auto"
-            >
-              <button
-                type="submit"
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-ep3-navy px-3 py-2 text-sm text-white sm:w-auto"
+            <>
+              <form
+                action={updateJobStatus.bind(null, id, "in_progress")}
+                className="w-full sm:w-auto"
               >
-                Marcar en camino
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-ep3-navy px-3 py-2 text-sm text-white sm:w-auto"
+                >
+                  Marcar en camino
+                </button>
+              </form>
+              {job.clientEmail ? (
+                <form
+                  action={resendClientJobAcceptedEmail.bind(null, id)}
+                  className="w-full sm:w-auto"
+                >
+                  <button
+                    type="submit"
+                    className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-ep3-navy/25 px-3 py-2 text-sm text-ep3-navy sm:w-auto"
+                  >
+                    Reenviar confirmación al cliente
+                  </button>
+                </form>
+              ) : null}
+            </>
           ) : null}
           {job.status === "assigned" && !readyForEnCamino ? (
             <p className="w-full text-sm text-ep3-navy/60">

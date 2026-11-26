@@ -92,6 +92,21 @@ describe("emailDeliveryNotice", () => {
     assert.match(sent.title, /enviado al operador/i);
     assert.match(sent.body, /Enviado a op@example.com/);
 
+    const accepted = emailDeliveryNotice(
+      "job_accepted",
+      {
+        mocked: false,
+        skipped: false,
+        failed: false,
+        to: "ana@example.com",
+        error: null,
+      },
+      "Ana: Juan · ABCD12",
+    );
+    assert.equal(accepted.type, "client_job_accepted_email");
+    assert.match(accepted.title, /enviado al cliente/i);
+    assert.match(accepted.body, /Enviado a ana@example.com/);
+
     const failed = emailDeliveryNotice(
       "quote",
       {

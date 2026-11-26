@@ -139,6 +139,7 @@ export async function updateJobStatus(
       jobId,
       openForEnCamino?.crewDriverId ?? null,
       openForEnCamino?.truckId ?? null,
+      openForEnCamino?.crewDriverRut ?? null,
     );
   }
 
@@ -159,6 +160,24 @@ export async function resendClientEnCaminoEmail(jobId: string) {
     jobId,
     open?.crewDriverId ?? null,
     open?.truckId ?? null,
+    open?.crewDriverRut ?? null,
+  );
+  revalidateJobPaths(jobId);
+  redirect(`/panel/trabajos/${jobId}`);
+}
+
+export async function resendClientJobAcceptedEmail(jobId: string) {
+  await requireAdmin();
+  const job = await requireJob(jobId);
+  const open = await getOpenAssignment(jobId);
+  if (!open || !isReadyForEnCamino(open)) {
+    throw new Error("El trabajo aún no tiene chofer y camión asignados");
+  }
+  await notifyClientJobAcceptedForJob(
+    jobId,
+    open.crewDriverId,
+    open.truckId,
+    open.crewDriverRut,
   );
   revalidateJobPaths(jobId);
   redirect(`/panel/trabajos/${jobId}`);
@@ -464,7 +483,10 @@ export async function operatorAcceptJob(jobId: string, formData: FormData) {
     .select({
       originAddress: jobs.originAddress,
       destinationAddress: jobs.destinationAddress,
+      scheduledDate: jobs.scheduledDate,
+      scheduledTime: jobs.scheduledTime,
       clientName: clients.name,
+      clientEmail: clients.email,
     })
     .from(jobs)
     .innerJoin(clients, eq(jobs.clientId, clients.id))
@@ -480,6 +502,13 @@ export async function operatorAcceptJob(jobId: string, formData: FormData) {
       : `${crew.name} · ${truck.plate}`,
     href: `/panel/trabajos/${jobId}`,
   });
+
+  await notifyClientJobAcceptedForJob(
+    jobId,
+    parsed.crewDriverId,
+    parsed.truckId,
+    parsed.crewDriverRut.toUpperCase(),
+  );
 
   revalidateJobPaths(jobId);
   redirect(`/panel/mis-trabajos/${jobId}`);
@@ -523,6 +552,7 @@ export async function driverAdvanceJob(
       jobId,
       latest.crewDriverId,
       latest.truckId,
+      latest.crewDriverRut,
     );
   }
 
@@ -543,10 +573,86 @@ export async function driverAdvanceJob(
   redirect(`/panel/mis-trabajos/${jobId}`);
 }
 
+async function notifyClientJobAcceptedForJob(
+  jobId: string,
+  crewDriverId: string | null,
+  truckId: string | null,
+  crewDriverRut: string | null,
+) {
+  const [job] = await db
+    .select({
+      originAddress: jobs.originAddress,
+      destinationAddress: jobs.destinationAddress,
+      scheduledDate: jobs.scheduledDate,
+      scheduledTime: jobs.scheduledTime,
+      clientName: clients.name,
+      clientEmail: clients.email,
+    })
+    .from(jobs)
+    .innerJoin(clients, eq(jobs.clientId, clients.id))
+    .where(eq(jobs.id, jobId))
+    .limit(1);
+
+  if (!job) return;
+
+  let crewDriverName = "Conductor asignado";
+  if (crewDriverId) {
+    const [crew] = await db
+      .select({ name: drivers.name })
+      .from(drivers)
+      .where(eq(drivers.id, crewDriverId))
+      .limit(1);
+    if (crew?.name) crewDriverName = crew.name;
+  }
+
+  let truckPlate = "Por confirmar";
+  let truckLabel: string | null = null;
+  if (truckId) {
+    const [truck] = await db
+      .select({ plate: trucks.plate, label: trucks.label })
+      .from(trucks)
+      .where(eq(trucks.id, truckId))
+      .limit(1);
+    if (truck?.plate) truckPlate = truck.plate;
+    if (truck?.label) truckLabel = truck.label;
+  }
+
+  const { notifyClientJobAccepted } = await import(
+    "@/lib/email/client-job-accepted"
+  );
+  const result = await notifyClientJobAccepted({
+    clientName: job.clientName,
+    clientEmail: job.clientEmail,
+    originAddress: job.originAddress,
+    destinationAddress: job.destinationAddress,
+    crewDriverName,
+    crewDriverRut: crewDriverRut ?? "Por confirmar",
+    truckPlate,
+    truckLabel,
+    scheduledDate: job.scheduledDate,
+    scheduledTime: job.scheduledTime,
+  });
+
+  const { emailDeliveryNotice } = await import("@/lib/email/deliver");
+  const notice = emailDeliveryNotice(
+    "job_accepted",
+    result,
+    `${job.clientName}: ${crewDriverName} · ${truckPlate}`,
+  );
+  const { notifyAdmins } = await import("@/lib/notifications");
+  await notifyAdmins({
+    type: notice.type,
+    title: notice.title,
+    body: notice.body,
+    href: `/panel/trabajos/${jobId}`,
+  });
+}
+
 async function notifyClientEnCaminoForJob(
   jobId: string,
   crewDriverId: string | null,
   truckId: string | null,
+  crewDriverRut: string | null = null,
 ) {
   const [job] = await db
     .select({
@@ -573,13 +679,15 @@ async function notifyClientEnCaminoForJob(
   }
 
   let truckPlate: string | null = null;
+  let truckLabel: string | null = null;
   if (truckId) {
     const [truck] = await db
-      .select({ plate: trucks.plate })
+      .select({ plate: trucks.plate, label: trucks.label })
       .from(trucks)
       .where(eq(trucks.id, truckId))
       .limit(1);
     truckPlate = truck?.plate ?? null;
+    truckLabel = truck?.label ?? null;
   }
 
   const { notifyClientEnCamino } = await import("@/lib/email/client-en-camino");
@@ -589,7 +697,9 @@ async function notifyClientEnCaminoForJob(
     originAddress: job.originAddress,
     destinationAddress: job.destinationAddress,
     crewDriverName,
+    crewDriverRut,
     truckPlate,
+    truckLabel,
   });
 
   const { emailDeliveryNotice } = await import("@/lib/email/deliver");

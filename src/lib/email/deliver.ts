@@ -1,8 +1,8 @@
 import { Resend } from "resend";
 
-/** Sandbox sender. Delivers only to the Resend account owner until a domain is verified. */
+/** Default sender using the verified domain transportesep3.cl */
 export const DEFAULT_EMAIL_FROM =
-  "Transportes EP3 <onboarding@resend.dev>";
+  "Transportes EP3 <cotizaciones@transportesep3.cl>";
 
 export type EmailDeliveryResult = {
   mocked: boolean;
@@ -13,12 +13,13 @@ export type EmailDeliveryResult = {
   error: string | null;
 };
 
-export type EmailNoticeKind = "quote" | "en_camino" | "assignment";
+export type EmailNoticeKind = "quote" | "en_camino" | "assignment" | "job_accepted";
 
 const NOTICE_TYPE: Record<EmailNoticeKind, string> = {
   quote: "quote_email",
   en_camino: "client_en_camino_email",
   assignment: "assignment_email",
+  job_accepted: "client_job_accepted_email",
 };
 
 const NOTICE_TITLE: Record<
@@ -42,6 +43,12 @@ const NOTICE_TITLE: Record<
     failed: "Asignación — correo no enviado",
     mocked: "Asignación — correo al operador (simulado)",
     sent: "Asignación — correo enviado al operador",
+  },
+  job_accepted: {
+    skipped: "Aceptación — cliente sin correo (aviso no enviado)",
+    failed: "Aceptación — aviso al cliente no enviado",
+    mocked: "Aceptación — aviso al cliente (simulado)",
+    sent: "Aceptación — aviso enviado al cliente",
   },
 };
 

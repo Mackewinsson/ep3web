@@ -179,6 +179,30 @@ export async function getJobOperationalDetail(jobId: string) {
       }
     : null;
 
+  const [jobAcceptedNotice] = await db
+    .select({
+      title: notifications.title,
+      body: notifications.body,
+      createdAt: notifications.createdAt,
+    })
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.type, "client_job_accepted_email"),
+        eq(notifications.href, `/panel/trabajos/${jobId}`),
+      ),
+    )
+    .orderBy(desc(notifications.createdAt))
+    .limit(1);
+
+  const jobAcceptedEmailOutcome = jobAcceptedNotice
+    ? {
+        failed: /no enviado/i.test(jobAcceptedNotice.title),
+        error: null as string | null,
+        sentAt: jobAcceptedNotice.createdAt,
+      }
+    : null;
+
   return {
     ...job,
     estimatedM3,
@@ -187,6 +211,7 @@ export async function getJobOperationalDetail(jobId: string) {
     clientTotalAmount,
     assignment: assignment ?? null,
     enCaminoEmailOutcome,
+    jobAcceptedEmailOutcome,
   };
 }
 

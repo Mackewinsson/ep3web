@@ -16,6 +16,7 @@ import {
   CLIENT_EN_CAMINO_CONFIRM_HINT,
   clientEnCaminoStatusCopy,
 } from "@/lib/email/client-en-camino";
+import { clientJobAcceptedStatusCopy } from "@/lib/email/client-job-accepted";
 import { drivers, trucks } from "@/db/schema";
 import { driverAdvanceJob, operatorDeclineJob } from "@/lib/actions/jobs";
 import { requireDriver } from "@/lib/auth";
@@ -277,17 +278,33 @@ export default async function MisTrabajoDetailPage({ params }: Props) {
           ) : null}
 
           {job.status === "assigned" && accepted ? (
-            <form action={driverAdvanceJob.bind(null, id, "in_progress")}>
-              <button
-                type="submit"
-                className="flex min-h-14 w-full items-center justify-center rounded-lg bg-ep3-yellow text-base font-bold text-ep3-navy"
-              >
-                En camino
-              </button>
-              <p className="mt-2 text-center text-xs text-ep3-navy/55">
-                {CLIENT_EN_CAMINO_CONFIRM_HINT}
-              </p>
-            </form>
+            <div className="space-y-3">
+              {job.jobAcceptedEmailOutcome ? (
+                <p
+                  className={`rounded-lg px-4 py-3 text-center text-sm font-medium ${
+                    job.jobAcceptedEmailOutcome?.failed
+                      ? "bg-amber-50 text-amber-950"
+                      : "bg-emerald-50 text-emerald-950"
+                  }`}
+                >
+                  {clientJobAcceptedStatusCopy(
+                    job.clientEmail,
+                    job.jobAcceptedEmailOutcome,
+                  )}
+                </p>
+              ) : null}
+              <form action={driverAdvanceJob.bind(null, id, "in_progress")}>
+                <button
+                  type="submit"
+                  className="flex min-h-14 w-full items-center justify-center rounded-lg bg-ep3-yellow text-base font-bold text-ep3-navy"
+                >
+                  En camino
+                </button>
+                <p className="mt-2 text-center text-xs text-ep3-navy/55">
+                  {CLIENT_EN_CAMINO_CONFIRM_HINT}
+                </p>
+              </form>
+            </div>
           ) : null}
 
           {canAccept ? (

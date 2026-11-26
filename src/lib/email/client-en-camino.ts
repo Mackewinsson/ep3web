@@ -12,7 +12,9 @@ export type ClientEnCaminoEmailPayload = {
   originAddress: string;
   destinationAddress: string;
   crewDriverName?: string | null;
+  crewDriverRut?: string | null;
   truckPlate?: string | null;
+  truckLabel?: string | null;
 };
 
 export type ClientEnCaminoEmailResult = EmailDeliveryResult;
@@ -45,13 +47,17 @@ function renderClientEnCaminoHtml(payload: ClientEnCaminoEmailPayload): string {
   const crewRow = payload.crewDriverName
     ? `<tr>
         <td style="padding: 8px 0; font-size: 14px; color: #64748B; width: 110px;">Conductor</td>
-        <td style="padding: 8px 0; font-size: 14px; font-weight: 700; color: ${BRAND_NAVY};">${escapeHtml(payload.crewDriverName)}</td>
+        <td style="padding: 8px 0; font-size: 14px; font-weight: 700; color: ${BRAND_NAVY};">
+          ${escapeHtml(payload.crewDriverName)}${payload.crewDriverRut ? ` <span style="font-size: 12px; color: #64748B; font-weight: 400;">(${escapeHtml(payload.crewDriverRut)})</span>` : ""}
+        </td>
       </tr>`
     : "";
   const truckRow = payload.truckPlate
     ? `<tr>
         <td style="padding: 8px 0; font-size: 14px; color: #64748B; width: 110px;">Patente camión</td>
-        <td style="padding: 8px 0; font-size: 14px; font-weight: 700; color: ${BRAND_NAVY};">${escapeHtml(payload.truckPlate)}</td>
+        <td style="padding: 8px 0; font-size: 14px; font-weight: 700; color: ${BRAND_NAVY};">
+          ${escapeHtml(payload.truckPlate)}${payload.truckLabel ? ` <span style="font-size: 12px; color: #64748B; font-weight: 400;">(${escapeHtml(payload.truckLabel)})</span>` : ""}
+        </td>
       </tr>`
     : "";
 
@@ -165,9 +171,11 @@ export function buildClientEnCaminoEmail(
 ): { to: string | null; subject: string; text: string; html: string } {
   const to = payload.clientEmail?.trim() || null;
   const crew = payload.crewDriverName
-    ? `Conductor: ${payload.crewDriverName}.`
+    ? `Conductor: ${payload.crewDriverName}${payload.crewDriverRut ? ` (${payload.crewDriverRut})` : ""}.`
     : "";
-  const truck = payload.truckPlate ? `Camión: ${payload.truckPlate}.` : "";
+  const truck = payload.truckPlate
+    ? `Camión: ${payload.truckPlate}${payload.truckLabel ? ` (${payload.truckLabel})` : ""}.`
+    : "";
   const text = [
     `Hola ${payload.clientName},`,
     "Tu mudanza ya va en camino.",
