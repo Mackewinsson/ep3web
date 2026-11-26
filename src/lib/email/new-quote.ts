@@ -104,7 +104,7 @@ export function renderClientQuoteEmailHtml(payload: NewQuoteEmailPayload): strin
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td align="center">
-                    <a href="https://wa.me/56984898375?text=Hola%20Transportes%20EP3,%20acabo%20de%20cotizar%20mi%20mudanza" 
+                    <a href="https://wa.me/56997406693?text=Hola%20Transportes%20EP3,%20acabo%20de%20cotizar%20mi%20mudanza" 
                        style="display: inline-block; background-color: #25D366; color: #FFFFFF; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 8px; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);">
                       💬 Escríbenos por WhatsApp
                     </a>
@@ -113,7 +113,7 @@ export function renderClientQuoteEmailHtml(payload: NewQuoteEmailPayload): strin
                 <tr>
                   <td align="center" style="padding-top: 14px;">
                     <span style="font-size: 13px; color: #64748B;">¿Prefieres llamar?</span>
-                    <a href="tel:+56984898375" style="font-size: 13px; color: ${BRAND_NAVY}; font-weight: 700; text-decoration: underline; margin-left: 4px;">+56 9 8489 8375</a>
+                    <a href="tel:+56997406693" style="font-size: 13px; color: ${BRAND_NAVY}; font-weight: 700; text-decoration: underline; margin-left: 4px;">+56 9 9740 6693</a>
                   </td>
                 </tr>
               </table>
@@ -335,7 +335,7 @@ export function buildNewQuoteClientEmail(payload: NewQuoteEmailPayload): {
     "",
     "Este mensaje solo confirma que llegó tu solicitud. No incluye precio ni detalle de ítems.",
     "",
-    "Si tienes dudas, escríbenos por WhatsApp o llama al +56 9 8489 8375.",
+    "Si tienes dudas, escríbenos por WhatsApp o llama al +56 9 9740 6693.",
     "",
     "Saludos cordiales,",
     "Equipo de Transportes EP3",

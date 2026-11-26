@@ -25,6 +25,8 @@ describe("buildClientEnCaminoEmail", () => {
     assert.match(email.html, /Las Condes/);
     assert.match(email.html, /Luis/);
     assert.match(email.html, /ABCD12/);
+    assert.match(email.html, /wa\.me\/56997406693/);
+    assert.match(email.html, /\+56 9 9740 6693/);
     assert.doesNotMatch(email.html, /\$|CLP|IVA/);
   });
 });

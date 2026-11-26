@@ -42,7 +42,7 @@ export function buildFollowUpClientEmail(payload: FollowUpEmailPayload): {
     "",
     "Queremos asegurarnos de que hayas recibido la información y resolver cualquier duda que tengas sobre la fecha, inventario o requerimientos de acceso.",
     "",
-    "¿Pudiste revisar los detalles? Si deseas coordinar o ajustar la cotización, puedes responder directamente a este correo o contactarnos por WhatsApp al +56 9 8489 8375.",
+    "¿Pudiste revisar los detalles? Si deseas coordinar o ajustar la cotización, puedes responder directamente a este correo o contactarnos por WhatsApp al +56 9 9740 6693.",
     "",
     "Quedamos atentos para ayudarte,",
     "Equipo de Operaciones · Transportes EP3",
@@ -109,7 +109,7 @@ export function buildFollowUpClientEmail(payload: FollowUpEmailPayload): {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td align="center">
-                    <a href="https://wa.me/56984898375?text=Hola%20Transportes%20EP3,%20me%20comunico%20para%20coordinar%20mi%20mudanza" 
+                    <a href="https://wa.me/56997406693?text=Hola%20Transportes%20EP3,%20me%20comunico%20para%20coordinar%20mi%20mudanza" 
                        style="display: inline-block; background-color: #25D366; color: #FFFFFF; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 8px; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);">
                       💬 Responder por WhatsApp
                     </a>
@@ -117,8 +117,8 @@ export function buildFollowUpClientEmail(payload: FollowUpEmailPayload): {
                 </tr>
                 <tr>
                   <td align="center" style="padding-top: 14px;">
-                    <a href="tel:+56984898375" style="font-size: 13px; color: ${BRAND_NAVY}; font-weight: 700; text-decoration: underline;">
-                      O llamarnos al +56 9 8489 8375
+                    <a href="tel:+56997406693" style="font-size: 13px; color: ${BRAND_NAVY}; font-weight: 700; text-decoration: underline;">
+                      O llamarnos al +56 9 9740 6693
                     </a>
                   </td>
                 </tr>

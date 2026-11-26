@@ -22,7 +22,7 @@ describe("buildFollowUpClientEmail", () => {
     assert.match(email.html, /#FFCC00/);
     assert.match(email.html, /TRANSPORTES/);
     assert.match(email.html, /Rodrigo Morales/);
-    assert.match(email.html, /wa\.me\/56984898375/);
+    assert.match(email.html, /wa\.me\/56997406693/);
   });
 });
 

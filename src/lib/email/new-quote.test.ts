@@ -43,7 +43,7 @@ describe("buildNewQuoteClientEmail", () => {
     assert.match(email.html, /TRANSPORTES/);
     assert.match(email.html, /Cotización recibida/);
     assert.match(email.html, /Carolina Gómez/);
-    assert.match(email.html, /wa\.me\/56984898375/);
+    assert.match(email.html, /wa\.me\/56997406693/);
     assert.doesNotMatch(email.html, /Providencia/);
     assert.doesNotMatch(email.html, /Las Condes/);
     assert.doesNotMatch(email.html, /Sofá/);

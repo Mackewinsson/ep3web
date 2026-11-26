@@ -112,7 +112,7 @@ function renderClientQuoteHtml(payload: ClientQuoteEmailPayload): string {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top: 24px;">
                 <tr>
                   <td align="center">
-                    <a href="https://wa.me/56984898375?text=Hola%20Transportes%20EP3,%20recibí%20la%20cotización%20${encodeURIComponent(payload.title)}" 
+                    <a href="https://wa.me/56997406693?text=Hola%20Transportes%20EP3,%20recibí%20la%20cotización%20${encodeURIComponent(payload.title)}" 
                        style="display: inline-block; background-color: #25D366; color: #FFFFFF; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 8px; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);">
                       💬 Aceptar o Consultar por WhatsApp
                     </a>
@@ -120,8 +120,8 @@ function renderClientQuoteHtml(payload: ClientQuoteEmailPayload): string {
                 </tr>
                 <tr>
                   <td align="center" style="padding-top: 14px;">
-                    <a href="tel:+56984898375" style="font-size: 13px; color: ${BRAND_NAVY}; font-weight: 700; text-decoration: underline;">
-                      O contáctanos al +56 9 8489 8375
+                    <a href="tel:+56997406693" style="font-size: 13px; color: ${BRAND_NAVY}; font-weight: 700; text-decoration: underline;">
+                      O contáctanos al +56 9 9740 6693
                     </a>
                   </td>
                 </tr>

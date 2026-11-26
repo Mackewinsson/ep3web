@@ -17,6 +17,8 @@ describe("buildClientQuoteEmail", () => {
     assert.match(email.subject, /Mudanza Las Condes/);
     assert.match(email.text, /Total: .+\+ IVA/);
     assert.match(email.text, /no incluye IVA/i);
+    assert.match(email.html, /wa\.me\/56997406693/);
+    assert.match(email.html, /\+56 9 9740 6693/);
   });
 
   it("keeps the client message and drops the wizard inventory dump", () => {
